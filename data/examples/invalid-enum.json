@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "slug": "invalid-enum-example",
+  "name_en": "Invalid Enum Test Shrine",
+  "name_ja": "テスト神社",
+  "region": "Kinki",
+  "prefecture": "Kyoto",
+  "city": "Kyoto",
+  "coordinates": { "lat": 35.0, "lng": 135.0 },
+
+  "details": { "history": "Synthetic record used to verify the validator rejects bad enums." },
+
+  "ranks": ["Beppyo-sha"],
+  "prayer_categories": ["Health"],
+
+  "deities": [
+    {
+      "name_romaji": "Susanoo-no-Mikoto",
+      "name_kanji": "素戔嗚尊",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Primary deity."
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Bad Access Type Event",
+      "name_ja": "テスト祭",
+      "access_type": "private_tour",
+      "occurrences": []
+    }
+  ],
+
+  "sources": []
+}

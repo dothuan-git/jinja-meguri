@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "slug": "hikawa-jinja-omiya",
+  "name_en": "Hikawa Shrine",
+  "name_ja": "氷川神社",
+  "region": "Kanto",
+  "prefecture": "Saitama",
+  "city": "Saitama",
+  "address": "1-407 Takahanacho, Omiya Ward, Saitama",
+  "coordinates": { "lat": 35.9176, "lng": 139.6298 },
+  "notes": "Head shrine of roughly 280 Hikawa shrines across the Kanto plain.",
+
+  "details": {
+    "history": "Traditionally said to date to the reign of Emperor Korei. The shrine gave its name to the district of Omiya ('great shrine') and was designated the ichinomiya of Musashi Province. Its 2km approach (sando) is among the longest in Japan.",
+    "why_visit": "The central Hikawa shrine of the Kanto region and the source of the Hikawa network's worship of Susanoo. The long tree-lined approach and the vermilion Romon gate make it a serene retreat within greater Tokyo.",
+    "prayer_focus": "Matchmaking and good marriage (縁結び), warding off misfortune, and family safety.",
+    "best_season": "Early summer for fresh greenery along the approach; the August Reitaisai festival."
+  },
+
+  "ranks": ["Beppyo-sha", "Kanpei-Taisha", "Ichinomiya"],
+
+  "prayer_categories": ["Matchmaking", "Marriage", "FamilySafety"],
+
+  "deities": [
+    {
+      "name_romaji": "Susanoo-no-Mikoto",
+      "name_kanji": "素戔嗚尊",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Principal deity (主祭神) of the Hikawa network."
+    },
+    {
+      "name_romaji": "Kushinadahime-no-Mikoto",
+      "name_kanji": "櫛稲田姫命",
+      "is_primary": false,
+      "sort_order": 2,
+      "role": "Consort enshrined with Susanoo; venerated here for matchmaking."
+    },
+    {
+      "name_romaji": "Onamuchi-no-Mikoto",
+      "name_kanji": "大己貴命",
+      "is_primary": false,
+      "sort_order": 3,
+      "role": "Descendant of Susanoo; deity of nation-building and good relationships.",
+      "regional_lore": null,
+      "canonical": {
+        "domain": "Nation-building, medicine, and human relationships",
+        "title": null,
+        "deity_type": "origin",
+        "canonical_lore": "Also known as Okuninushi, the kami who pacified and built the land of Izumo before ceding it to the heavenly deities. (Kojiki / Nihon Shoki)"
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Annual Grand Festival",
+      "name_ja": "例大祭",
+      "time_prose": "August 1 each year.",
+      "origin": "The shrine's principal annual rite, historically tied to the imperial court's recognition of Hikawa as the ichinomiya of Musashi.",
+      "meaning": "Thanksgiving and petition for the peace and prosperity of the region.",
+      "ritual": "Formal offerings (shinsen), kagura dance, and the dispatch of an imperial envoy in recognition of the shrine's chokusaisha status.",
+      "prayer": "For regional peace and bountiful harvests.",
+      "access_type": "public_witness",
+      "visitor_notes": "Ceremonies are largely formal; the approach and grounds are open to visitors.",
+      "deities": [
+        { "name_kanji": "素戔嗚尊", "role": "Principal honored deity" }
+      ],
+      "occurrences": [
+        { "start_date": "2026-08-01", "end_date": "2026-08-01" }
+      ]
+    }
+  ],
+
+  "sources": [
+    {
+      "url": "https://musashiichinomiya-hikawa.or.jp/",
+      "title": "武蔵一宮 氷川神社 公式サイト",
+      "source_type": "official",
+      "note": "Deities, history, and festival calendar."
+    },
+    {
+      "url": "https://ja.wikipedia.org/wiki/氷川神社",
+      "title": "氷川神社 - Wikipedia",
+      "source_type": "wikipedia_ja",
+      "note": null
+    }
+  ]
+}

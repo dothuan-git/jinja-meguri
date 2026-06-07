@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name_en": "Hokkaido",
+    "name_ja": "北海道"
+  },
+  {
+    "id": 2,
+    "name_en": "Tohoku",
+    "name_ja": "東北"
+  },
+  {
+    "id": 3,
+    "name_en": "Kanto",
+    "name_ja": "関東"
+  },
+  {
+    "id": 4,
+    "name_en": "Chubu",
+    "name_ja": "中部"
+  },
+  {
+    "id": 5,
+    "name_en": "Kinki",
+    "name_ja": "近畿"
+  },
+  {
+    "id": 6,
+    "name_en": "Chugoku",
+    "name_ja": "中国"
+  },
+  {
+    "id": 7,
+    "name_en": "Shikoku",
+    "name_ja": "四国"
+  },
+  {
+    "id": 8,
+    "name_en": "Kyushu",
+    "name_ja": "九州"
+  }
+]

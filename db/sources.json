@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "shrine_id": 1,
+    "url": "https://musashiichinomiya-hikawa.or.jp/",
+    "title": "武蔵一宮 氷川神社 公式サイト",
+    "source_type": "official",
+    "note": "Deities, history, and festival calendar."
+  },
+  {
+    "id": 2,
+    "shrine_id": 1,
+    "url": "https://ja.wikipedia.org/wiki/氷川神社",
+    "title": "氷川神社 - Wikipedia",
+    "source_type": "wikipedia_ja",
+    "note": null
+  },
+  {
+    "id": 3,
+    "shrine_id": 2,
+    "url": "https://www.yasaka-jinja.or.jp/",
+    "title": "八坂神社 公式サイト",
+    "source_type": "official",
+    "note": "Primary source for enshrined deities and festival schedule."
+  },
+  {
+    "id": 4,
+    "shrine_id": 2,
+    "url": "https://ja.wikipedia.org/wiki/八坂神社",
+    "title": "八坂神社 - Wikipedia",
+    "source_type": "wikipedia_ja",
+    "note": null
+  }
+]

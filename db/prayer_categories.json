@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "code": "Victory",
+    "name_en": "Victory",
+    "name_ja": "勝運",
+    "group_label": "Fortune & Success"
+  },
+  {
+    "id": 2,
+    "code": "GoodFortune",
+    "name_en": "Good Fortune",
+    "name_ja": "開運",
+    "group_label": "Fortune & Success"
+  },
+  {
+    "id": 3,
+    "code": "WishFulfillment",
+    "name_en": "Wish Fulfillment",
+    "name_ja": "心願成就",
+    "group_label": "Fortune & Success"
+  },
+  {
+    "id": 4,
+    "code": "Career",
+    "name_en": "Career Advancement",
+    "name_ja": "出世",
+    "group_label": "Fortune & Success"
+  },
+  {
+    "id": 5,
+    "code": "CompetitionWin",
+    "name_en": "Competition Win",
+    "name_ja": "必勝",
+    "group_label": "Fortune & Success"
+  },
+  {
+    "id": 6,
+    "code": "Matchmaking",
+    "name_en": "Matchmaking",
+    "name_ja": "縁結び",
+    "group_label": "Love & Family"
+  },
+  {
+    "id": 7,
+    "code": "Marriage",
+    "name_en": "Good Marriage",
+    "name_ja": "良縁",
+    "group_label": "Love & Family"
+  },
+  {
+    "id": 8,
+    "code": "Fertility",
+    "name_en": "Fertility",
+    "name_ja": "子宝",
+    "group_label": "Love & Family"
+  },
+  {
+    "id": 9,
+    "code": "SafeChildbirth",
+    "name_en": "Safe Childbirth",
+    "name_ja": "安産",
+    "group_label": "Love & Family"
+  },
+  {
+    "id": 10,
+    "code": "FamilySafety",
+    "name_en": "Family Safety",
+    "name_ja": "家内安全",
+    "group_label": "Love & Family"
+  },
+  {
+    "id": 11,
+    "code": "Health",
+    "name_en": "Good Health",
+    "name_ja": "健康",
+    "group_label": "Health"
+  },
+  {
+    "id": 12,
+    "code": "Longevity",
+    "name_en": "Longevity",
+    "name_ja": "長寿",
+    "group_label": "Health"
+  },
+  {
+    "id": 13,
+    "code": "Recovery",
+    "name_en": "Recovery from Illness",
+    "name_ja": "病気平癒",
+    "group_label": "Health"
+  },
+  {
+    "id": 14,
+    "code": "Business",
+    "name_en": "Business Prosperity",
+    "name_ja": "商売繁盛",
+    "group_label": "Prosperity"
+  },
+  {
+    "id": 15,
+    "code": "Wealth",
+    "name_en": "Wealth",
+    "name_ja": "金運",
+    "group_label": "Prosperity"
+  },
+  {
+    "id": 16,
+    "code": "Harvest",
+    "name_en": "Bountiful Harvest",
+    "name_ja": "五穀豊穣",
+    "group_label": "Prosperity"
+  },
+  {
+    "id": 17,
+    "code": "WardingEvil",
+    "name_en": "Warding off Evil",
+    "name_ja": "厄除け",
+    "group_label": "Protection & Safety"
+  },
+  {
+    "id": 18,
+    "code": "Purification",
+    "name_en": "Purification",
+    "name_ja": "厄祓い",
+    "group_label": "Protection & Safety"
+  },
+  {
+    "id": 19,
+    "code": "DisasterPrevent",
+    "name_en": "Disaster Prevention",
+    "name_ja": "災難除け",
+    "group_label": "Protection & Safety"
+  },
+  {
+    "id": 20,
+    "code": "TrafficSafety",
+    "name_en": "Traffic Safety",
+    "name_ja": "交通安全",
+    "group_label": "Protection & Safety"
+  },
+  {
+    "id": 21,
+    "code": "MaritimeSafety",
+    "name_en": "Maritime Safety",
+    "name_ja": "海上安全",
+    "group_label": "Protection & Safety"
+  },
+  {
+    "id": 22,
+    "code": "Academics",
+    "name_en": "Academic Success",
+    "name_ja": "学業成就",
+    "group_label": "Scholarship"
+  },
+  {
+    "id": 23,
+    "code": "ExamSuccess",
+    "name_en": "Exam Success",
+    "name_ja": "合格祈願",
+    "group_label": "Scholarship"
+  },
+  {
+    "id": 24,
+    "code": "NationalPeace",
+    "name_en": "National Peace",
+    "name_ja": "国家安泰",
+    "group_label": "Nation"
+  },
+  {
+    "id": 25,
+    "code": "NationalProtect",
+    "name_en": "National Protection",
+    "name_ja": "護国",
+    "group_label": "Nation"
+  }
+]

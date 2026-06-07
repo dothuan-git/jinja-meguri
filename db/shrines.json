@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "slug": "hikawa-jinja-omiya",
+    "name_en": "Hikawa Shrine",
+    "name_ja": "氷川神社",
+    "prefecture_id": 11,
+    "region_id": 3,
+    "city": "Saitama",
+    "address": "1-407 Takahanacho, Omiya Ward, Saitama",
+    "coordinates": {
+      "lat": 35.9176,
+      "lng": 139.6298
+    },
+    "notes": "Head shrine of roughly 280 Hikawa shrines across the Kanto plain."
+  },
+  {
+    "id": 2,
+    "slug": "yasaka-jinja",
+    "name_en": "Yasaka Shrine",
+    "name_ja": "八坂神社",
+    "prefecture_id": 26,
+    "region_id": 5,
+    "city": "Kyoto",
+    "address": "625 Gionmachi Kitagawa, Higashiyama Ward, Kyoto",
+    "coordinates": {
+      "lat": 35.0036,
+      "lng": 135.7785
+    },
+    "notes": null
+  }
+]
