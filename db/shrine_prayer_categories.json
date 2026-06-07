@@ -1,26 +1,78 @@
 [
   {
-    "shrine_id": 1,
+    "shrine_id": 3,
+    "category_id": 22
+  },
+  {
+    "shrine_id": 3,
+    "category_id": 23
+  },
+  {
+    "shrine_id": 3,
+    "category_id": 3
+  },
+  {
+    "shrine_id": 4,
+    "category_id": 14
+  },
+  {
+    "shrine_id": 4,
+    "category_id": 16
+  },
+  {
+    "shrine_id": 4,
+    "category_id": 15
+  },
+  {
+    "shrine_id": 4,
+    "category_id": 2
+  },
+  {
+    "shrine_id": 5,
     "category_id": 6
   },
   {
-    "shrine_id": 1,
+    "shrine_id": 5,
     "category_id": 7
   },
   {
-    "shrine_id": 1,
+    "shrine_id": 5,
     "category_id": 10
   },
   {
-    "shrine_id": 2,
+    "shrine_id": 6,
+    "category_id": 6
+  },
+  {
+    "shrine_id": 6,
+    "category_id": 7
+  },
+  {
+    "shrine_id": 6,
+    "category_id": 2
+  },
+  {
+    "shrine_id": 7,
+    "category_id": 10
+  },
+  {
+    "shrine_id": 7,
+    "category_id": 24
+  },
+  {
+    "shrine_id": 7,
+    "category_id": 3
+  },
+  {
+    "shrine_id": 8,
     "category_id": 17
   },
   {
-    "shrine_id": 2,
+    "shrine_id": 8,
     "category_id": 11
   },
   {
-    "shrine_id": 2,
+    "shrine_id": 8,
     "category_id": 14
   }
 ]

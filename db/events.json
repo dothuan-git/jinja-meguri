@@ -1,7 +1,33 @@
 [
   {
-    "id": 1,
-    "shrine_id": 1,
+    "id": 3,
+    "shrine_id": 3,
+    "name_en": "Jinko-shiki Taisai",
+    "name_ja": "神幸式大祭",
+    "time_prose": "Late September, over several days around the autumnal equinox.",
+    "origin": "The shrine's principal annual festival, re-enacting the consolation of Michizane's spirit.",
+    "meaning": "To comfort the enshrined kami and pray for peace and learning.",
+    "ritual": "A grand procession bears the divine palanquin (o-mikoshi) through the town in Heian-style costume.",
+    "prayer": "For scholarship, and for the repose and favor of Tenjin.",
+    "access_type": "public_witness",
+    "visitor_notes": "The costumed evening procession is the highlight; the approach fills with festival stalls."
+  },
+  {
+    "id": 4,
+    "shrine_id": 4,
+    "name_en": "Hatsuuma Taisai",
+    "name_ja": "初午大祭",
+    "time_prose": "The first Day of the Horse (hatsuuma) of the second lunar month — usually in February. Date varies each year.",
+    "origin": "Commemorates the descent of the Inari deity onto Inariyama on the first Day of the Horse in 711.",
+    "meaning": "A petition for a bountiful year and prosperous business, the most important rite of the Inari calendar.",
+    "ritual": "Worshippers receive shirushi-no-sugi (a blessed cedar sprig); the mountain fills with pilgrims through the night.",
+    "prayer": "For abundant harvest and flourishing trade.",
+    "access_type": "public_witness",
+    "visitor_notes": "Among the busiest days of the year at the shrine; expect dense crowds on the lower paths."
+  },
+  {
+    "id": 5,
+    "shrine_id": 5,
     "name_en": "Annual Grand Festival",
     "name_ja": "例大祭",
     "time_prose": "August 1 each year.",
@@ -13,8 +39,34 @@
     "visitor_notes": "Ceremonies are largely formal; the approach and grounds are open to visitors."
   },
   {
-    "id": 2,
-    "shrine_id": 2,
+    "id": 6,
+    "shrine_id": 6,
+    "name_en": "Kamiari-sai",
+    "name_ja": "神在祭",
+    "time_prose": "The 10th lunar month (Kamiarizuki) — in 2026, late November. Dates set annually by the lunar calendar.",
+    "origin": "When the myriad gods of Japan are believed to leave their own shrines and gather at Izumo to deliberate on human affairs and relationships.",
+    "meaning": "A solemn reception of the assembled deities and a petition for auspicious bonds in the coming year.",
+    "ritual": "The Karasade rites welcome and later send off the gods; the shrine observes strict quiet during the divine assembly.",
+    "prayer": "For good relationships and fortunate unions.",
+    "access_type": "pilgrimage_experience",
+    "visitor_notes": "The most spiritually charged period at Izumo; visitors are asked to keep a reverent quiet during the rites."
+  },
+  {
+    "id": 7,
+    "shrine_id": 7,
+    "name_en": "Spring Grand Festival",
+    "name_ja": "春の大祭",
+    "time_prose": "Late April to early May, around the Showa Day holiday.",
+    "origin": "An annual rite honoring the enshrined spirits, paired with public performances of classical arts.",
+    "meaning": "Thanksgiving and prayer for the peace and prosperity of the nation.",
+    "ritual": "Court music (gagaku), bugaku dance, noh, and yabusame horseback archery are offered before the deities.",
+    "prayer": "For national peace and the people's wellbeing.",
+    "access_type": "public_witness",
+    "visitor_notes": "The traditional-arts offerings are free to watch on the festival grounds."
+  },
+  {
+    "id": 8,
+    "shrine_id": 8,
     "name_en": "Gion Festival",
     "name_ja": "祇園祭",
     "time_prose": "Throughout July; Yamaboko Junko float processions on July 17 (Saki Matsuri) and July 24 (Ato Matsuri).",

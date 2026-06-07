@@ -25,5 +25,50 @@
     "title": null,
     "deity_type": "origin",
     "canonical_lore": "The maiden rescued by Susanoo from Yamata-no-Orochi and taken as his wife."
+  },
+  {
+    "id": 4,
+    "name_romaji": "Sugawara no Michizane",
+    "name_kanji": "菅原道真",
+    "domain": "Scholarship, learning, and calligraphy",
+    "title": "Heian-era scholar and statesman (845–903), deified as Tenjin",
+    "deity_type": "deified human",
+    "canonical_lore": "A renowned poet and minister of the Heian court, later venerated nationwide as the kami of academics."
+  },
+  {
+    "id": 5,
+    "name_romaji": "Uka-no-Mitama-no-Okami",
+    "name_kanji": "宇迦之御魂大神",
+    "domain": "Rice, agriculture, and prosperity",
+    "title": null,
+    "deity_type": "origin",
+    "canonical_lore": "The grain spirit at the heart of the Inari cult, a child of Susanoo in the Kojiki, worshipped for the fertility of the fields and the increase of wealth."
+  },
+  {
+    "id": 6,
+    "name_romaji": "Okuninushi-no-Okami",
+    "name_kanji": "大国主大神",
+    "domain": "Nation-building, marriage, and fortune",
+    "title": null,
+    "deity_type": "origin",
+    "canonical_lore": "A descendant of Susanoo who, with Sukunabikona, pacified and developed the land of Izumo before ceding it to the heavenly deities. (Kojiki / Nihon Shoki)"
+  },
+  {
+    "id": 7,
+    "name_romaji": "Emperor Meiji",
+    "name_kanji": "明治天皇",
+    "domain": "Imperial rule and the modernization of Japan",
+    "title": "122nd Emperor of Japan (1852–1912)",
+    "deity_type": "deified human",
+    "canonical_lore": "The emperor under whom Japan transformed from a feudal society into a modern state during the Meiji Restoration."
+  },
+  {
+    "id": 8,
+    "name_romaji": "Empress Shoken",
+    "name_kanji": "昭憲皇太后",
+    "domain": "Charity, education, and welfare",
+    "title": "Empress consort of Emperor Meiji (1849–1914)",
+    "deity_type": "deified human",
+    "canonical_lore": "Remembered for her patronage of women's education and of the Red Cross in Japan."
   }
 ]

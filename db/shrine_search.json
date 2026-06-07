@@ -1,6 +1,22 @@
 [
   {
-    "shrine_id": 1,
+    "shrine_id": 3,
+    "slug": "dazaifu-tenmangu",
+    "name_en": "Dazaifu Tenmangu",
+    "name_ja": "太宰府天満宮",
+    "city": "Dazaifu",
+    "search_blob": "Dazaifu Tenmangu 太宰府天満宮 Dazaifu Sugawara no Michizane 菅原道真 Academic Success Exam Success Wish Fulfillment Jinko-shiki Taisai 神幸式大祭"
+  },
+  {
+    "shrine_id": 4,
+    "slug": "fushimi-inari-taisha",
+    "name_en": "Fushimi Inari Taisha",
+    "name_ja": "伏見稲荷大社",
+    "city": "Kyoto",
+    "search_blob": "Fushimi Inari Taisha 伏見稲荷大社 Kyoto Uka-no-Mitama-no-Okami 宇迦之御魂大神 Business Prosperity Bountiful Harvest Wealth Good Fortune Hatsuuma Taisai 初午大祭"
+  },
+  {
+    "shrine_id": 5,
     "slug": "hikawa-jinja-omiya",
     "name_en": "Hikawa Shrine",
     "name_ja": "氷川神社",
@@ -8,7 +24,23 @@
     "search_blob": "Hikawa Shrine 氷川神社 Saitama Susanoo-no-Mikoto Kushinadahime-no-Mikoto Onamuchi-no-Mikoto 素戔嗚尊 櫛稲田姫命 大己貴命 Matchmaking Good Marriage Family Safety Annual Grand Festival 例大祭"
   },
   {
-    "shrine_id": 2,
+    "shrine_id": 6,
+    "slug": "izumo-oyashiro",
+    "name_en": "Izumo Oyashiro",
+    "name_ja": "出雲大社",
+    "city": "Izumo",
+    "search_blob": "Izumo Oyashiro 出雲大社 Izumo Okuninushi-no-Okami 大国主大神 Matchmaking Good Marriage Good Fortune Kamiari-sai 神在祭"
+  },
+  {
+    "shrine_id": 7,
+    "slug": "meiji-jingu",
+    "name_en": "Meiji Jingu",
+    "name_ja": "明治神宮",
+    "city": "Tokyo",
+    "search_blob": "Meiji Jingu 明治神宮 Tokyo Emperor Meiji Empress Shoken 明治天皇 昭憲皇太后 Family Safety National Peace Wish Fulfillment Spring Grand Festival 春の大祭"
+  },
+  {
+    "shrine_id": 8,
     "slug": "yasaka-jinja",
     "name_en": "Yasaka Shrine",
     "name_ja": "八坂神社",

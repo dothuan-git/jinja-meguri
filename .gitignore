@@ -13,3 +13,7 @@ next-env.d.ts
 /playwright-report/
 /.vercel
 *.tsbuildinfo
+
+# Playwright MCP scratch
+.playwright-mcp/
+/*.png

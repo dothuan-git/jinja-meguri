@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "slug": "fushimi-inari-taisha",
+  "name_en": "Fushimi Inari Taisha",
+  "name_ja": "伏見稲荷大社",
+  "region": "Kinki",
+  "prefecture": "Kyoto",
+  "city": "Kyoto",
+  "address": "68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto",
+  "coordinates": { "lat": 34.9671, "lng": 135.7727 },
+  "notes": "Head shrine of roughly 30,000 Inari shrines across Japan; famed for its tunnels of vermilion torii.",
+
+  "details": {
+    "history": "Founded in 711 on Inariyama, the shrine is the origin of the nationwide Inari faith. Its hillside paths are lined with thousands of torii donated by worshippers and businesses in gratitude for prosperity.",
+    "why_visit": "The Senbon Torii — corridors of vermilion gates winding up the sacred mountain — are among the most recognizable sights in Japan, and the four-kilometer mountain circuit passes countless smaller shrines and stone foxes.",
+    "prayer_focus": "Abundant harvest (五穀豊穣), prosperity in business (商売繁盛), and household fortune. Fox (kitsune) statues serve as the messengers of Inari.",
+    "best_season": "Year-round; especially atmospheric at dawn and during the February Hatsuuma festival and autumn foliage."
+  },
+
+  "ranks": ["Sohonsha", "Kanpei-Taisha", "Beppyo-sha"],
+
+  "prayer_categories": ["Business", "Harvest", "Wealth", "GoodFortune"],
+
+  "deities": [
+    {
+      "name_romaji": "Uka-no-Mitama-no-Okami",
+      "name_kanji": "宇迦之御魂大神",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Principal Inari deity (主祭神); grain kami venerated for harvest and commerce.",
+      "regional_lore": null,
+      "canonical": {
+        "domain": "Rice, agriculture, and prosperity",
+        "title": null,
+        "deity_type": "origin",
+        "canonical_lore": "The grain spirit at the heart of the Inari cult, a child of Susanoo in the Kojiki, worshipped for the fertility of the fields and the increase of wealth."
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Hatsuuma Taisai",
+      "name_ja": "初午大祭",
+      "time_prose": "The first Day of the Horse (hatsuuma) of the second lunar month — usually in February. Date varies each year.",
+      "origin": "Commemorates the descent of the Inari deity onto Inariyama on the first Day of the Horse in 711.",
+      "meaning": "A petition for a bountiful year and prosperous business, the most important rite of the Inari calendar.",
+      "ritual": "Worshippers receive shirushi-no-sugi (a blessed cedar sprig); the mountain fills with pilgrims through the night.",
+      "prayer": "For abundant harvest and flourishing trade.",
+      "access_type": "public_witness",
+      "visitor_notes": "Among the busiest days of the year at the shrine; expect dense crowds on the lower paths.",
+      "deities": [{ "name_kanji": "宇迦之御魂大神", "role": "Honored deity of the descent" }],
+      "occurrences": []
+    }
+  ],
+
+  "sources": [
+    {
+      "url": "https://inari.jp/",
+      "title": "伏見稲荷大社 公式サイト",
+      "source_type": "official",
+      "note": "Deities, history, and festival calendar."
+    },
+    {
+      "url": "https://ja.wikipedia.org/wiki/伏見稲荷大社",
+      "title": "伏見稲荷大社 - Wikipedia",
+      "source_type": "wikipedia_ja",
+      "note": null
+    }
+  ]
+}

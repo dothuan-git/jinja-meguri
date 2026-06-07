@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "slug": "dazaifu-tenmangu",
+  "name_en": "Dazaifu Tenmangu",
+  "name_ja": "太宰府天満宮",
+  "region": "Kyushu",
+  "prefecture": "Fukuoka",
+  "city": "Dazaifu",
+  "address": "4-7-1 Saifu, Dazaifu, Fukuoka",
+  "coordinates": { "lat": 33.5213, "lng": 130.535 },
+  "notes": "Built over the grave of Sugawara no Michizane; a head shrine of the Tenjin faith.",
+
+  "details": {
+    "history": "Founded in 919 over the tomb of Sugawara no Michizane, the Heian scholar-statesman who died in exile at Dazaifu in 903. After misfortunes struck the capital, he was deified as Tenjin, the kami of learning.",
+    "why_visit": "The spiritual home of students across Japan, who come to pray for academic success; the grounds are famed for some 6,000 plum trees that bloom in late winter.",
+    "prayer_focus": "Academic achievement (学業成就) and success in examinations (合格祈願), petitioned on ema and at the bronze ox statues.",
+    "best_season": "Late February to March for the plum blossoms (Michizane's beloved flower); examination season draws the largest crowds."
+  },
+
+  "ranks": ["Kanpei-Chusha", "Beppyo-sha"],
+
+  "prayer_categories": ["Academics", "ExamSuccess", "WishFulfillment"],
+
+  "deities": [
+    {
+      "name_romaji": "Sugawara no Michizane",
+      "name_kanji": "菅原道真",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Enshrined as Tenjin (主祭神), the kami of scholarship.",
+      "regional_lore": "Slandered and exiled from the court to Dazaifu, Michizane died here in 903. A series of plagues and lightning strikes on the capital were attributed to his vengeful spirit, who was pacified and enshrined as Tenman-Tenjin; over time the storm-god of grievance became the gentle patron of learning.",
+      "canonical": {
+        "domain": "Scholarship, learning, and calligraphy",
+        "title": "Heian-era scholar and statesman (845–903), deified as Tenjin",
+        "deity_type": "deified human",
+        "canonical_lore": "A renowned poet and minister of the Heian court, later venerated nationwide as the kami of academics."
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Jinko-shiki Taisai",
+      "name_ja": "神幸式大祭",
+      "time_prose": "Late September, over several days around the autumnal equinox.",
+      "origin": "The shrine's principal annual festival, re-enacting the consolation of Michizane's spirit.",
+      "meaning": "To comfort the enshrined kami and pray for peace and learning.",
+      "ritual": "A grand procession bears the divine palanquin (o-mikoshi) through the town in Heian-style costume.",
+      "prayer": "For scholarship, and for the repose and favor of Tenjin.",
+      "access_type": "public_witness",
+      "visitor_notes": "The costumed evening procession is the highlight; the approach fills with festival stalls.",
+      "deities": [{ "name_kanji": "菅原道真", "role": "Honored kami borne in the procession" }],
+      "occurrences": [{ "start_date": "2026-09-21", "end_date": "2026-09-25" }]
+    }
+  ],
+
+  "sources": [
+    {
+      "url": "https://www.dazaifutenmangu.or.jp/",
+      "title": "太宰府天満宮 公式サイト",
+      "source_type": "official",
+      "note": "Deity, history, and festival schedule."
+    },
+    {
+      "url": "https://ja.wikipedia.org/wiki/太宰府天満宮",
+      "title": "太宰府天満宮 - Wikipedia",
+      "source_type": "wikipedia_ja",
+      "note": null
+    }
+  ]
+}
