@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "slug": "meiji-jingu",
+  "name_en": "Meiji Jingu",
+  "name_ja": "明治神宮",
+  "region": "Kanto",
+  "prefecture": "Tokyo",
+  "city": "Tokyo",
+  "address": "1-1 Yoyogikamizonocho, Shibuya Ward, Tokyo",
+  "coordinates": { "lat": 35.6764, "lng": 139.6993 },
+  "notes": "A forest shrine in central Tokyo planted with some 100,000 donated trees.",
+
+  "details": {
+    "history": "Established in 1920 to enshrine the spirits of Emperor Meiji and Empress Shoken, set within an artificial evergreen forest designed to mature over centuries.",
+    "why_visit": "One of Japan's most visited shrines, drawing millions for hatsumode, and a tranquil expanse of woodland minutes from Harajuku.",
+    "prayer_focus": "Family harmony (家内安全), peace of the nation, and the fulfillment of heartfelt wishes, often written on ema beneath the great camphor trees.",
+    "best_season": "New Year for hatsumode; fresh green in early summer; the November autumn festival."
+  },
+
+  "ranks": ["Chokusaisha", "Kanpei-Taisha", "Beppyo-sha"],
+
+  "prayer_categories": ["FamilySafety", "NationalPeace", "WishFulfillment"],
+
+  "deities": [
+    {
+      "name_romaji": "Emperor Meiji",
+      "name_kanji": "明治天皇",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Enshrined sovereign (主祭神) of the Meiji era.",
+      "regional_lore": "Enshrined here together with his consort in 1920, eight years after his death, by national subscription; the surrounding forest was raised from saplings donated from every province of Japan and the colonies.",
+      "canonical": {
+        "domain": "Imperial rule and the modernization of Japan",
+        "title": "122nd Emperor of Japan (1852–1912)",
+        "deity_type": "deified human",
+        "canonical_lore": "The emperor under whom Japan transformed from a feudal society into a modern state during the Meiji Restoration."
+      }
+    },
+    {
+      "name_romaji": "Empress Shoken",
+      "name_kanji": "昭憲皇太后",
+      "is_primary": false,
+      "sort_order": 2,
+      "role": "Enshrined consort of Emperor Meiji.",
+      "regional_lore": null,
+      "canonical": {
+        "domain": "Charity, education, and welfare",
+        "title": "Empress consort of Emperor Meiji (1849–1914)",
+        "deity_type": "deified human",
+        "canonical_lore": "Remembered for her patronage of women's education and of the Red Cross in Japan."
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Spring Grand Festival",
+      "name_ja": "春の大祭",
+      "time_prose": "Late April to early May, around the Showa Day holiday.",
+      "origin": "An annual rite honoring the enshrined spirits, paired with public performances of classical arts.",
+      "meaning": "Thanksgiving and prayer for the peace and prosperity of the nation.",
+      "ritual": "Court music (gagaku), bugaku dance, noh, and yabusame horseback archery are offered before the deities.",
+      "prayer": "For national peace and the people's wellbeing.",
+      "access_type": "public_witness",
+      "visitor_notes": "The traditional-arts offerings are free to watch on the festival grounds.",
+      "deities": [{ "name_kanji": "明治天皇", "role": "Honored sovereign" }],
+      "occurrences": [{ "start_date": "2026-04-29", "end_date": "2026-05-03" }]
+    }
+  ],
+
+  "sources": [
+    {
+      "url": "https://www.meijijingu.or.jp/",
+      "title": "明治神宮 公式サイト",
+      "source_type": "official",
+      "note": "Enshrined deities, grounds, and annual rites."
+    },
+    {
+      "url": "https://ja.wikipedia.org/wiki/明治神宮",
+      "title": "明治神宮 - Wikipedia",
+      "source_type": "wikipedia_ja",
+      "note": null
+    }
+  ]
+}

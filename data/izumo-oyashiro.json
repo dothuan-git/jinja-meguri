@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "slug": "izumo-oyashiro",
+  "name_en": "Izumo Oyashiro",
+  "name_ja": "出雲大社",
+  "region": "Chugoku",
+  "prefecture": "Shimane",
+  "city": "Izumo",
+  "address": "195 Taishacho Kizukihigashi, Izumo, Shimane",
+  "coordinates": { "lat": 35.4019, "lng": 132.6853 },
+  "notes": "One of the oldest and most revered shrines in Japan; worshippers clap four times rather than two.",
+
+  "details": {
+    "history": "Of mythic antiquity, the shrine is tied in the Kojiki and Nihon Shoki to the kuni-yuzuri, the ceding of the land by Okuninushi to the heavenly deities, in return for which the great shrine was built.",
+    "why_visit": "The towering honden and the colossal shimenawa rope of the Kagura-den make Izumo unforgettable; it is the foremost shrine of enmusubi, the binding of good relationships.",
+    "prayer_focus": "Matchmaking and good relationships (縁結び), good marriage, and fortune.",
+    "best_season": "The 10th lunar month — known elsewhere as Kannazuki (month without gods) but at Izumo as Kamiarizuki, the month the gods gather here."
+  },
+
+  "ranks": ["Ichinomiya", "Kanpei-Taisha", "Beppyo-sha"],
+
+  "prayer_categories": ["Matchmaking", "Marriage", "GoodFortune"],
+
+  "deities": [
+    {
+      "name_romaji": "Okuninushi-no-Okami",
+      "name_kanji": "大国主大神",
+      "is_primary": true,
+      "sort_order": 1,
+      "role": "Principal deity (主祭神); kami of nation-building and of binding relationships.",
+      "regional_lore": "At Izumo, Okuninushi is honored as the builder of the land who ceded it to the heavenly grandchild (kuni-yuzuri) and withdrew into the unseen realm of relationships and fate; from this he became the great matchmaking kami, said to convene the assembled gods each autumn to decide the year's unions.",
+      "canonical": {
+        "domain": "Nation-building, marriage, and fortune",
+        "title": null,
+        "deity_type": "origin",
+        "canonical_lore": "A descendant of Susanoo who, with Sukunabikona, pacified and developed the land of Izumo before ceding it to the heavenly deities. (Kojiki / Nihon Shoki)"
+      }
+    }
+  ],
+
+  "events": [
+    {
+      "name_en": "Kamiari-sai",
+      "name_ja": "神在祭",
+      "time_prose": "The 10th lunar month (Kamiarizuki) — in 2026, late November. Dates set annually by the lunar calendar.",
+      "origin": "When the myriad gods of Japan are believed to leave their own shrines and gather at Izumo to deliberate on human affairs and relationships.",
+      "meaning": "A solemn reception of the assembled deities and a petition for auspicious bonds in the coming year.",
+      "ritual": "The Karasade rites welcome and later send off the gods; the shrine observes strict quiet during the divine assembly.",
+      "prayer": "For good relationships and fortunate unions.",
+      "access_type": "pilgrimage_experience",
+      "visitor_notes": "The most spiritually charged period at Izumo; visitors are asked to keep a reverent quiet during the rites.",
+      "deities": [{ "name_kanji": "大国主大神", "role": "Host of the assembled gods" }],
+      "occurrences": [{ "start_date": "2026-11-19", "end_date": "2026-11-25" }]
+    }
+  ],
+
+  "sources": [
+    {
+      "url": "https://izumooyashiro.or.jp/",
+      "title": "出雲大社 公式サイト",
+      "source_type": "official",
+      "note": "Deities, history, and Kamiari-sai rites."
+    },
+    {
+      "url": "https://ja.wikipedia.org/wiki/出雲大社",
+      "title": "出雲大社 - Wikipedia",
+      "source_type": "wikipedia_ja",
+      "note": null
+    }
+  ]
+}
