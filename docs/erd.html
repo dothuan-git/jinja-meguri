@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shinto Shrine DB — ERD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #1a1614;
+    --paper:      #f4ede1;
+    --paper-deep: #ece1cf;
+    --vermilion:  #b1432f;   /* torii red */
+    --vermilion-d:#8f3525;
+    --gold:       #a8842c;
+    --sumi:       #2c2622;
+    --moss:       #5d6648;
+    --indigo:     #2f3b4c;
+    --line:       #d8c9b0;
+    --card-bg:    #fbf6ec;
+    --shadow:     rgba(60,40,20,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(177,67,47,0.05), transparent 42%),
+      radial-gradient(circle at 82% 78%, rgba(47,59,76,0.05), transparent 45%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    line-height: 1.55;
+    padding: 0 0 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: relative;
+    padding: 4.5rem 2rem 3rem;
+    text-align: center;
+    border-bottom: 2px solid var(--ink);
+    overflow: hidden;
+  }
+  header::before {
+    content: "⛩";
+    position: absolute;
+    font-size: 22rem;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-46%);
+    color: var(--vermilion);
+    opacity: 0.06;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .42em;
+    text-transform: uppercase;
+    color: var(--vermilion-d);
+    margin-bottom: 1.2rem;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: clamp(2.6rem, 6vw, 4.6rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    position: relative;
+  }
+  h1 .ja {
+    display: block;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1rem, 2.4vw, 1.5rem);
+    letter-spacing: .35em;
+    color: var(--sumi);
+    margin-top: .7rem;
+    opacity: .8;
+  }
+  .sub {
+    max-width: 56ch;
+    margin: 1.6rem auto 0;
+    font-size: .98rem;
+    color: #5a4d40;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.18rem;
+  }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem 2rem;
+    justify-content: center;
+    max-width: 1180px;
+    margin: 2.4rem auto 0;
+    padding: 1.2rem 2rem;
+    font-size: .8rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: .55rem; font-family: 'JetBrains Mono', monospace; letter-spacing: .03em; }
+  .swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
+  .rel-key { display:flex; align-items:center; gap:.45rem; font-family:'JetBrains Mono', monospace; font-size:.78rem; }
+
+  /* ---------- Canvas ---------- */
+  .canvas {
+    max-width: 1280px;
+    margin: 3rem auto 0;
+    padding: 0 1.6rem;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.4rem;
+    position: relative;
+  }
+  .layer-label {
+    grid-column: 1 / -1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 2rem;
+    padding-bottom: .4rem;
+    border-bottom: 1px dashed var(--line);
+    display: flex; align-items: baseline; gap: .8rem;
+  }
+  .layer-label::before { content: ""; width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); display:inline-block; }
+
+  /* ---------- Table card ---------- */
+  .tbl {
+    background: var(--card-bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 4px 5px 0 var(--shadow);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease;
+    display: flex; flex-direction: column;
+    animation: rise .6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .tbl:hover { transform: translate(-2px,-2px); box-shadow: 7px 8px 0 var(--shadow); }
+  .tbl.dim { opacity: .28; filter: grayscale(.4); }
+  .tbl.focus { box-shadow: 6px 7px 0 var(--vermilion); }
+
+  .tbl-head {
+    padding: .7rem .85rem .6rem;
+    border-bottom: 1.5px solid var(--ink);
+    display: flex; align-items: center; gap: .5rem;
+    color: #fff;
+  }
+  .tbl-head .name { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: .92rem; letter-spacing: .02em; }
+  .tbl-head .badge { margin-left: auto; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; padding: .15rem .4rem; border-radius: 2px; background: rgba(255,255,255,.22); font-family: 'JetBrains Mono', monospace; }
+
+  /* color families */
+  .c-ref  .tbl-head { background: var(--moss); }
+  .c-core .tbl-head { background: var(--vermilion); }
+  .c-junc .tbl-head { background: var(--indigo); }
+  .c-prose .tbl-head{ background: var(--gold); }
+  .c-event .tbl-head{ background: var(--sumi); }
+
+  .c-ref   { border-color: var(--moss); }
+  .c-core  { border-color: var(--vermilion); }
+  .c-junc  { border-color: var(--indigo); }
+  .c-prose { border-color: var(--gold); }
+  .c-event { border-color: var(--sumi); }
+
+  .cols { list-style: none; font-family: 'JetBrains Mono', monospace; font-size: .76rem; }
+  .cols li {
+    padding: .32rem .85rem;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: .4rem;
+    color: #3a322b;
+  }
+  .cols li:last-child { border-bottom: none; }
+  .cols li .col { font-weight: 500; }
+  .cols li .type { margin-left: auto; color: #9a8c78; font-size: .68rem; font-style: italic; }
+  .k { display:inline-block; width: 1.5em; font-size: .62rem; font-weight: 700; }
+  .pk { color: var(--vermilion-d); }
+  .fk { color: var(--indigo); }
+  .uq { color: var(--moss); }
+  .cols li.rel { background: rgba(177,67,47,.05); }
+
+  /* ---------- spans ---------- */
+  .span2 { grid-column: span 2; } .span3 { grid-column: span 3; }
+  .span4 { grid-column: span 4; } .span5 { grid-column: span 5; }
+  .span6 { grid-column: span 6; }
+  @media (max-width: 900px) {
+    .canvas { grid-template-columns: repeat(6, 1fr); }
+    .span2,.span3 { grid-column: span 3; }
+    .span4,.span5,.span6 { grid-column: span 6; }
+  }
+  @media (max-width: 560px) {
+    .canvas { grid-template-columns: 1fr; }
+    .tbl { grid-column: 1 / -1 !important; }
+  }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---------- Footnote ---------- */
+  .note {
+    max-width: 760px; margin: 4rem auto 0; padding: 1.8rem 2rem;
+    border-left: 3px solid var(--vermilion);
+    background: var(--paper-deep);
+    font-size: .9rem; color: #4a3f33;
+  }
+  .note h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: .6rem; }
+  .note code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,.06); padding: .05rem .35rem; border-radius: 3px; font-size: .82em; }
+  .note p { margin-bottom: .6rem; }
+
+  .hint { text-align:center; font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.1em; color:#9a8c78; margin-top:2.4rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Entity Relationship Diagram</div>
+  <h1>Shinto Shrine Database
+    <span class="ja">神社データベース 設計図</span>
+  </h1>
+  <p class="sub">A normalized relational model for shrine discovery, deity lore, and the festival calendar.</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><span class="swatch" style="background:var(--moss)"></span>Reference / vocabulary</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--vermilion)"></span>Core entity</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--indigo)"></span>Junction (M:N)</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--gold)"></span>Prose / detail</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--sumi)"></span>Events</div>
+  <span style="width:1px;height:20px;background:var(--line)"></span>
+  <div class="rel-key"><span class="pk">PK</span> primary</div>
+  <div class="rel-key"><span class="fk">FK</span> foreign</div>
+  <div class="rel-key"><span class="uq">UQ</span> unique</div>
+</div>
+
+<main class="canvas" id="canvas">
+
+  <!-- ===== REFERENCE LAYER ===== -->
+  <div class="layer-label">Reference &amp; Controlled Vocabulary</div>
+
+  <div class="tbl c-ref span3" data-tbl="regions">
+    <div class="tbl-head"><span class="name">regions</span><span class="badge">8 rows</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">smallint</span></li>
+      <li><span class="k uq">UQ</span><span class="col">name_en</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">name_ja</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-ref span3" data-tbl="prefectures">
+    <div class="tbl-head"><span class="name">prefectures</span><span class="badge">~47</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">smallint</span></li>
+      <li><span class="k uq">UQ</span><span class="col">name_en</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">name_ja</span><span class="type">text</span></li>
+      <li class="rel" data-ref="regions"><span class="k fk">FK</span><span class="col">region_id</span><span class="type">→ regions</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-ref span3" data-tbl="ranks">
+    <div class="tbl-head"><span class="name">ranks</span><span class="badge">vocab</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">smallint</span></li>
+      <li><span class="k uq">UQ</span><span class="col">code</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">name_en / ja</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">rank_order</span><span class="type">smallint</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-ref span3" data-tbl="prayer_categories">
+    <div class="tbl-head"><span class="name">prayer_categories</span><span class="badge">24</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">smallint</span></li>
+      <li><span class="k uq">UQ</span><span class="col">code</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">name_en / ja</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <!-- ===== CORE LAYER ===== -->
+  <div class="layer-label">Core Entities</div>
+
+  <div class="tbl c-core span6" data-tbl="shrines">
+    <div class="tbl-head"><span class="name">shrines</span><span class="badge">entity</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">integer</span></li>
+      <li><span class="k uq">UQ</span><span class="col">slug</span><span class="type">text · routing</span></li>
+      <li><span class="k"></span><span class="col">name_en / name_ja</span><span class="type">text</span></li>
+      <li class="rel" data-ref="prefectures"><span class="k fk">FK</span><span class="col">prefecture_id</span><span class="type">→ prefectures</span></li>
+      <li class="rel" data-ref="regions"><span class="k fk">FK</span><span class="col">region_id</span><span class="type">→ regions (denorm)</span></li>
+      <li><span class="k"></span><span class="col">city / address</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">coordinates</span><span class="type">geography(Point) · PostGIS</span></li>
+      <li><span class="k"></span><span class="col">notes</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-core span6" data-tbl="deities">
+    <div class="tbl-head"><span class="name">deities</span><span class="badge">canonical</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">integer</span></li>
+      <li><span class="k"></span><span class="col">name_romaji</span><span class="type">text</span></li>
+      <li><span class="k uq">UQ</span><span class="col">name_kanji</span><span class="type">text · dedup key</span></li>
+      <li><span class="k"></span><span class="col">domain</span><span class="type">text · portfolio only</span></li>
+      <li><span class="k"></span><span class="col">title</span><span class="type">text · human identity</span></li>
+      <li><span class="k"></span><span class="col">deity_type</span><span class="type">enum</span></li>
+      <li><span class="k"></span><span class="col">canonical_lore</span><span class="type">text · fallback</span></li>
+    </ul>
+  </div>
+
+  <!-- ===== JUNCTION + PROSE LAYER ===== -->
+  <div class="layer-label">Relationships &amp; Per-Shrine Detail</div>
+
+  <div class="tbl c-junc span3" data-tbl="shrine_deities">
+    <div class="tbl-head"><span class="name">shrine_deities</span><span class="badge">M:N</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li class="rel" data-ref="deities"><span class="k fk">FK</span><span class="col">deity_id</span><span class="type">→ deities</span></li>
+      <li><span class="k"></span><span class="col">is_primary</span><span class="type">bool</span></li>
+      <li><span class="k"></span><span class="col">sort_order</span><span class="type">smallint</span></li>
+      <li><span class="k"></span><span class="col">role</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">regional_lore</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-junc span3" data-tbl="shrine_ranks">
+    <div class="tbl-head"><span class="name">shrine_ranks</span><span class="badge">M:N</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li class="rel" data-ref="ranks"><span class="k fk">FK</span><span class="col">rank_id</span><span class="type">→ ranks</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-junc span3" data-tbl="shrine_prayer_categories">
+    <div class="tbl-head"><span class="name">shrine_prayer_categories</span><span class="badge">M:N · filter</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li class="rel" data-ref="prayer_categories"><span class="k fk">FK</span><span class="col">category_id</span><span class="type">→ prayer_categories</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-prose span3" data-tbl="shrine_details">
+    <div class="tbl-head"><span class="name">shrine_details</span><span class="badge">1:1</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrines"><span class="k pk">PK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li><span class="k"></span><span class="col">history</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">why_visit</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">prayer_focus</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">best_season</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-prose span3" data-tbl="sources">
+    <div class="tbl-head"><span class="name">sources</span><span class="badge">provenance</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">integer</span></li>
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li><span class="k"></span><span class="col">url / title</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">source_type</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">note</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <!-- ===== EVENT LAYER ===== -->
+  <div class="layer-label">Festivals &amp; Calendar</div>
+
+  <div class="tbl c-event span4" data-tbl="events">
+    <div class="tbl-head"><span class="name">events</span><span class="badge">festival def</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">integer</span></li>
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines</span></li>
+      <li><span class="k"></span><span class="col">name_en / name_ja</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">time_prose</span><span class="type">text · display</span></li>
+      <li><span class="k"></span><span class="col">origin / meaning</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">ritual / prayer</span><span class="type">text</span></li>
+      <li><span class="k"></span><span class="col">access_type</span><span class="type">enum</span></li>
+      <li><span class="k"></span><span class="col">visitor_notes</span><span class="type">text</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-event span4" data-tbl="event_occurrences">
+    <div class="tbl-head"><span class="name">event_occurrences</span><span class="badge">★ calendar</span></div>
+    <ul class="cols">
+      <li><span class="k pk">PK</span><span class="col">id</span><span class="type">integer</span></li>
+      <li class="rel" data-ref="events"><span class="k fk">FK</span><span class="col">event_id</span><span class="type">→ events</span></li>
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines (denorm)</span></li>
+      <li><span class="k"></span><span class="col">start_date</span><span class="type">date · indexed</span></li>
+      <li><span class="k"></span><span class="col">end_date</span><span class="type">date · indexed</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-event span4" data-tbl="event_deities">
+    <div class="tbl-head"><span class="name">event_deities</span><span class="badge">M:N</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="events"><span class="k fk">FK</span><span class="col">event_id</span><span class="type">→ events</span></li>
+      <li class="rel" data-ref="deities"><span class="k fk">FK</span><span class="col">deity_id</span><span class="type">→ deities</span></li>
+      <li><span class="k"></span><span class="col">role</span><span class="type">text · event ctx</span></li>
+    </ul>
+  </div>
+
+  <!-- ===== SEARCH LAYER ===== -->
+  <div class="layer-label">Search (derived)</div>
+
+  <div class="tbl c-prose span6" data-tbl="shrine_search">
+    <div class="tbl-head"><span class="name">shrine_search</span><span class="badge">materialized view</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrines"><span class="k fk">FK</span><span class="col">shrine_id</span><span class="type">→ shrines (1 row/shrine)</span></li>
+      <li><span class="k"></span><span class="col">search_blob</span><span class="type">text · trigram (JP + fuzzy)</span></li>
+      <li><span class="k"></span><span class="col">search_tsv</span><span class="type">tsvector · ranked EN</span></li>
+      <li><span class="k"></span><span class="col">name_en / name_ja / city / slug</span><span class="type">passthrough</span></li>
+    </ul>
+  </div>
+
+  <div class="tbl c-prose span6" data-tbl="shrine_deity_lore_v">
+    <div class="tbl-head"><span class="name">shrine_deity_lore</span><span class="badge">view · COALESCE</span></div>
+    <ul class="cols">
+      <li class="rel" data-ref="shrine_deities"><span class="k"></span><span class="col">shrine_id, deity_id</span><span class="type">from shrine_deities</span></li>
+      <li><span class="k"></span><span class="col">lore</span><span class="type">COALESCE(regional, canonical)</span></li>
+      <li><span class="k"></span><span class="col">is_regional</span><span class="type">bool</span></li>
+    </ul>
+  </div>
+
+</main>
+
+<div class="hint">Hover any foreign-key row to trace its relationship · click a table to isolate it</div>
+
+<div class="note">
+  <h3>Reading the model</h3>
+  <p><strong>The calendar lives in two tables.</strong> <code>events</code> defines a festival once (lore, plus <code>time_prose</code> like “2nd Sunday of May”). <code>event_occurrences</code> holds the concrete dated rows you upload each January — the only table the calendar queries, via date-range overlap.</p>
+  <p><strong>Lore has a fallback.</strong> Regional deity lore on <code>shrine_deities.lore</code> takes priority; <code>deities.canonical_lore</code> is the Kojiki-level backup. Read-time <code>COALESCE</code> applies the “prefer regional” rule.</p>
+  <p><strong>Filters are facets, not prose.</strong> <code>shrine_categories</code> (“strong for”), <code>shrine_types</code> (all ranks as rows), region and prefecture are all joinable — the listing page filters on rows, never on text.</p>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const tables = [...document.querySelectorAll('.tbl')];
+
+  // Hover an FK row -> highlight source + referenced table
+  document.querySelectorAll('.cols li.rel').forEach(li => {
+    li.addEventListener('mouseenter', () => {
+      const refName = li.dataset.ref;
+      const srcTbl = li.closest('.tbl').dataset.tbl;
+      tables.forEach(t => {
+        const n = t.dataset.tbl;
+        if (n === refName || n === srcTbl) { t.classList.add('focus'); t.classList.remove('dim'); }
+        else t.classList.add('dim');
+      });
+    });
+    li.addEventListener('mouseleave', clear);
+  });
+
+  // Click a table -> isolate it + everything it references / is referenced by
+  let locked = null;
+  tables.forEach(t => {
+    t.querySelector('.tbl-head').addEventListener('click', () => {
+      const name = t.dataset.tbl;
+      if (locked === name) { locked = null; clear(); return; }
+      locked = name;
+      const related = new Set([name]);
+      // tables this one references
+      t.querySelectorAll('.cols li.rel').forEach(li => related.add(li.dataset.ref));
+      // tables that reference this one
+      document.querySelectorAll('.cols li.rel').forEach(li => {
+        if (li.dataset.ref === name) related.add(li.closest('.tbl').dataset.tbl);
+      });
+      tables.forEach(x => {
+        if (related.has(x.dataset.tbl)) { x.classList.add('focus'); x.classList.remove('dim'); }
+        else { x.classList.add('dim'); x.classList.remove('focus'); }
+      });
+    });
+  });
+
+  function clear() {
+    if (locked) return;
+    tables.forEach(t => { t.classList.remove('dim','focus'); });
+  }
+  // staggered entrance
+  tables.forEach((t,i) => t.style.animationDelay = (i*55)+'ms');
+</script>
+</body>
+</html>
