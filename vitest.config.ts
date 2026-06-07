@@ -9,6 +9,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL(".", import.meta.url)),
+      // `server-only`'s real default export throws outside React Server; stub it for tests.
+      "server-only": fileURLToPath(new URL("./lib/test/server-only-stub.ts", import.meta.url)),
     },
   },
 });
