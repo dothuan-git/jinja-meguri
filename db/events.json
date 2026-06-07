@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "shrine_id": 1,
+    "name_en": "Annual Grand Festival",
+    "name_ja": "例大祭",
+    "time_prose": "August 1 each year.",
+    "origin": "The shrine's principal annual rite, historically tied to the imperial court's recognition of Hikawa as the ichinomiya of Musashi.",
+    "meaning": "Thanksgiving and petition for the peace and prosperity of the region.",
+    "ritual": "Formal offerings (shinsen), kagura dance, and the dispatch of an imperial envoy in recognition of the shrine's chokusaisha status.",
+    "prayer": "For regional peace and bountiful harvests.",
+    "access_type": "public_witness",
+    "visitor_notes": "Ceremonies are largely formal; the approach and grounds are open to visitors."
+  },
+  {
+    "id": 2,
+    "shrine_id": 2,
+    "name_en": "Gion Festival",
+    "name_ja": "祇園祭",
+    "time_prose": "Throughout July; Yamaboko Junko float processions on July 17 (Saki Matsuri) and July 24 (Ato Matsuri).",
+    "origin": "Originated in 869 as a goryo-e rite to dispel a nationwide epidemic, sending 66 halberds to the Shinsen-en garden for the provinces of Japan.",
+    "meaning": "A purification of the city and a petition for protection from pestilence and disaster.",
+    "ritual": "Mikoshi processions, the towering yamaboko floats, and the Yamaboko Junko parade through central Kyoto.",
+    "prayer": "For freedom from disease and disaster.",
+    "access_type": "public_witness",
+    "visitor_notes": "The float processions on the 17th and 24th draw large crowds; arrive early along Shijo-dori."
+  }
+]

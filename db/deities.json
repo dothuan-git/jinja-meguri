@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name_romaji": "Onamuchi-no-Mikoto",
+    "name_kanji": "大己貴命",
+    "domain": "Nation-building, medicine, and human relationships",
+    "title": null,
+    "deity_type": "origin",
+    "canonical_lore": "Also known as Okuninushi, the kami who pacified and built the land of Izumo before ceding it to the heavenly deities. (Kojiki / Nihon Shoki)"
+  },
+  {
+    "id": 2,
+    "name_romaji": "Susanoo-no-Mikoto",
+    "name_kanji": "素戔嗚尊",
+    "domain": "Storms, sea, and the slaying of Yamata-no-Orochi",
+    "title": null,
+    "deity_type": "origin",
+    "canonical_lore": "Born from Izanagi's nose and banished from Takamagahara, Susanoo slew the eight-headed serpent Yamata-no-Orochi and recovered the sword Kusanagi. (Kojiki / Nihon Shoki)"
+  },
+  {
+    "id": 3,
+    "name_romaji": "Kushinadahime-no-Mikoto",
+    "name_kanji": "櫛稲田姫命",
+    "domain": "Rice fields and marital harmony",
+    "title": null,
+    "deity_type": "origin",
+    "canonical_lore": "The maiden rescued by Susanoo from Yamata-no-Orochi and taken as his wife."
+  }
+]

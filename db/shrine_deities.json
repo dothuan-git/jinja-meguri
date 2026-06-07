@@ -1,0 +1,42 @@
+[
+  {
+    "shrine_id": 1,
+    "deity_id": 2,
+    "is_primary": true,
+    "sort_order": 1,
+    "role": "Principal deity (主祭神) of the Hikawa network.",
+    "regional_lore": null
+  },
+  {
+    "shrine_id": 1,
+    "deity_id": 3,
+    "is_primary": false,
+    "sort_order": 2,
+    "role": "Consort enshrined with Susanoo; venerated here for matchmaking.",
+    "regional_lore": null
+  },
+  {
+    "shrine_id": 1,
+    "deity_id": 1,
+    "is_primary": false,
+    "sort_order": 3,
+    "role": "Descendant of Susanoo; deity of nation-building and good relationships.",
+    "regional_lore": null
+  },
+  {
+    "shrine_id": 2,
+    "deity_id": 2,
+    "is_primary": true,
+    "sort_order": 1,
+    "role": "Chief enshrined deity (主祭神); protector against plague and misfortune.",
+    "regional_lore": "At Yasaka, Susanoo was long venerated in a fused identity with Gozu Tenno (牛頭天王), the Buddhist-derived deity of pestilence, until the 1868 separation restored his Shinto name. The Gion Matsuri originated as a goryo-e rite to appease him and quell epidemics."
+  },
+  {
+    "shrine_id": 2,
+    "deity_id": 3,
+    "is_primary": false,
+    "sort_order": 2,
+    "role": "Consort of Susanoo, enshrined alongside him.",
+    "regional_lore": null
+  }
+]

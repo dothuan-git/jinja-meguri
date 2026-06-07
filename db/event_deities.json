@@ -1,0 +1,12 @@
+[
+  {
+    "event_id": 1,
+    "deity_id": 2,
+    "role": "Principal honored deity"
+  },
+  {
+    "event_id": 2,
+    "deity_id": 2,
+    "role": "Honored deity carried in the mikoshi"
+  }
+]

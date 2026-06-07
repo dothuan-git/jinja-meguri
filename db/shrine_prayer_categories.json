@@ -1,0 +1,26 @@
+[
+  {
+    "shrine_id": 1,
+    "category_id": 6
+  },
+  {
+    "shrine_id": 1,
+    "category_id": 7
+  },
+  {
+    "shrine_id": 1,
+    "category_id": 10
+  },
+  {
+    "shrine_id": 2,
+    "category_id": 17
+  },
+  {
+    "shrine_id": 2,
+    "category_id": 11
+  },
+  {
+    "shrine_id": 2,
+    "category_id": 14
+  }
+]
