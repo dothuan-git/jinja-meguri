@@ -1,6 +1,5 @@
 import "server-only";
-import fs from "node:fs";
-import path from "node:path";
+import pg from "pg";
 import type { Store } from "@/lib/types";
 
 const TABLES: (keyof Store)[] = [
@@ -28,16 +27,79 @@ export function buildStore(raw: Record<string, unknown[]>): Store {
   return store;
 }
 
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: true,
+  max: 2,
+});
+
 let cached: Store | null = null;
 
-export function loadStore(): Store {
+export async function loadStore(): Promise<Store> {
   if (cached) return cached;
-  const dbDir = path.join(process.cwd(), "db");
-  const raw: Record<string, unknown[]> = {};
-  for (const t of TABLES) {
-    const fp = path.join(dbDir, `${t}.json`);
-    raw[t] = fs.existsSync(fp) ? JSON.parse(fs.readFileSync(fp, "utf-8")) : [];
+
+  const client = await pool.connect();
+  try {
+    const raw: Record<string, unknown[]> = {};
+
+    const [
+      regions,
+      prefectures,
+      ranks,
+      prayerCategories,
+      deities,
+      shrinesRaw,
+      shrineDeities,
+      shrineRanks,
+      shrinePrayerCategories,
+      shrineDetails,
+      events,
+      eventDeities,
+      occurrencesRaw,
+      sources,
+      shrineSearchRaw,
+    ] = await Promise.all([
+      client.query("SELECT * FROM regions"),
+      client.query("SELECT * FROM prefectures"),
+      client.query("SELECT * FROM ranks"),
+      client.query("SELECT * FROM prayer_categories"),
+      client.query("SELECT * FROM deities"),
+      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, notes FROM shrines"),
+      client.query("SELECT * FROM shrine_deities"),
+      client.query("SELECT * FROM shrine_ranks"),
+      client.query("SELECT * FROM shrine_prayer_categories"),
+      client.query("SELECT * FROM shrine_details"),
+      client.query("SELECT * FROM events"),
+      client.query("SELECT * FROM event_deities"),
+      client.query("SELECT id, event_id, shrine_id, start_date::text, end_date::text FROM event_occurrences"),
+      client.query("SELECT * FROM sources"),
+      client.query("SELECT shrine_id, slug, name_en, name_ja, city, search_blob FROM shrine_search"),
+    ]);
+
+    raw["regions"] = regions.rows;
+    raw["prefectures"] = prefectures.rows;
+    raw["ranks"] = ranks.rows;
+    raw["prayer_categories"] = prayerCategories.rows;
+    raw["deities"] = deities.rows;
+    raw["shrines"] = shrinesRaw.rows.map((r) => ({
+      ...r,
+      coordinates: r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null,
+      lat: undefined,
+      lng: undefined,
+    }));
+    raw["shrine_deities"] = shrineDeities.rows;
+    raw["shrine_ranks"] = shrineRanks.rows;
+    raw["shrine_prayer_categories"] = shrinePrayerCategories.rows;
+    raw["shrine_details"] = shrineDetails.rows;
+    raw["events"] = events.rows;
+    raw["event_deities"] = eventDeities.rows;
+    raw["event_occurrences"] = occurrencesRaw.rows;
+    raw["sources"] = sources.rows;
+    raw["shrine_search"] = shrineSearchRaw.rows;
+
+    cached = buildStore(raw);
+    return cached;
+  } finally {
+    client.release();
   }
-  cached = buildStore(raw);
-  return cached;
 }
