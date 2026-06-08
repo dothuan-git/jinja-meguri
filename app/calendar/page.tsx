@@ -6,8 +6,8 @@ import type { CalendarEntry } from "@/lib/types";
 
 const YEAR = 2026; // dummy occurrences are seeded for 2026
 
-export default function CalendarPage() {
-  const store = loadStore();
+export default async function CalendarPage() {
+  const store = await loadStore();
   const months: Record<number, CalendarEntry[]> = {};
   for (let m = 1; m <= 12; m++) months[m] = entriesForMonth(store, YEAR, m);
   const facets = getFacetCatalogs(store);

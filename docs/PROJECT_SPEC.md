@@ -37,19 +37,19 @@ Booking/ticketing/e-commerce · user accounts/social · real-time data (crowds, 
 |------|--------|-------|
 | Frontend | **Next.js (App Router) + React + TypeScript** | SSG/ISR for shrine pages. Chosen for intercepting/parallel routes (detail-as-modal) and static rendering — **not** for SEO (dropped). |
 | Hosting | **Vercel Hobby** or **Cloudflare Pages** | Free. |
-| Database | **Supabase (free tier)** — PostgreSQL + PostGIS + pg_trgm | 500 MB / 5 GB bandwidth is ample at this scale. |
+| Database | **Neon** — serverless PostgreSQL + pg_trgm | Free tier (0.5 GB) is ample at this scale. |
 | Maps | **Google Maps keyless embed iframe** | No API key, no Cloud project. Detail page only. See §8. |
 | Search | **Postgres FTS + pg_trgm** via the `shrine_search` materialized view | All in-DB. |
 | Ingest | **Single standalone Python file** (`psycopg` v3) | Disposable; not coupled to the app. |
 | i18n | **English UI + Japanese terms inline** | No language toggle in v1. |
 
-**Supabase free-tier caveat:** projects pause after **7 days of inactivity** (~30s cold start). Mitigated by (a) SSG/ISR so most page views never hit the DB, and (b) a twice-weekly keep-alive cron (GitHub Actions). The ingest script connects via the **Session pooler** URI (the Direct connection is IPv6-only; the Transaction pooler breaks multi-statement transactions).
+**Neon note:** compute scales to zero after inactivity but this has no user-visible impact because the site is fully static — the DB is only hit at build time. Use `DATABASE_URL_UNPOOLED` (direct connection) for migrations and `DATABASE_URL` (pooled via PgBouncer) for build-time queries.
 
 ---
 
 ## 4. Data Model
 
-PostgreSQL + PostGIS. Full DDL in `schema.sql` (14 tables + 1 view + 1 materialized view). **Naming rule:** catalog = bare plural noun (`ranks`, `deities`); junction = `shrine_` + that noun.
+PostgreSQL (Neon). Full DDL in `schema.sql` (14 tables + 1 view + 1 materialized view). **Naming rule:** catalog = bare plural noun (`ranks`, `deities`); junction = `shrine_` + that noun.
 
 **Tables:** `regions`, `prefectures`, `ranks`, `prayer_categories` (controlled vocab); `deities`, `shrines` (core); `shrine_deities`, `shrine_ranks`, `shrine_prayer_categories`, `event_deities` (junctions); `shrine_details` (1:1 prose); `events`, `event_occurrences` (calendar); `sources` (provenance). **Views:** `shrine_deity_lore` (lore priority), `shrine_search` (materialized search index).
 
@@ -93,11 +93,11 @@ PostgreSQL + PostGIS. Full DDL in `schema.sql` (14 tables + 1 view + 1 materiali
 ## 7. Data Pipeline / Workflow
 
 ```
-Research (JA-first) → one contract-shaped JSON per shrine → ingest.py → Supabase → REFRESH shrine_search
+Research (JA-first) → one contract-shaped JSON per shrine → ingest.py → Neon Postgres → REFRESH shrine_search
 ```
 
 - The **contract** (`shrine_ingest_contract.jsonc`) is the JSON shape research produces and the script consumes. It carries explicit `ranks[]`, `prayer_categories[]`, `deities[]` (with `regional_lore`), `events[]` + `occurrences[]`, and `sources[]` so structured data is never buried in prose. Real data files are plain `.json` (the `.jsonc` is the annotated template).
-- The **ingest script** owns: validation, deity dedup (upsert on `name_kanji`), code→id resolution (ranks, categories, region, prefecture), PostGIS point construction, and idempotent re-ingest by `slug`. It is a single disposable Python file.
+- The **ingest script** owns: validation, deity dedup (upsert on `name_kanji`), code→id resolution (ranks, categories, region, prefecture), and idempotent re-ingest by `slug`. It is a single disposable Python file.
 - **Migration** of the ~10 legacy shrines = transform old format → contract shape → same ingest script. (Migration and ingest are one tool, not two.)
 - **Human pause points:** unmatched deity (no canonical block and not in DB), and validation failure.
 - **Annual manual task:** each January, upload concrete `event_occurrences` dates for lunar / "Nth-weekday" festivals (these cannot be computed). Fixed-Gregorian dates can ship in the research JSON directly.
@@ -142,12 +142,10 @@ Detail pages are real routed pages shown as a **side modal when opened from the 
 
 ---
 
-## 11. Build Phases
+## 11. Build Status
 
-1. **Handoff A — Data layer** (`HANDOFF_A_data_layer.md`): apply `schema.sql` + `seed.sql`; build `ingest.py`; migrate the ~10 legacy shrines. Ends with a populated DB.
-2. **Handoff B — Frontend** (`HANDOFF_B_frontend.md`): the Next.js v1 app against the populated DB; generates ~3 dummy shrines for development.
-
-**A before B** — the frontend needs a populated database. Run each as a separate, independently-closable task.
+1. **Data layer** — ✅ Neon project provisioned; schema + catalog seed applied; 6 placeholder shrines in `db/` (read layer swap to Neon pending).
+2. **Frontend v1** — ✅ Next.js app built and tested against the placeholder data.
 
 ---
 
@@ -156,18 +154,16 @@ Detail pages are real routed pages shown as a **side modal when opened from the 
 | File | Role |
 |------|------|
 | `PROJECT_SPEC.md` | This document — master reference. |
-| `schema.sql` | Base DDL. |
-| `seed.sql` | Catalog seed + 2 column additions. |
-| `shrine_ingest_contract.jsonc` | Per-shrine JSON contract / migration target. |
-| `HANDOFF_A_data_layer.md` | Data-layer build brief for Claude Code. |
-| `HANDOFF_B_frontend.md` | Frontend build brief for Claude Code. |
+| `schema.sql` | Base DDL (applied to Neon). |
+| `seed.sql` | Catalog seed (applied to Neon). |
+| `shrine_ingest_contract.jsonc` | Per-shrine JSON contract for ingest.py. |
 | `PROJECT_BRIEF.md` | Original brief (background; superseded by this spec). |
 
 ---
 
 ## 13. Constraints & Risks
 
-- **Free-tier Supabase pause** — mitigated by SSG/ISR + keep-alive cron.
+- **Neon scale-to-zero** — no user impact (site is static; DB only hit at build time).
 - **Undocumented Google embed endpoint** — isolated in one module; keyed Embed API is the fallback.
 - **Manual touchpoints** — annual `event_occurrences` upload and image sourcing are owner tasks, not automated; design them to be low-friction.
 - **Cultural accuracy and respect** — this is living religious practice. Never strip the Japanese; never hallucinate facts; cite sources.
