@@ -40,7 +40,7 @@ Name (EN/JA), enshrined deities, what it's "strong for", shrine lore/history, pe
 ## 3. Tech Stack
 
 - **Frontend:** Next.js / React (chosen for SSR/SSG → SEO, image optimization, and native modal-as-page routing). *Not yet scaffolded.*
-- **Database:** Supabase (free tier) — PostgreSQL + PostGIS + pg_trgm.
+- **Database:** Neon — serverless PostgreSQL + pg_trgm.
 - **Data volume:** small — tens of shrines (currently ~10 researched), dozens of deities, a few hundred event occurrences/year. Optimize for query clarity and good UX, not big-data scale.
 
 ---
@@ -117,7 +117,7 @@ These are genuinely undecided. Strong ideas welcome.
 8. **Trust / provenance display.** Should `sources` be visible to users (cited like footnotes) to build credibility?
 
 ## 9. Constraints to respect when brainstorming
-- Free-tier Supabase; small data volume; solo builder.
+- Neon free tier; small data volume; solo builder.
 - Bilingual integrity (never strip the Japanese).
 - Cultural accuracy and respect — this is living religious practice, not mythology trivia.
 - SEO matters (organic search is the main acquisition channel).

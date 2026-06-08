@@ -1,13 +1,11 @@
 -- ============================================================
 -- SHINTO SHRINE DATABASE — RELATIONAL DATA MODEL (v2 naming)
--- PostgreSQL + PostGIS (Supabase)
+-- PostgreSQL (Neon)
 -- ============================================================
 -- Naming rule:
 --   catalog table   = bare plural noun        (ranks, prayer_categories, deities)
 --   junction table  = shrine_<catalog>        (shrine_ranks, shrine_prayer_categories, shrine_deities)
 -- ============================================================
-
-CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- ------------------------------------------------------------
 -- REFERENCE / CONTROLLED VOCABULARY
@@ -68,15 +66,15 @@ CREATE TABLE shrines (
     region_id     smallint NOT NULL REFERENCES regions(id),   -- denormalized for cheap region filter
     city          text,
     address       text,
-    coordinates   geography(Point, 4326),              -- PostGIS: all-shrines map + proximity
+    lat           double precision,                     -- WGS-84 latitude  (nullable; used for map markers)
+    lng           double precision,                     -- WGS-84 longitude
     notes         text,
     created_at    timestamptz NOT NULL DEFAULT now(),
     updated_at    timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_shrines_prefecture  ON shrines(prefecture_id);
-CREATE INDEX idx_shrines_region      ON shrines(region_id);
-CREATE INDEX idx_shrines_coordinates ON shrines USING GIST (coordinates);
+CREATE INDEX idx_shrines_prefecture ON shrines(prefecture_id);
+CREATE INDEX idx_shrines_region     ON shrines(region_id);
 
 -- ------------------------------------------------------------
 -- SHRINE ↔ DEITY (junction; carries shrine-specific deity data)

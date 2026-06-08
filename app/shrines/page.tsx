@@ -3,8 +3,8 @@ import { loadStore } from "@/lib/db/store";
 import { getShrineCards, getFacetCatalogs } from "@/lib/db/repo";
 import ShrineListing from "@/components/ShrineListing";
 
-export default function ShrinesPage() {
-  const store = loadStore();
+export default async function ShrinesPage() {
+  const store = await loadStore();
   const cards = getShrineCards(store);
   const facets = getFacetCatalogs(store);
   return (
