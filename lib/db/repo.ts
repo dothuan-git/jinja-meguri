@@ -72,6 +72,7 @@ function buildCard(store: Store, shrineId: string): ShrineCard {
   const categories = shrineCategoryViews(store, shrineId);
   const deities = shrineDeityViews(store, shrineId);
   const primary = deities.find((d) => d.is_primary) ?? null;
+  const detailRow = store.shrine_details.find((d) => d.shrine_id === shrineId) ?? null;
   return {
     slug: s.slug,
     name_en: s.name_en,
@@ -87,6 +88,10 @@ function buildCard(store: Store, shrineId: string): ShrineCard {
     rank_codes: ranks.map((r) => r.name_en),
     category_codes: categories.map((c) => c.name_en),
     deity_ja: deities.map((d) => d.name_ja).filter((k): k is string => !!k),
+    prayer_focus: detailRow?.prayer_focus ?? null,
+    best_time: detailRow?.best_time ?? null,
+    primary_deity_titles: primary?.titles ?? [],
+    image_url: s.image_urls?.[0] ?? null,
   };
 }
 

@@ -173,6 +173,10 @@ export interface ShrineCard {
   rank_codes: string[];
   category_codes: string[];
   deity_ja: string[];
+  prayer_focus: string | null;
+  best_time: string | null;
+  primary_deity_titles: string[];
+  image_url: string | null;
 }
 
 export interface ShrineDetail extends ShrineCard {

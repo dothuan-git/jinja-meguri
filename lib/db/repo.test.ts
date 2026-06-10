@@ -29,6 +29,16 @@ describe("getShrineCards", () => {
   });
 });
 
+describe("getShrineCards extended fields", () => {
+  it("includes prayer_focus, best_time, primary_deity_titles, image_url", () => {
+    const card = getShrineCards(store)[0];
+    expect(card).toHaveProperty("prayer_focus");
+    expect(card).toHaveProperty("best_time");
+    expect(Array.isArray(card.primary_deity_titles)).toBe(true);
+    expect(card).toHaveProperty("image_url");
+  });
+});
+
 describe("getShrineDetail", () => {
   const a = getShrineDetail(store, "a")!;
   it("orders deities by sort_order and exposes both lore fields separately", () => {
