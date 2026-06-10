@@ -13,11 +13,9 @@ const TABLES: (keyof Store)[] = [
   "shrine_ranks",
   "shrine_prayer_categories",
   "shrine_details",
-  "events",
-  "event_deities",
-  "event_occurrences",
+  "festivals",
   "sources",
-  "shrine_search",
+  "festival_occurrences",
 ];
 
 export function buildStore(raw: Record<string, unknown[]>): Store {
@@ -53,27 +51,23 @@ export async function loadStore(): Promise<Store> {
       shrineRanks,
       shrinePrayerCategories,
       shrineDetails,
-      events,
-      eventDeities,
-      occurrencesRaw,
+      festivalsRaw,
       sources,
-      shrineSearchRaw,
+      festivalOccurrences,
     ] = await Promise.all([
       client.query("SELECT * FROM regions"),
       client.query("SELECT * FROM prefectures"),
       client.query("SELECT * FROM ranks"),
       client.query("SELECT * FROM prayer_categories"),
       client.query("SELECT * FROM deities"),
-      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, notes FROM shrines"),
+      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls, notes FROM shrines"),
       client.query("SELECT * FROM shrine_deities"),
       client.query("SELECT * FROM shrine_ranks"),
       client.query("SELECT * FROM shrine_prayer_categories"),
       client.query("SELECT * FROM shrine_details"),
-      client.query("SELECT * FROM events"),
-      client.query("SELECT * FROM event_deities"),
-      client.query("SELECT id, event_id, shrine_id, start_date::text, end_date::text FROM event_occurrences"),
+      client.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes FROM festivals"),
       client.query("SELECT * FROM sources"),
-      client.query("SELECT shrine_id, slug, name_en, name_ja, city, search_blob FROM shrine_search"),
+      client.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
     ]);
 
     raw["regions"] = regions.rows;
@@ -91,11 +85,9 @@ export async function loadStore(): Promise<Store> {
     raw["shrine_ranks"] = shrineRanks.rows;
     raw["shrine_prayer_categories"] = shrinePrayerCategories.rows;
     raw["shrine_details"] = shrineDetails.rows;
-    raw["events"] = events.rows;
-    raw["event_deities"] = eventDeities.rows;
-    raw["event_occurrences"] = occurrencesRaw.rows;
+    raw["festivals"] = festivalsRaw.rows;
     raw["sources"] = sources.rows;
-    raw["shrine_search"] = shrineSearchRaw.rows;
+    raw["festival_occurrences"] = festivalOccurrences.rows;
 
     cached = buildStore(raw);
     return cached;

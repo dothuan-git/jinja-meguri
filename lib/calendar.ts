@@ -6,7 +6,7 @@ export function monthRange(year: number, month: number): { start: string; end: s
   return { start: `${year}-${pad(month)}-01`, end: `${year}-${pad(month)}-${pad(lastDay)}` };
 }
 
-function shrineContext(store: Store, shrineId: number) {
+function shrineContext(store: Store, shrineId: string) {
   const s = store.shrines.find((x) => x.id === shrineId)!;
   const region = store.regions.find((r) => r.id === s.region_id);
   const catIdsByShrine = store.shrine_prayer_categories
@@ -14,7 +14,7 @@ function shrineContext(store: Store, shrineId: number) {
     .map((c) => c.category_id);
   const category_codes = store.prayer_categories
     .filter((c) => catIdsByShrine.includes(c.id))
-    .map((c) => c.code);
+    .map((c) => c.name_en);
   return { slug: s.slug, name_en: s.name_en, region: region?.name_en ?? "", region_id: s.region_id, category_codes };
 }
 
@@ -22,51 +22,56 @@ export function entriesForMonth(store: Store, year: number, month: number): Cale
   const { start, end } = monthRange(year, month);
   const entries: CalendarEntry[] = [];
 
-  // Dated occurrences overlapping the month: start_date <= end AND end_date >= start
-  for (const occ of store.event_occurrences) {
-    if (occ.start_date <= end && occ.end_date >= start) {
-      const ev = store.events.find((e) => e.id === occ.event_id);
-      if (!ev) continue;
-      const ctx = shrineContext(store, occ.shrine_id);
+  // Index occurrences for the requested year so lookup is O(1) per festival
+  const occByFestival = new Map(
+    store.festival_occurrences
+      .filter((o) => o.year === year)
+      .map((o) => [o.festival_id, o])
+  );
+
+  for (const f of store.festivals) {
+    const ctx = shrineContext(store, f.shrine_id);
+    const occ = occByFestival.get(f.id);
+
+    // Occurrence dates take priority over festival defaults
+    const startDate = occ?.start_date ?? f.start_date;
+    const endDate = occ ? occ.end_date : f.end_date;
+    const effectiveEnd = endDate ?? startDate; // single-day event: end = start
+
+    if (startDate && effectiveEnd) {
+      if (startDate <= end && effectiveEnd >= start) {
+        entries.push({
+          festival_id: f.id,
+          shrine_slug: ctx.slug,
+          shrine_name_en: ctx.name_en,
+          festival_name_en: f.name_en,
+          festival_name_ja: f.name_ja,
+          region: ctx.region,
+          region_id: ctx.region_id,
+          category_codes: ctx.category_codes,
+          start_date: startDate,
+          end_date: endDate,
+          time_prose: f.time_prose,
+          is_fallback: false,
+        });
+      }
+    } else {
+      // No date at all — show as undated for any month queried
       entries.push({
-        event_id: ev.id,
+        festival_id: f.id,
         shrine_slug: ctx.slug,
         shrine_name_en: ctx.name_en,
-        event_name_en: ev.name_en,
-        event_name_ja: ev.name_ja,
+        festival_name_en: f.name_en,
+        festival_name_ja: f.name_ja,
         region: ctx.region,
         region_id: ctx.region_id,
         category_codes: ctx.category_codes,
-        start_date: occ.start_date,
-        end_date: occ.end_date,
-        time_prose: ev.time_prose,
-        is_fallback: false,
+        start_date: null,
+        end_date: null,
+        time_prose: f.time_prose,
+        is_fallback: true,
       });
     }
-  }
-
-  // Fallback: events with NO occurrence in the chosen YEAR get one unpinned entry per displayed month.
-  const yearPrefix = `${year}-`;
-  for (const ev of store.events) {
-    const hasOccThisYear = store.event_occurrences.some(
-      (o) => o.event_id === ev.id && (o.start_date.startsWith(yearPrefix) || o.end_date.startsWith(yearPrefix))
-    );
-    if (hasOccThisYear) continue;
-    const ctx = shrineContext(store, ev.shrine_id);
-    entries.push({
-      event_id: ev.id,
-      shrine_slug: ctx.slug,
-      shrine_name_en: ctx.name_en,
-      event_name_en: ev.name_en,
-      event_name_ja: ev.name_ja,
-      region: ctx.region,
-      region_id: ctx.region_id,
-      category_codes: ctx.category_codes,
-      start_date: null,
-      end_date: null,
-      time_prose: ev.time_prose,
-      is_fallback: true,
-    });
   }
 
   return entries;

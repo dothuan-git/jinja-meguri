@@ -5,17 +5,17 @@ import type {
   RankView,
   CategoryView,
   DeityView,
-  EventView,
+  FestivalView,
   FacetCatalogs,
   Prefecture,
 } from "@/lib/types";
-import { pickHighestRankId, resolveLore } from "@/lib/db/derive";
+import { pickHighestRankId } from "@/lib/db/derive";
 
-function index<T extends { id: number }>(rows: T[]): Map<number, T> {
+function index<T extends { id: string | number }>(rows: T[]): Map<T["id"], T> {
   return new Map(rows.map((r) => [r.id, r]));
 }
 
-function shrineRankViews(store: Store, shrineId: number): RankView[] {
+function shrineRankViews(store: Store, shrineId: string): RankView[] {
   const byId = index(store.ranks);
   const ranks = store.shrine_ranks
     .filter((sr) => sr.shrine_id === shrineId)
@@ -24,8 +24,8 @@ function shrineRankViews(store: Store, shrineId: number): RankView[] {
   const highestId = pickHighestRankId(ranks);
   return ranks
     .map((r) => ({
-      code: r.code,
       name_en: r.name_en,
+      description: r.description,
       name_ja: r.name_ja,
       rank_order: r.rank_order,
       is_highest: r.id === highestId,
@@ -33,32 +33,30 @@ function shrineRankViews(store: Store, shrineId: number): RankView[] {
     .sort((a, b) => a.rank_order - b.rank_order);
 }
 
-function shrineCategoryViews(store: Store, shrineId: number): CategoryView[] {
+function shrineCategoryViews(store: Store, shrineId: string): CategoryView[] {
   const byId = index(store.prayer_categories);
   return store.shrine_prayer_categories
     .filter((spc) => spc.shrine_id === shrineId)
     .map((spc) => byId.get(spc.category_id)!)
     .filter(Boolean)
-    .map((c) => ({ code: c.code, name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label }));
+    .map((c) => ({ name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label }));
 }
 
-function shrineDeityViews(store: Store, shrineId: number): DeityView[] {
+function shrineDeityViews(store: Store, shrineId: string): DeityView[] {
   const byId = index(store.deities);
   return store.shrine_deities
     .filter((sd) => sd.shrine_id === shrineId)
     .map((sd) => {
       const d = byId.get(sd.deity_id)!;
-      const { lore, is_regional } = resolveLore(sd.regional_lore, d.canonical_lore);
       return {
         id: d.id,
-        name_romaji: d.name_romaji,
-        name_kanji: d.name_kanji,
+        name_en: d.name_en,
+        name_ja: d.name_ja,
+        titles: d.titles ?? [],
         role: sd.role,
-        domain: d.domain,
-        title: d.title,
         deity_type: d.deity_type,
-        lore,
-        is_regional,
+        canonical_lore: d.canonical_lore,
+        regional_lore: sd.regional_lore,
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,
       };
@@ -66,7 +64,7 @@ function shrineDeityViews(store: Store, shrineId: number): DeityView[] {
     .sort((a, b) => a.sort_order - b.sort_order);
 }
 
-function buildCard(store: Store, shrineId: number): ShrineCard {
+function buildCard(store: Store, shrineId: string): ShrineCard {
   const s = store.shrines.find((x) => x.id === shrineId)!;
   const region = store.regions.find((r) => r.id === s.region_id);
   const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
@@ -81,14 +79,14 @@ function buildCard(store: Store, shrineId: number): ShrineCard {
     city: s.city,
     prefecture: pref?.name_en ?? "",
     region: region?.name_en ?? "",
-    primary_deity: primary ? { name_romaji: primary.name_romaji, name_kanji: primary.name_kanji } : null,
+    primary_deity: primary ? { name_en: primary.name_en, name_ja: primary.name_ja } : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
     region_id: s.region_id,
     prefecture_id: s.prefecture_id,
-    rank_codes: ranks.map((r) => r.code),
-    category_codes: categories.map((c) => c.code),
-    deity_kanji: deities.map((d) => d.name_kanji).filter((k): k is string => !!k),
+    rank_codes: ranks.map((r) => r.name_en),
+    category_codes: categories.map((c) => c.name_en),
+    deity_ja: deities.map((d) => d.name_ja).filter((k): k is string => !!k),
   };
 }
 
@@ -105,36 +103,39 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
   if (!s) return null;
   const card = buildCard(store, s.id);
   const detailRow = store.shrine_details.find((d) => d.shrine_id === s.id) ?? null;
-  const events: EventView[] = store.events
-    .filter((e) => e.shrine_id === s.id)
-    .map((e) => ({
-      id: e.id,
-      name_en: e.name_en,
-      name_ja: e.name_ja,
-      time_prose: e.time_prose,
-      origin: e.origin,
-      meaning: e.meaning,
-      ritual: e.ritual,
-      prayer: e.prayer,
-      access_type: e.access_type,
-      visitor_notes: e.visitor_notes,
+  const festivals: FestivalView[] = store.festivals
+    .filter((f) => f.shrine_id === s.id)
+    .map((f) => ({
+      id: f.id,
+      name_en: f.name_en,
+      name_ja: f.name_ja,
+      time_prose: f.time_prose,
+      start_date: f.start_date,
+      end_date: f.end_date,
+      origin: f.origin,
+      meaning: f.meaning,
+      ritual: f.ritual,
+      prayer: f.prayer,
+      festival_type: f.festival_type,
+      visitor_notes: f.visitor_notes,
     }));
   return {
     ...card,
     address: s.address,
     coordinates: s.coordinates,
+    image_urls: s.image_urls,
     notes: s.notes,
     deities: shrineDeityViews(store, s.id),
     ranks: shrineRankViews(store, s.id),
     details: detailRow
       ? {
           history: detailRow.history,
-          why_visit: detailRow.why_visit,
+          description: detailRow.description,
           prayer_focus: detailRow.prayer_focus,
-          best_season: detailRow.best_season,
+          best_time: detailRow.best_time,
         }
       : null,
-    events,
+    festivals,
     sources: store.sources.filter((src) => src.shrine_id === s.id),
   };
 }
@@ -142,7 +143,7 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
 export function getFacetCatalogs(store: Store): FacetCatalogs {
   const groupsMap = new Map<string, CategoryView[]>();
   for (const c of store.prayer_categories) {
-    const v: CategoryView = { code: c.code, name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label };
+    const v: CategoryView = { name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label };
     if (!groupsMap.has(c.group_label)) groupsMap.set(c.group_label, []);
     groupsMap.get(c.group_label)!.push(v);
   }
@@ -152,17 +153,17 @@ export function getFacetCatalogs(store: Store): FacetCatalogs {
   const ranks: RankView[] = store.ranks
     .filter((r) => rankIdsInUse.has(r.id))
     .sort((a, b) => a.rank_order - b.rank_order)
-    .map((r) => ({ code: r.code, name_en: r.name_en, name_ja: r.name_ja, rank_order: r.rank_order, is_highest: false }));
+    .map((r) => ({ name_en: r.name_en, description: r.description, name_ja: r.name_ja, rank_order: r.rank_order, is_highest: false }));
 
   const prefecturesByRegion: Record<number, Prefecture[]> = {};
   for (const p of store.prefectures) {
     (prefecturesByRegion[p.region_id] ??= []).push(p);
   }
 
-  const deityKanjiInUse = new Map<string, { name_romaji: string; name_kanji: string }>();
+  const deityJaInUse = new Map<string, { name_en: string; name_ja: string }>();
   for (const sd of store.shrine_deities) {
     const d = store.deities.find((x) => x.id === sd.deity_id);
-    if (d?.name_kanji) deityKanjiInUse.set(d.name_kanji, { name_romaji: d.name_romaji, name_kanji: d.name_kanji });
+    if (d?.name_ja) deityJaInUse.set(d.name_ja, { name_en: d.name_en, name_ja: d.name_ja });
   }
 
   const regionIdsInUse = new Set(store.shrines.map((s) => s.region_id));
@@ -171,6 +172,6 @@ export function getFacetCatalogs(store: Store): FacetCatalogs {
     ranks,
     regions: store.regions.filter((r) => regionIdsInUse.has(r.id)),
     prefecturesByRegion,
-    deities: [...deityKanjiInUse.values()].sort((a, b) => a.name_romaji.localeCompare(b.name_romaji)),
+    deities: [...deityJaInUse.values()].sort((a, b) => a.name_en.localeCompare(b.name_en)),
   };
 }
