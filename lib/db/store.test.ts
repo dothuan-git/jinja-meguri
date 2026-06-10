@@ -5,6 +5,6 @@ describe("buildStore", () => {
   it("defaults missing tables to empty arrays", () => {
     const s = buildStore({ shrines: [{ id: 1 }] });
     expect(s.shrines).toHaveLength(1);
-    expect(s.events).toEqual([]);
+    expect(s.festivals).toEqual([]);
   });
 });
