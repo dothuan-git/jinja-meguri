@@ -11,9 +11,5 @@ export default async function ShrinePage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const detail = getShrineDetail(await loadStore(), slug);
   if (!detail) notFound();
-  return (
-    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <ShrineDetailView shrine={detail} variant="page" />
-    </main>
-  );
+  return <ShrineDetailView shrine={detail} variant="page" />;
 }
