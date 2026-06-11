@@ -204,6 +204,29 @@ export interface FacetCatalogs {
   deities: { name_en: string; name_ja: string }[];
 }
 
+export interface CalendarFestival {
+  festival_id: string;
+  shrine_slug: string;
+  shrine_name_en: string;
+  shrine_city: string | null;
+  shrine_prefecture: string;
+  shrine_region: string;
+  region_id: number;
+  festival_name_en: string;
+  festival_name_ja: string | null;
+  festival_type: string | null;
+  time_prose: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  month: number | null; // 1..12 from start_date; null when undated
+  meaning: string | null;
+  ritual: string | null;
+  prayer: string | null;
+  visitor_notes: string | null;
+  origin: string | null;
+  is_fallback: boolean;
+}
+
 export interface CalendarEntry {
   festival_id: string;
   shrine_slug: string;

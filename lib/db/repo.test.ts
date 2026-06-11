@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { makeStore } from "@/lib/db/__fixtures__/store";
-import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs } from "@/lib/db/repo";
+import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs, getFestivalYear } from "@/lib/db/repo";
 
 const store = makeStore();
 
@@ -69,6 +69,20 @@ describe("getShrineDetail", () => {
   });
   it("returns null for an unknown slug", () => {
     expect(getShrineDetail(store, "nope")).toBeNull();
+  });
+});
+
+describe("getFestivalYear", () => {
+  it("returns festivals with prose and a resolved month", () => {
+    const list = getFestivalYear(store, 2026);
+    expect(Array.isArray(list)).toBe(true);
+    const f = list[0];
+    expect(f).toHaveProperty("festival_name_en");
+    expect(f).toHaveProperty("meaning");
+    expect(f).toHaveProperty("shrine_slug");
+    expect(f).toHaveProperty("festival_type");
+    // month is null (fallback) or 1..12
+    expect(f.month === null || (f.month! >= 1 && f.month! <= 12)).toBe(true);
   });
 });
 

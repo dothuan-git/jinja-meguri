@@ -8,6 +8,7 @@ import type {
   FestivalView,
   FacetCatalogs,
   Prefecture,
+  CalendarFestival,
 } from "@/lib/types";
 import { pickHighestRankId } from "@/lib/db/derive";
 
@@ -143,6 +144,43 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
     festivals,
     sources: store.sources.filter((src) => src.shrine_id === s.id),
   };
+}
+
+export function getFestivalYear(store: Store, year: number): CalendarFestival[] {
+  const occByFestival = new Map(
+    store.festival_occurrences.filter((o) => o.year === year).map((o) => [o.festival_id, o]),
+  );
+  return store.festivals.map((f) => {
+    const s = store.shrines.find((x) => x.id === f.shrine_id)!;
+    const region = store.regions.find((r) => r.id === s.region_id);
+    const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
+    const occ = occByFestival.get(f.id);
+    const startDate = occ?.start_date ?? f.start_date ?? null;
+    const endDate = (occ ? occ.end_date : f.end_date) ?? null;
+    const month = startDate ? Number(startDate.slice(5, 7)) : null;
+    return {
+      festival_id: f.id,
+      shrine_slug: s.slug,
+      shrine_name_en: s.name_en,
+      shrine_city: s.city,
+      shrine_prefecture: pref?.name_en ?? "",
+      shrine_region: region?.name_en ?? "",
+      region_id: s.region_id,
+      festival_name_en: f.name_en,
+      festival_name_ja: f.name_ja,
+      festival_type: f.festival_type,
+      time_prose: f.time_prose,
+      start_date: startDate,
+      end_date: endDate,
+      month,
+      meaning: f.meaning,
+      ritual: f.ritual,
+      prayer: f.prayer,
+      visitor_notes: f.visitor_notes,
+      origin: f.origin,
+      is_fallback: startDate === null,
+    };
+  });
 }
 
 export function getFacetCatalogs(store: Store): FacetCatalogs {
