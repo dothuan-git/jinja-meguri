@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { makeStore } from "@/lib/db/__fixtures__/store";
-import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs, getFestivalYear } from "@/lib/db/repo";
+import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs, getFestivalYear, getDeityList } from "@/lib/db/repo";
 
 const store = makeStore();
 
@@ -88,6 +88,21 @@ describe("getFestivalYear", () => {
 
 describe("getAllSlugs", () => {
   it("returns every slug", () => expect(getAllSlugs(store).sort()).toEqual(["a", "b"]));
+});
+
+describe("getDeityList", () => {
+  it("returns deities with their enshrining shrines", () => {
+    const list = getDeityList(store);
+    expect(list.length).toBeGreaterThan(0);
+    const d = list[0];
+    expect(d).toHaveProperty("name_en");
+    expect(Array.isArray(d.titles)).toBe(true);
+    expect(Array.isArray(d.shrines)).toBe(true);
+    // every deity returned is enshrined somewhere
+    expect(d.shrines.length).toBeGreaterThan(0);
+    expect(d.shrines[0]).toHaveProperty("slug");
+    expect(d.shrines[0]).toHaveProperty("is_primary");
+  });
 });
 
 describe("getFacetCatalogs", () => {

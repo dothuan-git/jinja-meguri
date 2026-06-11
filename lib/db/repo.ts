@@ -9,6 +9,8 @@ import type {
   FacetCatalogs,
   Prefecture,
   CalendarFestival,
+  DeityListItem,
+  DeityShrineLink,
 } from "@/lib/types";
 import { pickHighestRankId } from "@/lib/db/derive";
 
@@ -181,6 +183,47 @@ export function getFestivalYear(store: Store, year: number): CalendarFestival[] 
       is_fallback: startDate === null,
     };
   });
+}
+
+export function getDeityList(store: Store): DeityListItem[] {
+  const shrineById = index(store.shrines);
+  const items: DeityListItem[] = store.deities.map((d) => {
+    const links: DeityShrineLink[] = store.shrine_deities
+      .filter((sd) => sd.deity_id === d.id)
+      .map((sd) => {
+        const s = shrineById.get(sd.shrine_id)!;
+        const region = store.regions.find((r) => r.id === s.region_id);
+        const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
+        return {
+          slug: s.slug,
+          name_en: s.name_en,
+          name_ja: s.name_ja,
+          city: s.city,
+          prefecture: pref?.name_en ?? "",
+          region: region?.name_en ?? "",
+          is_primary: sd.is_primary,
+          regional_lore: sd.regional_lore,
+        };
+      })
+      .sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
+    return {
+      id: d.id,
+      name_en: d.name_en,
+      name_ja: d.name_ja,
+      titles: d.titles ?? [],
+      deity_type: d.deity_type,
+      canonical_lore: d.canonical_lore,
+      shrines: links,
+    };
+  });
+  // only deities that are enshrined somewhere, Amaterasu/Inari first then alpha
+  return items
+    .filter((d) => d.shrines.length > 0)
+    .sort((a, b) => {
+      const rank = (n: string) => (n.includes("Amaterasu") ? 0 : n.includes("Inari") ? 1 : 2);
+      const ra = rank(a.name_en), rb = rank(b.name_en);
+      return ra !== rb ? ra - rb : a.name_en.localeCompare(b.name_en);
+    });
 }
 
 export function getFacetCatalogs(store: Store): FacetCatalogs {

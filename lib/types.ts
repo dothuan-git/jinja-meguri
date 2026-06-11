@@ -204,6 +204,26 @@ export interface FacetCatalogs {
   deities: { name_en: string; name_ja: string }[];
 }
 
+export interface DeityShrineLink {
+  slug: string;
+  name_en: string;
+  name_ja: string | null;
+  city: string | null;
+  prefecture: string;
+  region: string;
+  is_primary: boolean;
+  regional_lore: string | null;
+}
+export interface DeityListItem {
+  id: string;
+  name_en: string;
+  name_ja: string | null;
+  titles: string[];
+  deity_type: string;
+  canonical_lore: string | null;
+  shrines: DeityShrineLink[];
+}
+
 export interface CalendarFestival {
   festival_id: string;
   shrine_slug: string;
