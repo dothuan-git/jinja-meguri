@@ -78,6 +78,12 @@
   box-shadow: 0 10px 40px -15px rgba(26, 32, 28, 0.1);
 }
 
+/* Pre-hide elements tagged for GSAP staggered entrance; the hook in
+   useEntranceReveal.ts animates them in. The reduced-motion rule and the
+   noscript block in layout.tsx keep content visible without JS. */
+[data-reveal] { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1; } }
+
 body {
   background-color: var(--color-sand);
   color: var(--color-stone);

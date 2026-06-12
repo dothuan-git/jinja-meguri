@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { ShrineDetail } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
+import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 function primaryOf(shrine: ShrineDetail) {
   return shrine.deities.find((d) => d.is_primary) ?? shrine.deities[0] ?? null;
@@ -95,6 +96,8 @@ export default function ShrineDetailView({
 
 function PageBody({ view: shrine }: { view: View }) {
   const [activeSection, setActiveSection] = useState("overview");
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEntranceReveal(pageRef);
 
   const getPrayerTagStyle = (focus: string, index: number) => {
     const styles = [
@@ -198,10 +201,10 @@ function PageBody({ view: shrine }: { view: View }) {
       onScroll={handleScroll}
       className="w-full flex-1 flex flex-col h-[calc(100vh-80px)] overflow-y-auto bg-transparent relative scroll-smooth pb-16"
     >
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
+      <div ref={pageRef} className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
 
         {/* Floating Minimal Navigation Bar */}
-        <div className="flex items-center justify-between mb-4 select-none">
+        <div data-reveal="fade-up" className="flex items-center justify-between mb-4 select-none">
           <Link
             id="back-button"
             href="/shrines"
@@ -219,7 +222,7 @@ function PageBody({ view: shrine }: { view: View }) {
         </div>
 
         {/* Cinematic Header Display (Borderless, natural merge) */}
-        <div className="relative w-full rounded-2xl overflow-hidden shadow-xs aspect-[16/7] md:aspect-[21/7] bg-stone/5">
+        <div data-reveal="fade-up-blur" className="relative w-full rounded-2xl overflow-hidden shadow-xs aspect-[16/7] md:aspect-[21/7] bg-stone/5">
           <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} />
           <div className="absolute inset-0 bg-gradient-to-t from-stone/60 via-stone/5 to-transparent pointer-events-none" />
 
@@ -240,7 +243,7 @@ function PageBody({ view: shrine }: { view: View }) {
         </div>
 
         {/* Fast Facts Row (Subtle layout with typography blocks, no frames) */}
-        <div className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
+        <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
           <div className="flex-1 space-y-2 max-w-2xl">
             <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
               {shrine.ranks.map((rank, i) => (
@@ -282,7 +285,7 @@ function PageBody({ view: shrine }: { view: View }) {
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
 
         {/* Floating Sidebar Directory (Simple hover items, no borders, no boxes) */}
-        <nav className="w-full lg:w-48 shrink-0 lg:sticky lg:top-14 h-fit hidden lg:block select-none z-10">
+        <nav data-reveal="slide-left" className="w-full lg:w-48 shrink-0 lg:sticky lg:top-14 h-fit hidden lg:block select-none z-10">
           <span className="inline-block text-[10px] font-mono tracking-[0.15em] px-2 py-0.5 border-2 border-torii text-torii bg-torii/[0.04] rotate-[-2.5deg] mb-5 font-black uppercase rounded-xs shadow-[inset_0_0_1.5px_rgba(201,75,50,0.25)] select-none">
             FILE DIRECTORY
           </span>
@@ -350,6 +353,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="overview"
             ref={sectionRefs.overview}
+            data-reveal="fade-up"
             className="relative scroll-mt-14 select-text"
           >
             {/* Soft backdrop watermark kanji decoration */}
@@ -392,6 +396,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="deities"
             ref={sectionRefs.deities}
+            data-reveal="rise"
             className="relative scroll-mt-14 select-text"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
@@ -520,6 +525,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="chronicles"
             ref={sectionRefs.chronicles}
+            data-reveal="fade-up"
             className="relative scroll-mt-14 select-text"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
@@ -565,6 +571,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="festivals"
             ref={sectionRefs.festivals}
+            data-reveal="rise"
             className="relative scroll-mt-14"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
@@ -669,6 +676,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="pilgrimage"
             ref={sectionRefs.pilgrimage}
+            data-reveal="stamp"
             className="relative scroll-mt-14 pt-2"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
@@ -768,6 +776,7 @@ function PageBody({ view: shrine }: { view: View }) {
           <section
             id="location"
             ref={sectionRefs.location}
+            data-reveal="rise"
             className="relative scroll-mt-14 pb-8"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">

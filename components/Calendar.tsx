@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type MouseEvent } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -22,6 +22,7 @@ import {
   X
 } from "lucide-react";
 import type { CalendarFestival } from "@/lib/types";
+import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 // Poetic lunar month structure
 interface PoeticMonth {
@@ -79,6 +80,8 @@ type LinkedFestival = {
 
 export default function Calendar({ year, festivals }: { year: number; festivals: CalendarFestival[] }) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEntranceReveal(containerRef);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all"); // "all", "public_witness", "pilgrimage_experience"
@@ -197,10 +200,10 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-24 z-10 select-none">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-24 z-10 select-none">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
-      <div className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
           <div className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-5deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -224,7 +227,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 2. SEASONAL TERMINOLOGY RESOURCE BANNER */}
-      <div className="w-full bg-[#ffffff] border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-[#ffffff] border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
         <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
           <div className="w-10 h-10 rounded-xl bg-torii/5 border border-torii/15 flex items-center justify-center text-torii shrink-0 shadow-3xs">
             <Sun size={18} className="stroke-[1.5]" />
@@ -259,7 +262,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 3. LUNAR CYCLE INDEX SCROLLER (MOBILE & TABLET EXCLUSIVE DOCK) */}
-      <div className="lg:hidden w-full overflow-x-auto scrollbar-none flex gap-2.5 py-3 px-1 mb-8 border-y border-moss/10 sticky top-14 bg-sand/90 backdrop-blur-md z-30">
+      <div data-reveal="fade-up" className="lg:hidden w-full overflow-x-auto scrollbar-none flex gap-2.5 py-3 px-1 mb-8 border-y border-moss/10 sticky top-14 bg-sand/90 backdrop-blur-md z-30">
         {Object.keys(POETIC_MONTHS).map(Number).sort((a, b) => a - b).map(mNum => {
           const mInfo = POETIC_MONTHS[mNum];
           const isMonthActive = activeMonths.includes(mNum);
@@ -282,7 +285,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 4. CHRONOLOGY FILTER & SEARCH ACTIONS PANEL */}
-      <div className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-4 rounded-2xl mb-12 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 relative shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-4 rounded-2xl mb-12 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 relative shadow-3xs">
 
         {/* Search input styled as a scroll calligraphy ledger search */}
         <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
@@ -354,7 +357,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 5. SPLIT TIMELINE GRID (MAIN CALENDAR MATRIX) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative pb-16">
+      <div data-reveal="rise" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative pb-16">
 
         {/* LEFT COLUMN: THE CORE CHRONOLOGICAL TIMELINE PATH (col-span-12 lg:col-span-10) */}
         <div className="col-span-12 lg:col-span-10 space-y-16">

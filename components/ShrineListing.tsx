@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
@@ -16,6 +16,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
+import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 const getTagColors = (tag: string) => {
   const sum = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -53,6 +54,8 @@ const PARAM_KEY: Record<Exclude<keyof Filters, "searchQuery">, string> = {
 export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; facets: FacetCatalogs }) {
   const router = useRouter();
   const params = useSearchParams();
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEntranceReveal(containerRef);
 
   const getList = (key: string) => params.getAll(key);
   const filters: Filters = {
@@ -204,10 +207,10 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) || filters.searchQuery !== "";
 
   return (
-    <div className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 select-none flex flex-col">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 select-none flex flex-col">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
-      <div className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
           <div className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-5deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -231,7 +234,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
       </div>
 
       {/* ==================== TYPOGRAPHY-FOCUSED INLINE FILTER PANEL ==================== */}
-      <section className="w-full pb-2 mb-2 flex flex-col gap-4 select-none text-xs">
+      <section data-reveal="fade-up" className="w-full pb-2 mb-2 flex flex-col gap-4 select-none text-xs">
 
         {/* Search Row & Active Filters Clear */}
         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
@@ -355,7 +358,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
       </section>
 
       {/* ==================== CORE LISTING CONTAINER ==================== */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main data-reveal="rise" className="flex-1 flex flex-col min-w-0">
 
         {/* Upper Action Bar (Sorting control, layout picker, counter) */}
         <div className="flex items-center justify-between pb-4 mb-5 border-b border-moss/15 shrink-0">

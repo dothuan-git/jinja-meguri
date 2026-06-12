@@ -19,6 +19,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="relative min-h-screen bg-sand text-stone overflow-x-hidden">
+        {/* Reveal hidden [data-reveal] elements for visitors without JS */}
+        <noscript><style>{`[data-reveal]{opacity:1}`}</style></noscript>
         <AmbientByRoute />
         <div className="relative z-10 flex min-h-screen flex-col items-center">
           <SiteChrome />

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import type { SearchDoc, ShrineCard as Card } from "@/lib/types";
 import { makeSearcher } from "@/lib/search";
 import ShrineCard from "@/components/ShrineCard";
+import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; cards: Card[] }) {
   const sp = useSearchParams();
@@ -26,12 +27,18 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
 
   const matched = results.map((r) => cardBySlug.get(r.slug)).filter((c): c is Card => !!c);
 
+  const containerRef = useRef<HTMLElement>(null);
+  useEntranceReveal(containerRef);
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <p className="kicker">Find a shrine</p>
-      <h1 className="mt-2 font-display text-5xl font-semibold">Search</h1>
+    <main ref={containerRef} className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div data-reveal="fade-up">
+        <p className="kicker">Find a shrine</p>
+        <h1 className="mt-2 font-display text-5xl font-semibold">Search</h1>
+      </div>
 
       <form
+        data-reveal="fade-up"
         role="search"
         onSubmit={(e) => {
           e.preventDefault();
@@ -58,20 +65,20 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
         />
       </form>
 
-      <div className="mt-8">
+      <div data-reveal="rise" className="mt-8">
         {query === "" ? (
           <p className="text-sumi-soft">
-            Try <em>Yasaka</em>, <span className="jp">祇園</span>, <em>matchmaking</em>, or a kami’s name.
+            Try <em>Yasaka</em>, <span className="jp">祇園</span>, <em>matchmaking</em>, or a kami's name.
           </p>
         ) : matched.length === 0 ? (
           <p className="text-sumi-soft">
-            No shrines match “<span className="text-sumi">{query}</span>”.
+            No shrines match "<span className="text-sumi">{query}</span>".
           </p>
         ) : (
           <>
             <p className="mb-5 text-sm text-sumi-soft">
-              <span className="text-sumi">{matched.length}</span> result{matched.length === 1 ? "" : "s"} for “
-              {query}”
+              <span className="text-sumi">{matched.length}</span> result{matched.length === 1 ? "" : "s"} for "
+              {query}"
             </p>
             <div className="grid gap-5 sm:grid-cols-2">
               {matched.map((c) => (
