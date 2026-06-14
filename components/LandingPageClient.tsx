@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Volume2, VolumeX, Music, Flower, Sun, Leaf, Snowflake } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { shintoSynth } from "@/lib/audioSynthesizer";
@@ -11,6 +11,22 @@ import { shintoSynth } from "@/lib/audioSynthesizer";
 const MotionLink = motion.create(Link);
 
 type Season = "spring" | "summer" | "autumn" | "winter";
+
+const SEASON_GRADIENTS: Record<Season, string> = {
+  spring: "radial-gradient(ellipse at 50% 50%, #fff2f5 0%, #faf6f0 100%)",
+  summer: "radial-gradient(ellipse at 50% 50%, #111a33 0%, #070b18 100%)",
+  autumn: "radial-gradient(ellipse at 50% 50%, #fff7e6 0%, #faf3e0 100%)",
+  winter: "radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a12 100%)",
+};
+
+// Solid base colours (gradient edge values) — fills any 1-px compositing gap
+// so the body's bg-sand never bleeds through during GPU layer transitions.
+const SEASON_BG_BASE: Record<Season, string> = {
+  spring: "#faf6f0",
+  summer: "#070b18",
+  autumn: "#faf3e0",
+  winter: "#050a12",
+};
 
 export default function LandingPageClient() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -463,23 +479,23 @@ export default function LandingPageClient() {
   };
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className={`relative h-screen min-h-screen w-full flex flex-col justify-between p-4 sm:p-6 md:p-8 z-10 overflow-hidden select-none transition-all duration-1000 ${seasonStyles.textMain}`}
+      style={{ backgroundColor: SEASON_BG_BASE[currentSeason], transition: "background-color 1.2s ease-in-out" }}
     >
-      {/* Smooth Background Transition Layer using cross-fade */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <AnimatePresence initial={false}>
+      {/* Smooth Background Transition Layer — all seasons always mounted so opacity always sums to 1, eliminating edge bleed */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        {(Object.keys(SEASON_GRADIENTS) as Season[]).map((s) => (
           <motion.div
-            key={currentSeason}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
+            key={s}
+            initial={false}
             className="absolute inset-0"
-            style={{ backgroundImage: seasonStyles.bgGradient }}
+            animate={{ opacity: currentSeason === s ? 1 : 0 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            style={{ backgroundImage: SEASON_GRADIENTS[s] }}
           />
-        </AnimatePresence>
+        ))}
       </div>
 
       {/* HTML5 Canvas overlay for delicate, lightweight seasonal particles */}
