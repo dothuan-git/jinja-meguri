@@ -27,7 +27,7 @@ export function buildStore(raw: Record<string, unknown[]>): Store {
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: true,
+  ssl: { rejectUnauthorized: true },
   max: 2,
 });
 

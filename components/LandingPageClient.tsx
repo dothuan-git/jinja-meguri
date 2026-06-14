@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Volume2, VolumeX, Music, Flower, Sun, Leaf, Snowflake } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { shintoSynth } from "@/lib/audioSynthesizer";
@@ -460,10 +460,22 @@ export default function LandingPageClient() {
     <div 
       ref={containerRef} 
       className={`relative h-screen min-h-screen w-full flex flex-col justify-between p-4 sm:p-6 md:p-8 z-10 overflow-hidden select-none transition-all duration-1000 ${seasonStyles.textMain}`}
-      style={{
-        backgroundImage: seasonStyles.bgGradient
-      }}
     >
+      {/* Smooth Background Transition Layer using cross-fade */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={currentSeason}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="absolute inset-0"
+            style={{ backgroundImage: seasonStyles.bgGradient }}
+          />
+        </AnimatePresence>
+      </div>
+
       {/* HTML5 Canvas overlay for delicate, lightweight seasonal particles */}
       <canvas 
         ref={canvasRef} 
