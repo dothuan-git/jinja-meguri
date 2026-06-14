@@ -49,7 +49,7 @@ CREATE TABLE deities (
     name_ja        text UNIQUE,                  -- kanji; dedup key on ingest
     titles         text[],                       -- array of divine epithets/titles
     deity_type     text NOT NULL
-        CHECK (deity_type IN ('origin','deified human','syncretic','imported')),
+        CHECK (deity_type IN ('mythological','deified_human','syncretic')),
     canonical_lore text                          -- Kojiki/Nihon Shoki fallback narrative
 );
 
@@ -138,7 +138,7 @@ CREATE TABLE festivals (
     meaning       text,
     ritual        text,
     prayer        text,
-    festival_type text CHECK (festival_type IN ('public_witness','pilgrimage_experience')),
+    festival_type text CHECK (festival_type IN ('spectacle','pilgrimage')),
     visitor_notes text
 );
 

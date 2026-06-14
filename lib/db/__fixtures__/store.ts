@@ -26,8 +26,8 @@ export function makeStore(): Store {
       { id: 2, name_en: "Victory", name_ja: "勝運", group_label: "Fortune & Success" },
     ],
     deities: [
-      { id: "deity-1", name_en: "Deity One", name_ja: "神一", titles: ["Lord of the Sun", "Divine Ancestor"], deity_type: "origin", canonical_lore: "canon-1" },
-      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", titles: ["Guardian of the Sea"], deity_type: "origin", canonical_lore: "canon-2" },
+      { id: "deity-1", name_en: "Deity One", name_ja: "神一", titles: ["Lord of the Sun", "Divine Ancestor"], deity_type: "mythological", canonical_lore: "canon-1" },
+      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", titles: ["Guardian of the Sea"], deity_type: "mythological", canonical_lore: "canon-2" },
     ],
     shrines: [
       { id: "shrine-a", slug: "a", name_en: "Shrine A", name_ja: "甲社", prefecture_id: 1, region_id: 1, city: "Saitama", address: "addr-a", coordinates: { lat: 35.9, lng: 139.6 }, image_urls: null, notes: null },
@@ -53,8 +53,8 @@ export function makeStore(): Store {
       { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer" },
     ],
     festivals: [
-      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "public_witness", visitor_notes: "v" },
-      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage_experience", visitor_notes: "v2" },
+      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },
+      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2" },
     ],
     sources: [
       { id: "source-1", shrine_id: "shrine-a", url: "https://example.com/a", title: "A official" },
