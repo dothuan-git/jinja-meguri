@@ -1,23 +1,8 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, EB_Garamond } from "next/font/google";
 import "./globals.css";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
-
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const body = EB_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-  display: "swap",
-});
+import SiteChrome from "@/components/SiteChrome";
+import SiteFooter from "@/components/SiteFooter";
+import AmbientByRoute from "@/components/AmbientByRoute";
 
 export const metadata: Metadata = {
   title: "Jinja Meguri — 神社巡り",
@@ -33,20 +18,15 @@ export default function RootLayout({
   modal: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
-        <div className="flex min-h-screen flex-col">
-          <Nav />
-          <div className="flex-1">{children}</div>
-          <Footer />
+    <html lang="en">
+      <body className="relative min-h-screen bg-sand text-stone overflow-x-hidden">
+        {/* Reveal hidden [data-reveal] elements for visitors without JS */}
+        <noscript><style>{`[data-reveal]{opacity:1}`}</style></noscript>
+        <AmbientByRoute />
+        <div className="relative z-10 flex min-h-screen flex-col items-center">
+          <SiteChrome />
+          <div className="w-full flex-1">{children}</div>
+          <SiteFooter />
         </div>
         {modal}
       </body>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { makeStore } from "@/lib/db/__fixtures__/store";
-import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs } from "@/lib/db/repo";
+import { getShrineCards, getShrineDetail, getAllSlugs, getFacetCatalogs, getFestivalYear, getDeityList } from "@/lib/db/repo";
 
 const store = makeStore();
 
@@ -26,6 +26,16 @@ describe("getShrineCards", () => {
     expect(a.category_codes.sort()).toEqual(["Matchmaking", "Victory"]);
     expect(a.deity_ja).toContain("神一");
     expect(a.rank_codes.sort()).toEqual(["Ichinomiya", "Sonsha"]);
+  });
+});
+
+describe("getShrineCards extended fields", () => {
+  it("includes prayer_focus, best_time, primary_deity_titles, image_url", () => {
+    const card = getShrineCards(store)[0];
+    expect(card).toHaveProperty("prayer_focus");
+    expect(card).toHaveProperty("best_time");
+    expect(Array.isArray(card.primary_deity_titles)).toBe(true);
+    expect(card).toHaveProperty("image_url");
   });
 });
 
@@ -62,8 +72,37 @@ describe("getShrineDetail", () => {
   });
 });
 
+describe("getFestivalYear", () => {
+  it("returns festivals with prose and a resolved month", () => {
+    const list = getFestivalYear(store, 2026);
+    expect(Array.isArray(list)).toBe(true);
+    const f = list[0];
+    expect(f).toHaveProperty("festival_name_en");
+    expect(f).toHaveProperty("meaning");
+    expect(f).toHaveProperty("shrine_slug");
+    expect(f).toHaveProperty("festival_type");
+    // month is null (fallback) or 1..12
+    expect(f.month === null || (f.month! >= 1 && f.month! <= 12)).toBe(true);
+  });
+});
+
 describe("getAllSlugs", () => {
   it("returns every slug", () => expect(getAllSlugs(store).sort()).toEqual(["a", "b"]));
+});
+
+describe("getDeityList", () => {
+  it("returns deities with their enshrining shrines", () => {
+    const list = getDeityList(store);
+    expect(list.length).toBeGreaterThan(0);
+    const d = list[0];
+    expect(d).toHaveProperty("name_en");
+    expect(Array.isArray(d.titles)).toBe(true);
+    expect(Array.isArray(d.shrines)).toBe(true);
+    // every deity returned is enshrined somewhere
+    expect(d.shrines.length).toBeGreaterThan(0);
+    expect(d.shrines[0]).toHaveProperty("slug");
+    expect(d.shrines[0]).toHaveProperty("is_primary");
+  });
 });
 
 describe("getFacetCatalogs", () => {

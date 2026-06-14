@@ -173,6 +173,10 @@ export interface ShrineCard {
   rank_codes: string[];
   category_codes: string[];
   deity_ja: string[];
+  prayer_focus: string | null;
+  best_time: string | null;
+  primary_deity_titles: string[];
+  image_url: string | null;
 }
 
 export interface ShrineDetail extends ShrineCard {
@@ -198,6 +202,49 @@ export interface FacetCatalogs {
   regions: Region[];
   prefecturesByRegion: Record<number, Prefecture[]>;
   deities: { name_en: string; name_ja: string }[];
+}
+
+export interface DeityShrineLink {
+  slug: string;
+  name_en: string;
+  name_ja: string | null;
+  city: string | null;
+  prefecture: string;
+  region: string;
+  is_primary: boolean;
+  regional_lore: string | null;
+}
+export interface DeityListItem {
+  id: string;
+  name_en: string;
+  name_ja: string | null;
+  titles: string[];
+  deity_type: string;
+  canonical_lore: string | null;
+  shrines: DeityShrineLink[];
+}
+
+export interface CalendarFestival {
+  festival_id: string;
+  shrine_slug: string;
+  shrine_name_en: string;
+  shrine_city: string | null;
+  shrine_prefecture: string;
+  shrine_region: string;
+  region_id: number;
+  festival_name_en: string;
+  festival_name_ja: string | null;
+  festival_type: string | null;
+  time_prose: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  month: number | null; // 1..12 from start_date; null when undated
+  meaning: string | null;
+  ritual: string | null;
+  prayer: string | null;
+  visitor_notes: string | null;
+  origin: string | null;
+  is_fallback: boolean;
 }
 
 export interface CalendarEntry {

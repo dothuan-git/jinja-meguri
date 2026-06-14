@@ -29,9 +29,9 @@ export default function ShrineCard({ card }: { card: Card }) {
       {card.primary_deity && (
         <p className="mt-3 text-sm text-sumi-soft">
           <span className="text-sumi-soft/70">Enshrines </span>
-          <span className="italic text-sumi">{card.primary_deity.name_romaji}</span>
-          {card.primary_deity.name_kanji && (
-            <span className="jp ml-1 text-sumi-soft">{card.primary_deity.name_kanji}</span>
+          <span className="italic text-sumi">{card.primary_deity.name_en}</span>
+          {card.primary_deity.name_ja && (
+            <span className="jp ml-1 text-sumi-soft">{card.primary_deity.name_ja}</span>
           )}
         </p>
       )}
@@ -39,7 +39,7 @@ export default function ShrineCard({ card }: { card: Card }) {
       {card.categories.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {card.categories.slice(0, 3).map((c) => (
-            <Chip key={c.code} label={c.name_en} sub={c.name_ja} tone="accent" />
+            <Chip key={c.name_en} label={c.name_en} sub={c.name_ja} tone="accent" />
           ))}
           {extraCats > 0 && (
             <span className="self-center text-xs text-sumi-soft/70">+{extraCats} more</span>
