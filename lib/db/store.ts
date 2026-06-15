@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import pg from "pg";
 import type { Store } from "@/lib/types";
 
@@ -25,17 +26,15 @@ export function buildStore(raw: Record<string, unknown[]>): Store {
   return store;
 }
 
-const pool = new pg.Pool({
+export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: true },
-  max: 2,
+  max: 5,
 });
 
-let cached: Store | null = null;
-
-export async function loadStore(): Promise<Store> {
-  if (cached) return cached;
-
+// React cache() dedupes within a single request; a fresh cache is created per
+// request, so admin writes are always reflected on the next page load.
+export const loadStore = cache(async (): Promise<Store> => {
   const client = await pool.connect();
   try {
     const raw: Record<string, unknown[]> = {};
@@ -89,9 +88,8 @@ export async function loadStore(): Promise<Store> {
     raw["sources"] = sources.rows;
     raw["festival_occurrences"] = festivalOccurrences.rows;
 
-    cached = buildStore(raw);
-    return cached;
+    return buildStore(raw);
   } finally {
     client.release();
   }
-}
+});

@@ -4,6 +4,8 @@ import { toSearchDocs } from "@/lib/search";
 import { getShrineCards } from "@/lib/db/repo";
 import SearchResults from "@/components/SearchResults";
 
+export const dynamic = "force-dynamic";
+
 export default async function SearchPage() {
   const store = await loadStore();
   return (

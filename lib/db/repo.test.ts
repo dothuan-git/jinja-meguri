@@ -65,7 +65,7 @@ describe("getShrineDetail", () => {
   it("includes festival dates and type", () => {
     expect(a.festivals[0].start_date).toBe("2026-07-30");
     expect(a.festivals[0].end_date).toBe("2026-08-02");
-    expect(a.festivals[0].festival_type).toBe("public_witness");
+    expect(a.festivals[0].festival_type).toBe("spectacle");
   });
   it("returns null for an unknown slug", () => {
     expect(getShrineDetail(store, "nope")).toBeNull();

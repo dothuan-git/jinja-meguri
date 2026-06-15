@@ -1,0 +1,48 @@
+# Admin access
+
+The site has a private admin area for managing shrine content. It is not linked from the
+public site and is excluded from search indexing.
+
+> This document is public. It describes the model at a high level only. Exact routes,
+> database commands, table names, and environment-variable names are intentionally omitted —
+> see the source and your deployment/hosting console for those.
+
+## How auth works
+
+Two independent layers:
+
+1. **Authentication** — a managed, hosted auth service owns the sign-in form, the session
+   cookie, and the user records.
+2. **Authorization** — signing in is not enough. The account must also appear on an internal
+   admin allowlist. Authenticated accounts that are not allow-listed are treated as if the
+   admin area does not exist.
+
+Route and action guards live in the application code (see
+[`lib/auth/server.ts`](../lib/auth/server.ts)).
+
+## Onboarding a new admin
+
+Three steps. The same email must be used throughout.
+
+1. **Create the person's auth account** in the hosting console. No password is set here.
+2. **Add their email to the admin allowlist** (a database entry).
+3. **They set their own password.** From the admin sign-in page they use the
+   "first time / forgot password" link, receive a one-time link by email (it expires shortly),
+   set a password, and can then sign in.
+
+Adding or removing an admin needs no code change or redeploy.
+
+> In production, the deployed domain must be registered as a trusted origin with the auth
+> service, or the emailed link is rejected. Use a real, reachable inbox — the link is only
+> delivered by email.
+
+## Removing an admin
+
+- Remove their entry from the admin allowlist to revoke access (their login can remain).
+- To remove them entirely, also delete the account in the hosting console.
+
+## Configuration
+
+The app reads its database connection and auth-service settings from environment variables,
+set locally and in the deployment platform. Secrets are never committed; see `.env.example`
+for the (non-secret) template.
