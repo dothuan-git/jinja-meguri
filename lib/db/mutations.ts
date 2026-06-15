@@ -1,6 +1,7 @@
 import "server-only";
 import { pool } from "@/lib/db/store";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
+import type { DeityInput } from "@/lib/admin/deityContract";
 import type { PoolClient } from "pg";
 
 // Resolve a catalog name to its numeric id; throws if not found.
@@ -148,6 +149,45 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
   } finally {
     client.release();
   }
+}
+
+// Upsert a canonical deity, keyed on name_ja (the kanji dedup key).
+// If a deity with that name_ja exists it is updated; otherwise inserted.
+export async function upsertDeity(input: DeityInput): Promise<{ id: string; name_ja: string; created: boolean }> {
+  const existing = await pool.query("SELECT id FROM deities WHERE name_ja = $1", [input.name_ja]);
+  if (existing.rows[0]) {
+    const id = existing.rows[0].id as string;
+    await pool.query(
+      "UPDATE deities SET name_en=$1, deity_type=$2, titles=$3, canonical_lore=$4 WHERE id=$5",
+      [input.name_en, input.deity_type, input.titles ?? null, input.canonical_lore ?? null, id],
+    );
+    return { id, name_ja: input.name_ja, created: false };
+  }
+  const ins = await pool.query(
+    "INSERT INTO deities (name_en, name_ja, deity_type, titles, canonical_lore) VALUES ($1,$2,$3,$4,$5) RETURNING id",
+    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.canonical_lore ?? null],
+  );
+  return { id: ins.rows[0].id as string, name_ja: input.name_ja, created: true };
+}
+
+// Update a canonical deity by id (edit mode). Unlike upsertDeity, this allows
+// name_ja itself to change; a collision with another deity's name_ja surfaces as
+// a UNIQUE-violation DB error.
+export async function updateDeity(id: string, input: DeityInput): Promise<void> {
+  const res = await pool.query(
+    "UPDATE deities SET name_en=$1, name_ja=$2, deity_type=$3, titles=$4, canonical_lore=$5 WHERE id=$6",
+    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.canonical_lore ?? null, id],
+  );
+  if (res.rowCount === 0) throw new Error(`No deity with id "${id}"`);
+}
+
+// Delete a canonical deity. Blocked when any shrine still links to it
+// (shrine_deities.deity_id has no ON DELETE CASCADE — deities are global).
+export async function deleteDeity(id: string): Promise<void> {
+  const refs = await pool.query("SELECT count(*)::int AS n FROM shrine_deities WHERE deity_id = $1", [id]);
+  const n = refs.rows[0].n as number;
+  if (n > 0) throw new Error(`Cannot delete: this deity is linked to ${n} shrine${n === 1 ? "" : "s"}. Unlink it first.`);
+  await pool.query("DELETE FROM deities WHERE id = $1", [id]);
 }
 
 export async function deleteShrine(slug: string): Promise<void> {

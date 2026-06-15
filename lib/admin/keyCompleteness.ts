@@ -50,6 +50,19 @@ function check(
   return { label, expected: keys.length, present: keys.length - missing.length, missing };
 }
 
+// Standalone canonical-deity import (admin/deities/new) — a single object,
+// not nested inside a shrine.
+export function checkDeityCompleteness(data: unknown): CompletenessReport {
+  if (!isObject(data)) {
+    return { groups: [], totalExpected: 0, totalPresent: 0, totalMissing: 0, complete: false };
+  }
+  const groups = [check(data, EXPECTED_KEYS.canonical, "deity")];
+  const totalExpected = groups.reduce((n, g) => n + g.expected, 0);
+  const totalPresent = groups.reduce((n, g) => n + g.present, 0);
+  const totalMissing = totalExpected - totalPresent;
+  return { groups, totalExpected, totalPresent, totalMissing, complete: totalMissing === 0 };
+}
+
 export function checkCompleteness(data: unknown): CompletenessReport {
   const groups: CompletenessGroup[] = [];
 
