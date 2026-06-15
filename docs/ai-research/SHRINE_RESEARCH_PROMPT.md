@@ -150,7 +150,9 @@ Deity object (in `deities[]`):
   - `name_en` **(req)** — romaji/English deity name.
   - `name_ja` — kanji (defaults to the deity's `name_ja` if omitted).
   - `deity_type` **(req)** — exactly one of: `"mythological"`, `"deified_human"`, `"syncretic"`.
-  - `titles` — array of divine epithets/titles (strings), or omit.
+  - `titles` — array of evocative **English epithets** for the deity's domains/roles (their sphere of
+    patronage), **one per entry**, in Title Case (e.g. `["God of Rice and Agriculture", "Patron of Commerce and Prosperity"]`).
+    Not romaji name-aliases or kanji; don't semicolon-join roles — split into separate entries. Or omit.
   - `canonical_lore` — the standard Kojiki/Nihon Shoki narrative (prose). See **Lore fields** below —
     this is the field that displays for the *primary* deity, so always fill it for the primary.
 

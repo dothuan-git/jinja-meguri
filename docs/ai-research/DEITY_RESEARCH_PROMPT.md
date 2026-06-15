@@ -101,8 +101,11 @@ Required keys are marked **(req)**.
 - `name_ja` **(req)** — the deity's name in **kanji** (e.g. `"天宇受売命"`, `"稲荷大神"`). The global
   dedup key — must be canonical kanji.
 - `deity_type` **(req)** — exactly one of: `"mythological"`, `"deified_human"`, `"syncretic"`.
-- `titles` — array of divine epithets / alternate names / honorifics (strings), each ideally with kanji
-  in parentheses (e.g. `["Uka-no-Mitama-no-Ōkami (宇迦之御魂大神)"]`). Empty → `[]`.
+- `titles` — array of evocative **English epithets** describing the deity's domains and roles — their
+  *sphere of patronage* (what the kami governs / is venerated for), **one epithet per array element**,
+  in natural Title Case (e.g. `["Goddess of the Sun", "Sovereign of the High Celestial Plain", "Divine Ancestor of the Imperial Family"]`).
+  These are **not** romaji transliterations of the name and **not** kanji aliases. Do **not** join several
+  roles into one string with a semicolon — split each role into its own entry. Empty → `[]`.
 - `canonical_lore` — the standard mythological narrative as flowing prose (see Research method), or
   `null` if genuinely unknown.
 
@@ -113,7 +116,7 @@ Required keys are marked **(req)**.
   "name_en": "Ame-no-Uzume",
   "name_ja": "天宇受売命",
   "deity_type": "mythological",
-  "titles": ["Ame-no-Uzume-no-Mikoto (天宇受売命)", "Goddess of Dawn and Mirth"],
+  "titles": ["Goddess of Dawn and Mirth", "Patroness of the Performing Arts", "Bringer of Laughter and Revelry"],
   "canonical_lore": "Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the goddess who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the sun goddess hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers."
 }
 ```
@@ -123,6 +126,7 @@ Required keys are marked **(req)**.
 - [ ] All **5** keys are present; `titles` is `[]` (never `null`) when empty; `canonical_lore` is `null` when empty — never `"-"`/`""`.
 - [ ] `name_en` and `name_ja` are filled; `name_ja` is canonical **kanji**.
 - [ ] `deity_type` is exactly one of `"mythological"`, `"deified_human"`, `"syncretic"`.
+- [ ] `titles` are English domain/role epithets (sphere of patronage), one per entry — no romaji name-aliases, no kanji, no semicolon-joined roles.
 - [ ] `canonical_lore` is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
 - [ ] `canonical_lore` reads as a told myth, length scaled to the legend — not a one-line summary, not padded — see **Prose voice & length**.
 

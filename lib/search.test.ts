@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toSearchDocs, makeSearcher } from "@/lib/search";
+import { toSearchDocs, makeSearcher, fold } from "@/lib/search";
 import { makeStore } from "@/lib/db/__fixtures__/store";
 
 const docs = toSearchDocs(makeStore());
@@ -24,5 +24,23 @@ describe("search", () => {
   });
   it("returns [] for empty query", () => {
     expect(search("   ")).toEqual([]);
+  });
+  it("matches a macron'd field from an ASCII query (Kyōto ⟵ 'Kyoto')", () => {
+    const results = search("Kyoto");
+    expect(results.map((r) => r.slug)).toContain("b");
+  });
+  it("matches an ASCII field from a macron'd query ('Shrīne' ⟶ Shrine)", () => {
+    const results = search("Shrīne A");
+    expect(results[0].slug).toBe("a");
+  });
+});
+
+describe("fold", () => {
+  it("strips macrons and lowercases", () => {
+    expect(fold("Inari Ōkami")).toBe("inari okami");
+    expect(fold("Amaterasu Ōmikami")).toBe("amaterasu omikami");
+  });
+  it("leaves kanji untouched", () => {
+    expect(fold("稲荷大神")).toBe("稲荷大神");
   });
 });

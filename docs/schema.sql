@@ -47,7 +47,7 @@ CREATE TABLE deities (
     id             uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     name_en        text NOT NULL,                -- romaji / English name
     name_ja        text UNIQUE,                  -- kanji; dedup key on ingest
-    titles         text[],                       -- array of divine epithets/titles
+    titles         text[],                       -- domain/role epithets (sphere of patronage)
     deity_type     text NOT NULL
         CHECK (deity_type IN ('mythological','deified_human','syncretic')),
     canonical_lore text                          -- Kojiki/Nihon Shoki fallback narrative

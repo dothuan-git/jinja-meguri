@@ -74,9 +74,9 @@ the characters, what is at stake, and the vivid turning points.
 - **Name (kanji):** <kanji — the global dedup key>
 - **Deity type:** <mythological | deified_human | syncretic>
 
-**Titles** (one per line; epithets / alternate names, kanji in parentheses):
-- <title (kanji)>
-- <title (kanji)>
+**Titles** (one English domain epithet per line — the deity's roles / sphere of patronage; no romaji names, no kanji):
+- <English domain epithet>
+- <English domain epithet>
 <or write "— none —" if there are none>
 
 **Canonical lore:**
@@ -88,8 +88,10 @@ the characters, what is at stake, and the vivid turning points.
 - **Name (kanji)** *(required)* — the deity's name in **kanji** (kana only if there is no standard
   kanji form). This is the global dedup key — saving the same kanji **updates** the existing deity.
 - **Deity type** *(required)* — exactly one of `mythological` / `deified_human` / `syncretic`.
-- **Titles** — divine epithets, alternate names, or honorifics; each with kanji in parentheses where
-  possible. Leave as "— none —" if there are none.
+- **Titles** — evocative **English epithets** for the deity's domains and roles (their *sphere of
+  patronage*), **one per line**, in natural Title Case (e.g. "Goddess of the Sun", "Divine Ancestor of
+  the Imperial Family"). Not romaji name-aliases and not kanji; don't join several roles with a semicolon
+  — split them onto separate lines. Leave as "— none —" if there are none.
 - **Canonical lore** — the standard mythological narrative as flowing prose, or `—` if genuinely unknown.
 
 ### Example (shape only — research your own values)
@@ -103,8 +105,9 @@ the characters, what is at stake, and the vivid turning points.
 - **Deity type:** mythological
 
 **Titles:**
-- Ame-no-Uzume-no-Mikoto (天宇受売命)
 - Goddess of Dawn and Mirth
+- Patroness of the Performing Arts
+- Bringer of Laughter and Revelry
 
 **Canonical lore:**
 Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the goddess who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the sun goddess hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers.
@@ -113,6 +116,7 @@ Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In t
 ### Before you answer
 - **Name (English)** and **Name (kanji)** are both filled; the kanji is canonical.
 - **Deity type** is exactly one of the three allowed values.
+- **Titles** are English domain/role epithets (sphere of patronage), one per line — no romaji name-aliases, no kanji, no semicolon-joined roles.
 - **Canonical lore** is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
 - **Canonical lore** reads as a told myth, length scaled to the legend — not a one-line summary, not padded.
 

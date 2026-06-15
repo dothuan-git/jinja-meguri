@@ -14,6 +14,7 @@ import {
   ArrowUpRight
 } from "lucide-react";
 import type { DeityListItem } from "@/lib/types";
+import { fold } from "@/lib/search";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function DeityListing({ deities }: { deities: DeityListItem[] }) {
@@ -111,14 +112,14 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
   // 4. Filter list dynamically for search dropdown suggestions
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
+    const query = fold(searchQuery);
     return deitiesList
       .map((deity, index) => ({ deity, index }))
       .filter(({ deity }) =>
-        deity.name.toLowerCase().includes(query) ||
+        fold(deity.name).includes(query) ||
         deity.japaneseName.includes(query) ||
-        deity.titles.some(t => t.toLowerCase().includes(query)) ||
-        deity.canonicalLore.toLowerCase().includes(query)
+        deity.titles.some(t => fold(t).includes(query)) ||
+        fold(deity.canonicalLore).includes(query)
       );
   }, [searchQuery, deitiesList]);
 
