@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
-import type { Region, Prefecture, Rank, PrayerCategory } from "@/lib/types";
+import type { Region, Prefecture, Rank, PrayerCategory, Deity } from "@/lib/types";
 
 interface Props {
   initialData?: ShrineInput;
   catalogs: { regions: Region[]; prefectures: Prefecture[]; ranks: Rank[]; prayerCategories: PrayerCategory[] };
+  existingDeities: Deity[];
   onSave: (data: ShrineInput) => void;
   pending: boolean;
 }
@@ -19,7 +20,7 @@ type FestivalDraft = NonNullable<ShrineInput["festivals"]>[number];
 type SourceDraft = NonNullable<ShrineInput["sources"]>[number];
 
 function emptyDeity(): DeityDraft {
-  return { name_ja: "", is_primary: false, sort_order: 0, role: "", regional_lore: "" };
+  return { name_ja: "", is_primary: false, sort_order: 0, regional_lore: "" };
 }
 function emptyFestival(): FestivalDraft {
   return { name_en: "", name_ja: "", time_prose: "", festival_type: "spectacle", occurrences: [] };
@@ -40,7 +41,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const cls = "w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500";
 const textareaClass = `${cls} font-sans`;
 
-export default function ShrineForm({ initialData, catalogs, onSave, pending }: Props) {
+export default function ShrineForm({ initialData, catalogs, existingDeities, onSave, pending }: Props) {
   const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [nameEn, setNameEn] = useState(initialData?.name_en ?? "");
   const [nameJa, setNameJa] = useState(initialData?.name_ja ?? "");
@@ -72,8 +73,27 @@ export default function ShrineForm({ initialData, catalogs, onSave, pending }: P
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   }
 
+  // Existing deities the user can link to (the contract keys on name_ja, so only
+  // those with a kanji name are selectable).
+  const deityOptions = existingDeities
+    .filter((d) => d.name_ja)
+    .sort((a, b) => a.name_en.localeCompare(b.name_en));
+
   function updateDeity(i: number, patch: Partial<DeityDraft>) {
     setDeities((prev) => prev.map((d, idx) => idx === i ? { ...d, ...patch } : d));
+  }
+
+  // Deity picker: link an existing deity (no canonical block → importer reuses it),
+  // start a new deity (reveal canonical fields), or clear the selection.
+  function selectDeity(i: number, value: string) {
+    if (value === "__new__") {
+      updateDeity(i, { name_ja: "", canonical: { name_en: "", deity_type: "mythological", canonical_lore: "" } });
+    } else if (value === "") {
+      updateDeity(i, { name_ja: "", canonical: undefined });
+    } else {
+      const picked = deityOptions.find((o) => o.id === value);
+      updateDeity(i, { name_ja: picked?.name_ja ?? "", canonical: undefined });
+    }
   }
   function updateFestival(i: number, patch: Partial<FestivalDraft>) {
     setFestivals((prev) => prev.map((f, idx) => idx === i ? { ...f, ...patch } : f));
@@ -100,7 +120,6 @@ export default function ShrineForm({ initialData, catalogs, onSave, pending }: P
       deities: deities.map((d, i) => ({
         ...d,
         sort_order: i,
-        role: d.role || null,
         regional_lore: d.regional_lore || null,
       })),
       festivals: festivals.length ? festivals : undefined,
@@ -238,35 +257,51 @@ export default function ShrineForm({ initialData, catalogs, onSave, pending }: P
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Name (kanji) *">
-                <input value={d.name_ja} onChange={(e) => updateDeity(i, { name_ja: e.target.value })} required className={cls} />
-              </Field>
-              <Field label="Role">
-                <input value={d.role ?? ""} onChange={(e) => updateDeity(i, { role: e.target.value })} className={cls} />
-              </Field>
-            </div>
-            <Field label="Regional lore (overrides canonical)">
-              <textarea value={d.regional_lore ?? ""} onChange={(e) => updateDeity(i, { regional_lore: e.target.value })} rows={2} className={textareaClass} />
+            <Field label="Deity *">
+              <select
+                value={d.canonical !== undefined ? "__new__" : (deityOptions.find((o) => o.name_ja === d.name_ja)?.id ?? "")}
+                onChange={(e) => selectDeity(i, e.target.value)}
+                required
+                className={cls}
+              >
+                <option value="">— select a deity —</option>
+                {deityOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name_en}{o.name_ja ? ` (${o.name_ja})` : ""}
+                  </option>
+                ))}
+                <option value="__new__">＋ New deity (not in the list)</option>
+              </select>
             </Field>
-            <details>
-              <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-700">Canonical info (only needed if this is a new deity)</summary>
-              <div className="mt-3 space-y-3 rounded bg-gray-50 p-3">
+
+            {d.canonical !== undefined && (
+              <div className="space-y-3 rounded bg-gray-50 p-3">
+                <p className="text-xs text-gray-500">New canonical deity — it will be created in the database on save.</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Name (romaji)">
-                    <input value={d.canonical?.name_en ?? ""} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical, name_en: e.target.value, deity_type: d.canonical?.deity_type ?? "mythological" } })} className={cls} />
+                  <Field label="Name (kanji) *">
+                    <input value={d.name_ja} onChange={(e) => updateDeity(i, { name_ja: e.target.value })} required className={cls} />
+                  </Field>
+                  <Field label="Name (romaji) *">
+                    <input value={d.canonical?.name_en ?? ""} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical!, name_en: e.target.value } })} required className={cls} />
                   </Field>
                   <Field label="Deity type">
-                    <select value={d.canonical?.deity_type ?? "mythological"} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical, name_en: d.canonical?.name_en ?? "", deity_type: e.target.value as typeof DEITY_TYPES[number] } })} className={cls}>
+                    <select value={d.canonical?.deity_type ?? "mythological"} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical!, deity_type: e.target.value as typeof DEITY_TYPES[number] } })} className={cls}>
                       {DEITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </Field>
                 </div>
                 <Field label="Canonical lore">
-                  <textarea value={d.canonical?.canonical_lore ?? ""} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical, name_en: d.canonical?.name_en ?? "", deity_type: d.canonical?.deity_type ?? "mythological", canonical_lore: e.target.value } })} rows={3} className={textareaClass} />
+                  <textarea value={d.canonical?.canonical_lore ?? ""} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical!, canonical_lore: e.target.value } })} rows={3} className={textareaClass} />
                 </Field>
               </div>
-            </details>
+            )}
+
+            <Field label="Regional lore">
+              <textarea value={d.regional_lore ?? ""} onChange={(e) => updateDeity(i, { regional_lore: e.target.value })} rows={2} className={textareaClass} />
+              <p className="mt-1 text-xs text-gray-400">
+                Primary deity: shown as a supplementary note beneath the canonical lore. Secondary deity: the only lore shown on the shrine page.
+              </p>
+            </Field>
           </div>
         ))}
       </section>

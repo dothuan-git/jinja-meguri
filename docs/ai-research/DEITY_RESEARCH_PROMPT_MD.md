@@ -31,9 +31,25 @@ so each value can be copied straight into its field.
 3. **Never hallucinate** divine genealogy, epithets, or mythological facts. If a fact can't be verified
    from a real source, leave that field `—`.
 4. **Deity type** must be one of the exact values `mythological` / `deified_human` / `syncretic`.
-5. **Canonical lore** is **full flowing prose**, not bullet points. Write in clear, natural English but
-   **keep Japanese terms inline with kanji/kana** (e.g. "the spirit of the grain (宇迦之御魂)"). Only
-   surface Japanese where it carries meaning — names, key terms, quotes.
+5. **Canonical lore** is **full flowing prose**, not bullet points (see **Prose voice & length**).
+   Write in clear, natural English but **keep Japanese terms inline with kanji/kana** (e.g. "the spirit
+   of the grain (宇迦之御魂)"). Only surface Japanese where it carries meaning — names, key terms, quotes.
+
+### Prose voice & length
+**Canonical lore** should read like a **told myth**, not an encyclopedia entry — narrative momentum:
+the characters, what is at stake, and the vivid turning points.
+- **Length follows the legend — there is no cap.** A kami with a thin record gets a tight paragraph;
+  one with a rich myth cycle earns the room to tell it. Most entries land around a paragraph and major
+  deities may run two or three; the Example shows the **texture, not a ceiling**.
+- **Multi-episode legends — break into paragraphs.** When a kami has several distinct episodes, separate
+  them with a **blank line** (just press Enter in the form). Use it only between genuinely separate
+  episodes, not inside a single continuous one.
+- **Density, not word-count, is the discipline.** Never pad a thin story to fill space; never truncate
+  a rich one to hit a target. Every sentence carries a fact or moves the narrative.
+- **Tight, not thin.** Cut *filler* — hedging, repetition, throat-clearing, meta-commentary — **not** story.
+- **Don't over-compress.** Never flatten the myth into a one-line factual summary (e.g. "the kami of
+  rice and prosperity"); that strips the story feeling this site exists to convey.
+- **Vivid retelling, never embellishment** — no invented drama, dialogue, or detail beyond the sources.
 
 ### Research method
 - Research **Japanese-first**: prefer `ja.wikipedia.org`, the Kojiki (古事記) and Nihon Shoki (日本書紀),
@@ -98,6 +114,7 @@ Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In t
 - **Name (English)** and **Name (kanji)** are both filled; the kanji is canonical.
 - **Deity type** is exactly one of the three allowed values.
 - **Canonical lore** is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
+- **Canonical lore** reads as a told myth, length scaled to the legend — not a one-line summary, not padded.
 
 If the deity name is ambiguous (several kami share a reading, or a name maps to multiple distinct
 deities), ask one brief clarifying question (which kanji / which tradition) before researching.

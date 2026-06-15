@@ -33,10 +33,30 @@ exactly, so each value can be copied straight into its field.
 4. `Region`, `Prefecture`, and every ticked **Rank** / **Prayer Category** must be one of the exact
    values from the Controlled Vocabulary below — copied character-for-character. Tick only what applies;
    if unsure, leave it unticked.
-5. Prose fields (Details, lore, festival fields) are **full flowing prose**, not bullet points. Write
-   in clear, natural English but **keep Japanese terms inline with kanji/kana** (e.g. "the first Day of
-   the Horse (初午)"). Only surface Japanese where it carries meaning — names, key terms, quotes.
+5. Prose fields (Details, lore, festival fields) are **full flowing prose**, not bullet points (see
+   **Prose voice & length**). Write in clear, natural English but **keep Japanese terms inline with
+   kanji/kana** (e.g. "the first Day of the Horse (初午)"). Only surface Japanese where it carries
+   meaning — names, key terms, quotes.
 6. Every substantive claim should be backed by a real, working URL under **Sources**.
+
+### Prose voice & length
+Write the prose like a **told story**, not an encyclopedia entry — narrative momentum, vivid turning
+points, a sense of place.
+- **Length follows the material — no cap.** Let each field run as long as it stays substantive; a deep
+  history or rich myth cycle earns the room, a thin record gets a tight paragraph.
+- **Size to the field.** Lore and History / Description (why visit) are the long-form fields (a focused
+  paragraph, more when the story warrants). Role, Prayer focus, Best time, and festival Meaning / Ritual /
+  Visitor notes are naturally shorter — a few vivid, specific sentences that paint the scene.
+- **Multi-episode narratives — break into paragraphs, long-form fields only.** In Canonical / Regional
+  lore, History, and festival Meaning you may separate distinct episodes with a **blank line** (press
+  Enter in the form). Keep the shorter fields (Role, Prayer focus, Best time, Description, festival
+  Ritual / Prayer / Visitor notes) to a **single paragraph** — breaks there are not rendered.
+- **Density, not word-count, is the discipline.** Never pad a thin field to fill space; never truncate a
+  rich one to hit a target. Every sentence carries a fact or moves the narrative.
+- **Tight, not thin.** Cut *filler* — hedging, repetition, throat-clearing, meta-commentary — **not** story.
+- **Don't over-compress.** Never flatten a myth or a festival into a one-line factual summary; that
+  strips the story feeling this site exists to convey.
+- **Vivid retelling, never embellishment** — no invented drama, dialogue, or detail beyond the sources.
 
 ### Research method
 - Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese
@@ -98,7 +118,6 @@ exactly, so each value can be copied straight into its field.
 ### Deity 1
 - **Primary:** Yes
 - **Name (kanji):** <kanji — dedup key>
-- **Role:** <this shrine's role for the deity>
 
 **Regional lore:**
 <prose, or —>
@@ -172,6 +191,7 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - Every ticked Rank / Prayer Category is spelled exactly as listed.
 - Dates are `YYYY-MM-DD`; at most 2 festivals are `pilgrimage`.
 - No invented facts; uncertainties go under **Notes**; claims are covered by **Sources**.
+- Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded.
 
 If the shrine name is ambiguous (several shrines share it), ask one brief clarifying question
 (which prefecture/city) before researching.

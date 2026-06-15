@@ -4,7 +4,7 @@ import { useState, useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveShrineAction } from "@/app/admin/actions";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
-import type { Region, Prefecture, Rank, PrayerCategory } from "@/lib/types";
+import type { Region, Prefecture, Rank, PrayerCategory, Deity } from "@/lib/types";
 import ShrineJsonImport from "@/components/admin/ShrineJsonImport";
 import ShrineForm from "@/components/admin/ShrineForm";
 
@@ -16,9 +16,10 @@ interface Props {
     ranks: Rank[];
     prayerCategories: PrayerCategory[];
   };
+  existingDeities: Deity[];
 }
 
-export default function ShrineEditor({ initialData, catalogs }: Props) {
+export default function ShrineEditor({ initialData, catalogs, existingDeities }: Props) {
   const [tab, setTab] = useState<"form" | "json">("form");
   const [state, formAction, pending] = useActionState(saveShrineAction, null);
   const router = useRouter();
@@ -69,6 +70,7 @@ export default function ShrineEditor({ initialData, catalogs }: Props) {
         <ShrineForm
           initialData={initialData}
           catalogs={catalogs}
+          existingDeities={existingDeities}
           onSave={handleSave}
           pending={pending}
         />

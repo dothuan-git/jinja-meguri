@@ -39,10 +39,31 @@ so it can be pasted straight into the site's deity JSON importer.
 5. `name_ja` is the **kanji dedup key** the whole site matches on — it must be the deity's name in
    **kanji** (kana only if the name has no standard kanji form), exact and canonical. Re-importing the
    same `name_ja` **overwrites** that deity, so spelling matters.
-6. `canonical_lore` is **full flowing prose**, not a bullet summary. Write in natural English but
-   **preserve Japanese terms inline with kanji/kana** (e.g. "the spirit of the grain (宇迦之御魂)").
+6. `canonical_lore` is **full flowing prose**, not a bullet summary (see **Prose voice & length**).
+   Write in natural English but **preserve Japanese terms inline with kanji/kana**
+   (e.g. "the spirit of the grain (宇迦之御魂)").
 7. **Completeness — emit every key, every time** (see below). Never drop an optional key; fill empties
    with `null` or `[]`. **Never** use `"-"` or `""` as a placeholder.
+
+### Prose voice & length
+`canonical_lore` should read like a **told myth**, not an encyclopedia entry — give it narrative
+momentum: the characters, what is at stake, and the vivid turning points of the story.
+- **Length follows the legend — there is no cap.** A kami with a thin record gets a tight paragraph;
+  one with a rich myth cycle (multiple defining episodes, deep genealogy) earns the room to tell it.
+  Let the story run as long as it stays substantive. As a rough feel most entries land around a
+  paragraph and major deities may run two or three; the Example below shows the **texture, not a ceiling**.
+- **Multi-episode legends — break into paragraphs.** When a kami has several distinct episodes, separate
+  them with a blank line so the page renders them as paragraphs. In JSON this must be an **escaped `\n\n`**
+  inside the string (a raw newline is invalid; `"…rock cave.\n\nLater, during the descent…"` stays valid
+  `JSON.parse`). Don't break a single continuous episode; use it only between genuinely separate ones.
+- **Density, not word-count, is the discipline.** Never pad a thin story to fill space; never truncate
+  a rich one to hit a target. Every sentence should carry a fact or move the narrative forward.
+- **Tight, not thin.** Cut *filler* — hedging ("it is said that…"), repetition, throat-clearing, and
+  meta-commentary ("this deity is notable for…") — **not** story.
+- **Don't over-compress.** Never flatten the myth into a one-line factual summary (e.g. "the kami of
+  rice and prosperity"); that strips the story feeling this site exists to convey.
+- **Vivid retelling, never embellishment.** Don't add drama, invented dialogue, or detail that isn't
+  in the sources — concision and length alike must never become fabrication.
 
 ### Completeness — fill every field
 Always output **all 5 keys**, even when empty, so the shape is fixed and verifiable. Use the
@@ -103,6 +124,7 @@ Required keys are marked **(req)**.
 - [ ] `name_en` and `name_ja` are filled; `name_ja` is canonical **kanji**.
 - [ ] `deity_type` is exactly one of `"mythological"`, `"deified_human"`, `"syncretic"`.
 - [ ] `canonical_lore` is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
+- [ ] `canonical_lore` reads as a told myth, length scaled to the legend — not a one-line summary, not padded — see **Prose voice & length**.
 
 If the user names a deity that is ambiguous (several kami share a reading, or a name maps to multiple
 distinct deities), ask one brief clarifying question (which kanji / which tradition) before researching.

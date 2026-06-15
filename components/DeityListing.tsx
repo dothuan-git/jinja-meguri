@@ -377,7 +377,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                       <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
                         Canonical Chronicle Chronicle (記紀神話)
                       </span>
-                      <p className="first-letter:text-3.5xl first-letter:font-serif first-letter:font-black first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 leading-relaxed font-serif text-sm md:text-base text-justify text-stone/90 select-all">
+                      <p className="first-letter:text-3.5xl first-letter:font-serif first-letter:font-black first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 leading-relaxed font-serif text-sm md:text-base text-justify text-stone/90 select-all whitespace-pre-line">
                         {activeDeity.canonicalLore}
                       </p>
                     </div>
@@ -444,7 +444,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                             {regionalLore && (
                               <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-serif text-[11px] md:text-xs text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-all flex gap-2">
                                 <span className="text-torii text-base leading-none font-sans font-black select-none">“</span>
-                                <div className="flex-1 text-justify">
+                                <div className="flex-1 text-justify whitespace-pre-line">
                                   {regionalLore}
                                 </div>
                               </div>

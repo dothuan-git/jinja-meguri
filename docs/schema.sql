@@ -84,8 +84,7 @@ CREATE TABLE shrine_deities (
     deity_id      uuid     NOT NULL REFERENCES deities(id),
     is_primary    boolean  NOT NULL DEFAULT false,
     sort_order    smallint NOT NULL DEFAULT 0,
-    role          text,                          -- shrine-specific role
-    regional_lore text,                          -- overrides deities.canonical_lore; null = use canonical
+    regional_lore text,                          -- shrine-specific lore; null = use deities.canonical_lore
     PRIMARY KEY (shrine_id, deity_id)
 );
 

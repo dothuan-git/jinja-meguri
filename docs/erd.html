@@ -360,7 +360,6 @@
       <li class="rel" data-ref="deities"><span class="k fk">FK</span><span class="col">deity_id</span><span class="type">→ deities</span></li>
       <li><span class="k"></span><span class="col">is_primary</span><span class="type">bool</span></li>
       <li><span class="k"></span><span class="col">sort_order</span><span class="type">smallint</span></li>
-      <li><span class="k"></span><span class="col">role</span><span class="type">text</span></li>
       <li><span class="k"></span><span class="col">regional_lore</span><span class="type">text</span></li>
     </ul>
   </div>
@@ -516,8 +515,7 @@
         <tr><td class="f">deity_id</td><td class="v">"a1b2c3d4-…"</td><td class="d">→ deities</td></tr>
         <tr><td class="f">is_primary</td><td class="v">true</td><td class="d">marks the main enshrined deity; only one row per shrine should be true</td></tr>
         <tr><td class="f">sort_order</td><td class="v">1</td><td class="d">display order on shrine detail page — lowest value appears first</td></tr>
-        <tr><td class="f">role</td><td class="v">"principal"</td><td class="d">this deity's role at this specific shrine (principal · consort · guardian · …)</td></tr>
-        <tr><td class="f">regional_lore</td><td class="v">"The founding deity of Izumo…"</td><td class="d">shrine-specific lore shown in place of canonical_lore; null falls back to canonical</td></tr>
+        <tr><td class="f">regional_lore</td><td class="v">"The founding deity of Izumo…"</td><td class="d">shrine-specific lore; null falls back to canonical_lore</td></tr>
       </table>
     </div>
 

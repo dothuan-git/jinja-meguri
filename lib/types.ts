@@ -53,7 +53,6 @@ export interface ShrineDeityRow {
   deity_id: string;
   is_primary: boolean;
   sort_order: number;
-  role: string | null;
   regional_lore: string | null;
 }
 export interface ShrineRankRow {
@@ -135,7 +134,6 @@ export interface DeityView {
   name_en: string;
   name_ja: string | null;
   titles: string[];
-  role: string | null;
   deity_type: string;
   canonical_lore: string | null;
   regional_lore: string | null;

@@ -46,7 +46,6 @@ export default async function EditShrinePage({ params }: { params: Promise<{ slu
       name_ja: d.name_ja ?? "",
       is_primary: d.is_primary,
       sort_order: d.sort_order,
-      role: d.role,
       regional_lore: d.regional_lore,
     })),
     festivals: detail.festivals.map((f) => ({
@@ -74,7 +73,7 @@ export default async function EditShrinePage({ params }: { params: Promise<{ slu
           Edit: {detail.name_en}
         </h1>
       </div>
-      <ShrineEditor initialData={initialData} catalogs={catalogs} />
+      <ShrineEditor initialData={initialData} catalogs={catalogs} existingDeities={store.deities} />
     </div>
   );
 }

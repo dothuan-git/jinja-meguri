@@ -38,10 +38,34 @@ be pasted straight into the site's JSON importer.
    never guess. If a *required* field is uncertain, put your best value and explain it in `notes`.
 5. Every claim of substance should be backed by an entry in `sources` (real, working URLs only).
 6. Prose fields (`details.*`, deity `*_lore`, festival fields) are **full flowing prose**, not bullet
-   summaries. Write in natural English but **preserve Japanese terms inline with kanji/kana**
-   (e.g. "the first Day of the Horse (初午)").
+   summaries (see **Prose voice & length**). Write in natural English but **preserve Japanese terms
+   inline with kanji/kana** (e.g. "the first Day of the Horse (初午)").
 7. **Completeness — emit every key, every time** (see the Completeness section below). Never drop an
    optional key; fill empties with `null` or `[]`. **Never** use `"-"` or `""` as a placeholder.
+
+### Prose voice & length
+Write the prose like a **told story**, not an encyclopedia entry — narrative momentum, vivid turning
+points, a sense of place.
+- **Length follows the material — no cap.** Let each field run as long as it stays substantive: a
+  shrine with a deep history or a kami with a rich myth cycle earns the room to tell it; a thin record
+  gets a tight paragraph. The gold-standard example file shows the **texture, not a ceiling**.
+- **Size to the field.** Lore and `details.history` / `details.description` are the long-form fields
+  (a focused paragraph, more when the story warrants). `prayer_focus`, `best_time`, and festival
+  `meaning` / `ritual` / `prayer` / `visitor_notes` are naturally shorter — a few vivid, specific
+  sentences that paint the scene.
+- **Multi-episode narratives — break into paragraphs, long-form fields only.** In `canonical_lore`,
+  `regional_lore`, `details.history`, and festival `meaning` you may separate distinct episodes with a
+  blank line, written as an **escaped `\n\n`** inside the JSON string (must stay valid `JSON.parse`).
+  Keep the shorter fields (`prayer_focus`, `best_time`, `details.description`, festival
+  `ritual` / `prayer` / `visitor_notes`) to a **single paragraph** — breaks there are not rendered.
+- **Density, not word-count, is the discipline.** Never pad a thin field to fill space; never truncate
+  a rich one to hit a target. Every sentence carries a fact or moves the narrative.
+- **Tight, not thin.** Cut *filler* — hedging, repetition, throat-clearing, meta-commentary ("this
+  shrine is notable for…") — **not** story.
+- **Don't over-compress.** Never flatten a myth or a festival into a one-line factual summary; that
+  strips the story feeling this site exists to convey.
+- **Vivid retelling, never embellishment.** Don't add drama, invented dialogue, or detail beyond the
+  sources — concision and length alike must never become fabrication.
 
 ### Completeness — fill every field
 Always output **every key at every level**, even when empty, so the shape is fixed and verifiable.
@@ -63,7 +87,7 @@ Use the type-correct empty value — never `"-"`, never `""`:
 |---|---|---|
 | top level | slug, name_en, name_ja, region, prefecture, city, address, coordinates, image_urls, notes, details, ranks, prayer_categories, deities, festivals, sources | **16** |
 | `details` | history, description, prayer_focus, best_time | **4** |
-| each `deities[]` | name_ja, is_primary, sort_order, role, regional_lore, canonical | **6** |
+| each `deities[]` | name_ja, is_primary, sort_order, regional_lore, canonical | **5** |
 | each `canonical` | name_en, name_ja, deity_type, titles, canonical_lore | **5** |
 | each `festivals[]` | name_en, name_ja, time_prose, start_date, end_date, origin, meaning, ritual, prayer, festival_type, visitor_notes, occurrences | **12** |
 | each `occurrences[]` | year, start_date, end_date, notes | **4** |
@@ -78,7 +102,7 @@ Array *lengths* vary by shrine, so the grand total varies — verify the **key s
   Don't output Japanese except where it carries meaning — names, key terms, quotes — and always pair
   those with the original kanji/kana (see rule #6).
 - Prioritise **shrine-specific / regional lore** over the generic Kojiki/Nihon Shoki narrative, but place
-  each piece in the **right field for that deity's role** — see **Lore fields** under the Deity object.
+  each piece in the **right field for that deity's position (primary vs secondary)** — see **Lore fields** under the Deity object.
 - Festivals: include **only major / uniquely significant** festivals (skip daily and monthly rites).
   At most **2** festivals may be `festival_type: "pilgrimage"`. Use `"spectacle"` only for genuinely
   visible ceremonies/processions. If a festival is neither, omit `festival_type`.
@@ -119,7 +143,6 @@ Deity object (in `deities[]`):
 - `name_ja` **(req)** — the deity's kanji name. This is the global dedup key, so it must be the kanji.
 - `is_primary` **(req)** — boolean. **Exactly one** deity in the array is `true`.
 - `sort_order` — integer ≥ 0; primary = `0`, then ascending. Default `0`.
-- `role` — this shrine's specific role/relationship for the deity (prose).
 - `regional_lore` — this shrine's **own** version of the deity's story (prose), or omit/`null`.
   See **Lore fields** below — this is the field that displays for *secondary* deities.
 - `canonical` — **always include this** (you don't know which deities already exist in the DB; it is
@@ -132,7 +155,7 @@ Deity object (in `deities[]`):
     this is the field that displays for the *primary* deity, so always fill it for the primary.
 
 **Lore fields — which one to fill (read carefully).** The site renders the two lore fields differently
-depending on the deity's role, so put the text where it will actually appear:
+depending on whether the deity is primary or secondary, so put the text where it will actually appear:
 - **Primary deity** (`is_primary: true`): `canonical_lore` is the **main** lore shown on the page —
   **always fill it**. Add `regional_lore` only if this shrine has a genuinely distinct local version; it
   then appears as a short supplementary "regional origins" note. Canonical-only (no `regional_lore`) is
@@ -207,6 +230,7 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - [ ] `deities` has ≥1 entry and **exactly one** `is_primary: true`; each has `name_ja` and `canonical`.
 - [ ] Each `canonical.deity_type` is one of the three allowed values.
 - [ ] Primary deity has `canonical.canonical_lore` filled; any companion lore that must display is in `regional_lore`.
+- [ ] Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded — see **Prose voice & length**.
 - [ ] At most 2 festivals have `festival_type: "pilgrimage"`; any `festival_type` is a valid enum value.
 - [ ] All dates are `"YYYY-MM-DD"`; `occurrences[].year` is 2020–2100.
 - [ ] All `sources[].url` and any `image_urls[]` are real, valid URLs.

@@ -34,7 +34,6 @@ const DeitySchema = z.object({
   name_ja: z.string().min(1, "Deity name_ja (kanji dedup key) is required"),
   is_primary: z.boolean(),
   sort_order: z.number().int().min(0).default(0),
-  role: z.string().nullable().optional(),
   regional_lore: z.string().nullable().optional(),
   // Only required when the deity doesn't exist in the DB yet
   canonical: DeityCanonicalSchema.optional(),

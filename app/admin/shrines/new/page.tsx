@@ -21,7 +21,7 @@ export default async function NewShrinePage() {
         <Link href="/admin/dashboard" className="text-sm text-gray-500 hover:text-gray-800">← Back</Link>
         <h1 className="text-xl font-bold text-gray-900">New Shrine</h1>
       </div>
-      <ShrineEditor catalogs={catalogs} />
+      <ShrineEditor catalogs={catalogs} existingDeities={store.deities} />
     </div>
   );
 }

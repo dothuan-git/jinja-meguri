@@ -11,7 +11,7 @@ export const EXPECTED_KEYS = {
     "prayer_categories", "deities", "festivals", "sources",
   ],
   details: ["history", "description", "prayer_focus", "best_time"],
-  deity: ["name_ja", "is_primary", "sort_order", "role", "regional_lore", "canonical"],
+  deity: ["name_ja", "is_primary", "sort_order", "regional_lore", "canonical"],
   canonical: ["name_en", "name_ja", "deity_type", "titles", "canonical_lore"],
   festival: [
     "name_en", "name_ja", "time_prose", "start_date", "end_date", "origin",

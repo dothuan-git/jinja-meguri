@@ -56,7 +56,6 @@ function shrineDeityViews(store: Store, shrineId: string): DeityView[] {
         name_en: d.name_en,
         name_ja: d.name_ja,
         titles: d.titles ?? [],
-        role: sd.role,
         deity_type: d.deity_type,
         canonical_lore: d.canonical_lore,
         regional_lore: sd.regional_lore,
