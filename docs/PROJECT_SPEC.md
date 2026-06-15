@@ -96,7 +96,7 @@ PostgreSQL (Neon). Full DDL in `schema.sql` (14 tables + 1 view + 1 materialized
 Research (JA-first) → one contract-shaped JSON per shrine → ingest.py → Neon Postgres → REFRESH shrine_search
 ```
 
-- The **contract** (`shrine_ingest_contract.jsonc`) is the JSON shape research produces and the script consumes. It carries explicit `ranks[]`, `prayer_categories[]`, `deities[]` (with `regional_lore`), `events[]` + `occurrences[]`, and `sources[]` so structured data is never buried in prose. Real data files are plain `.json` (the `.jsonc` is the annotated template).
+- The **contract** (`shrine_ingest_contract.json`) is the JSON shape research produces and the script consumes. It carries explicit `ranks[]`, `prayer_categories[]`, `deities[]` (with `regional_lore`), `events[]` + `occurrences[]`, and `sources[]` so structured data is never buried in prose. Real data files are plain `.json` (the `.jsonc` is the annotated template).
 - The **ingest script** owns: validation, deity dedup (upsert on `name_kanji`), code→id resolution (ranks, categories, region, prefecture), and idempotent re-ingest by `slug`. It is a single disposable Python file.
 - **Migration** of the ~10 legacy shrines = transform old format → contract shape → same ingest script. (Migration and ingest are one tool, not two.)
 - **Human pause points:** unmatched deity (no canonical block and not in DB), and validation failure.
