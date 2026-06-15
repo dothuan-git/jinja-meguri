@@ -1,0 +1,71 @@
+{
+  "slug": "fushimi-inari-taisha",
+  "name_en": "Fushimi Inari Taisha",
+  "name_ja": "伏見稲荷大社",
+  "region": "Kinki",
+  "prefecture": "Kyoto",
+  "city": "Kyoto",
+  "address": "68 Fukakusa Yabunouchichō, Fushimi-ku, Kyoto 612-0882 (京都府京都市伏見区深草薮之内町68)",
+  "coordinates": { "lat": 34.9671, "lng": 135.7727 },
+  "image_urls": [],
+  "notes": "Coordinates point to the main shrine (honden) at the foot of Mount Inari; verify before publishing. Images to be sourced by the site owner.",
+  "details": {
+    "history": "Founded in 711 CE (和銅4年) by Hata no Irogu of the immigrant Hata clan, who—according to the Yamashiro no Kuni Fudoki—enshrined the kami on the three peaks of Mount Inari after an arrow he shot into a rice-cake target turned into a swan and alighted there. Fushimi Inari grew into the head shrine of the Inari cult; it appears in the Engishiki (927) as a Myōjin Taisha and rose to the highest modern rank of Kanpei-Taisha. Over the centuries its tutelary role expanded from rice and agriculture to commerce, and merchants' donations gave rise to the celebrated corridors of vermilion torii.",
+    "description": "Fushimi Inari is the most famous Inari shrine in Japan and the spiritual home of the roughly 30,000 Inari shrines nationwide. Behind the vast Rōmon gate and Honden, a network of trails climbs the sacred Mount Inari through the Senbon Torii—'thousands of torii gates'—each donated by an individual or business in thanks for answered prayers. The full circuit to the summit and back takes two to three hours and passes countless sub-shrines, stone fox (kitsune) messengers, and tea houses. The grounds are open day and night and free to enter.",
+    "prayer_focus": "Inari is the kami of rice, agriculture, and—by extension—of commerce and prosperity. Visitors pray above all for business prosperity (商売繁盛) and a bountiful harvest (五穀豊穣), as well as for wealth and financial luck (金運) and general good fortune (開運). Companies large and small dedicate torii and come to give thanks for success.",
+    "best_time": "Early morning (before about 9 am) or after dusk to walk the torii corridors without crowds; the lanterns lend the night ascent an eerie beauty. Late autumn brings color to the mountain. The shrine is busiest at New Year (hatsumōde) and on the February Hatsuuma festival day."
+  },
+  "ranks": ["Sohonsha", "Myojin-Taisha", "Shikinai-sha", "Kanpei-Taisha"],
+  "prayer_categories": ["Business Prosperity", "Bountiful Harvest", "Wealth", "Good Fortune"],
+  "deities": [
+    {
+      "name_ja": "稲荷大神",
+      "is_primary": true,
+      "sort_order": 0,
+      "role": "Worshipped here as Inari Ōkami, the collective name for the kami enshrined across the five peaks of Mount Inari; the chief among them is Uka-no-Mitama-no-Ōkami. Fushimi Inari is the sōhonsha (head shrine) from which the Inari faith spread nationwide.",
+      "regional_lore": "Local tradition holds that the kami first descended onto Mount Inari on the first Day of the Horse in 711, the event commemorated each year at Hatsuuma. The fox (kitsune) is revered as Inari's messenger; pairs of stone foxes—often holding a key or a sheaf of rice in their mouths—guard the shrine's gates.",
+      "canonical": {
+        "name_en": "Inari Ōkami",
+        "name_ja": "稲荷大神",
+        "deity_type": "mythological",
+        "titles": ["Uka-no-Mitama-no-Ōkami (宇迦之御魂大神)"],
+        "canonical_lore": "Uka-no-Mitama-no-Kami (宇迦之御魂神) appears in the Kojiki as a child of Susanoo and in the Nihon Shoki as a child of Izanagi and Izanami; the name means 'spirit of the grain.' From the Heian period the deity merged with the broader Inari cult and, through Buddhist syncretism, with Dakiniten, becoming one of Japan's most widely worshipped kami of rice, sustenance, and prosperity."
+      }
+    }
+  ],
+  "festivals": [
+    {
+      "name_en": "Hatsuuma Taisai",
+      "name_ja": "初午大祭",
+      "time_prose": "First Day of the Horse (初午) in February — varies year to year",
+      "start_date": null,
+      "end_date": null,
+      "origin": "Commemorates the descent of the kami onto Mount Inari on the first Day of the Horse (hatsuuma) in 711 CE, regarded as the shrine's founding.",
+      "meaning": "The most important festival of the Inari year, a day to pray for a good harvest, prosperous business, family safety, and the fulfillment of wishes.",
+      "ritual": "Worshippers ascend toward the sacred peaks and receive the shirushi no sugi (験の杉), a sprig of sacred cedar given as a token of good fortune; ema and offerings fill the precincts.",
+      "prayer": "Business prosperity (商売繁盛), bountiful harvest (五穀豊穣), wish fulfillment (心願成就).",
+      "festival_type": "pilgrimage",
+      "visitor_notes": "The date shifts each year with the zodiac calendar, so it cannot be computed in advance — add the concrete date to occurrences[] each year.",
+      "occurrences": []
+    },
+    {
+      "name_en": "Inari Matsuri",
+      "name_ja": "稲荷祭",
+      "time_prose": "Mid-April departure (Shinkōsai, 神幸祭) to early-May return (Kankōsai, 還幸祭)",
+      "start_date": null,
+      "end_date": null,
+      "origin": "The shrine's great spring rite, dating in its present form to the Heian period, in which the kami travel from the mountain to bless the surrounding parish.",
+      "meaning": "Brings the blessings of Inari out to the people of Fukakusa and the wider Kyoto area for the planting season.",
+      "ritual": "In the Shinkōsai the kami are transferred into five mikoshi and carried to the Otabisho in the city; weeks later the Kankōsai returns them to the shrine, accompanied by processions.",
+      "prayer": null,
+      "festival_type": "spectacle",
+      "visitor_notes": "The mikoshi processions and the decorated Otabisho are the visible highlights; exact dates shift slightly each year, so confirm with the shrine.",
+      "occurrences": []
+    }
+  ],
+  "sources": [
+    { "url": "https://inari.jp/", "title": "Fushimi Inari Taisha — official site" },
+    { "url": "https://ja.wikipedia.org/wiki/%E4%BC%8F%E8%A6%8B%E7%A8%B2%E8%8D%B7%E5%A4%A7%E7%A4%BE", "title": "伏見稲荷大社 — Japanese Wikipedia" },
+    { "url": "https://en.wikipedia.org/wiki/Fushimi_Inari-taisha", "title": "Fushimi Inari-taisha — English Wikipedia" }
+  ]
+}

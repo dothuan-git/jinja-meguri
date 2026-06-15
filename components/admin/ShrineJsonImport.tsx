@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
+import { checkCompleteness } from "@/lib/admin/keyCompleteness";
 
 interface Props {
   initialData?: ShrineInput;
@@ -13,6 +14,15 @@ interface Props {
 export default function ShrineJsonImport({ initialData, onSave, pending, formAction }: Props) {
   const [text, setText] = useState(initialData ? JSON.stringify(initialData, null, 2) : "");
   const [parseError, setParseError] = useState<string | null>(null);
+
+  const completeness = useMemo(() => {
+    if (!text.trim()) return null;
+    try {
+      return { report: checkCompleteness(JSON.parse(text)), invalid: false as const };
+    } catch {
+      return { report: null, invalid: true as const };
+    }
+  }, [text]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +67,41 @@ export default function ShrineJsonImport({ initialData, onSave, pending, formAct
           placeholder='{"slug": "my-shrine", "name_en": "My Shrine", ...}'
         />
       </div>
+
+      {completeness?.invalid && (
+        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Not valid JSON yet — key check will run once it parses.
+        </p>
+      )}
+
+      {completeness?.report && (
+        <div
+          className={`rounded border px-3 py-2 text-xs ${
+            completeness.report.complete
+              ? "border-green-200 bg-green-50 text-green-800"
+              : "border-amber-200 bg-amber-50 text-amber-800"
+          }`}
+        >
+          <p className="font-medium">
+            {completeness.report.complete
+              ? `✓ All keys present — ${completeness.report.totalPresent}/${completeness.report.totalExpected} across ${completeness.report.groups.length} objects`
+              : `${completeness.report.totalMissing} missing key${completeness.report.totalMissing === 1 ? "" : "s"} — ${completeness.report.totalPresent}/${completeness.report.totalExpected} present`}
+          </p>
+          {!completeness.report.complete && (
+            <ul className="mt-2 space-y-1">
+              {completeness.report.groups
+                .filter((g) => g.missing.length > 0)
+                .map((g) => (
+                  <li key={g.label} className="font-mono">
+                    <span className="text-amber-900">{g.label}</span>{" "}
+                    <span className="text-amber-600">({g.present}/{g.expected})</span>{" "}
+                    missing: {g.missing.join(", ")}
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {parseError && (
         <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{parseError}</p>
