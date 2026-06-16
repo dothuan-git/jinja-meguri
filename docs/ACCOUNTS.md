@@ -25,20 +25,23 @@ Route and action guards live in the application code (see
 Three steps. The same email must be used throughout.
 
 1. **Create the person's auth account** in the hosting console. No password is set here.
-2. **Add their email to the admin allowlist** (a database entry).
+2. **Add their email to the admin allowlist** (a database entry). Each entry carries a `role`
+   — either `admin` (full access, the default) or `editor` (content authoring only, restrictions
+   to be defined). Omitting the role defaults to `admin`.
 3. **They set their own password.** From the admin sign-in page they use the
    "first time / forgot password" link, receive a one-time link by email (it expires shortly),
    set a password, and can then sign in.
 
-Adding or removing an admin needs no code change or redeploy.
+Adding, removing, or changing a role needs no code change or redeploy — it is a database update only.
 
 > In production, the deployed domain must be registered as a trusted origin with the auth
 > service, or the emailed link is rejected. Use a real, reachable inbox — the link is only
 > delivered by email.
 
-## Removing an admin
+## Removing or demoting an admin
 
-- Remove their entry from the admin allowlist to revoke access (their login can remain).
+- Remove their entry from the admin allowlist to revoke access entirely (their auth login can remain).
+- To change their role, update the `role` value on their allowlist entry.
 - To remove them entirely, also delete the account in the hosting console.
 
 ## Configuration

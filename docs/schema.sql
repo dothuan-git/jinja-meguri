@@ -170,3 +170,13 @@ CREATE TABLE festival_occurrences (
 
 CREATE INDEX idx_festival_occurrences_festival ON festival_occurrences(festival_id);
 CREATE INDEX idx_festival_occurrences_year     ON festival_occurrences(year);
+
+-- ------------------------------------------------------------
+-- ADMIN ALLOWLIST
+-- ------------------------------------------------------------
+CREATE TABLE app_admin (
+    email      text PRIMARY KEY,
+    role       text NOT NULL DEFAULT 'admin'
+                   CHECK (role IN ('admin', 'editor')),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
