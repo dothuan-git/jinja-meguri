@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { deleteDeityAction } from "@/app/admin/actions";
+import { useToast } from "@/components/ui/Toast";
 
 interface Props {
   deity: { id: string; name_en: string; name_ja: string | null; deity_type: string };
@@ -13,18 +14,22 @@ interface Props {
 export default function AdminDeityRow({ deity, shrineCount }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function handleDelete() {
     if (shrineCount > 0) {
-      alert(`Cannot delete "${deity.name_en}" — it is linked to ${shrineCount} shrine${shrineCount === 1 ? "" : "s"}. Unlink it first.`);
+      toast.error(
+        `Cannot delete "${deity.name_en}" — it is linked to ${shrineCount} shrine${shrineCount === 1 ? "" : "s"}. Unlink it first.`,
+      );
       return;
     }
     if (!confirm(`Delete "${deity.name_en}"? This cannot be undone.`)) return;
     startTransition(async () => {
       const result = await deleteDeityAction(deity.id);
       if (result.error) {
-        alert(`Error: ${result.error}`);
+        toast.error(`Couldn't delete deity “${deity.name_en}”: ${result.error}`);
       } else {
+        toast.success(`Deity “${deity.name_en}” deleted.`);
         router.refresh();
       }
     });

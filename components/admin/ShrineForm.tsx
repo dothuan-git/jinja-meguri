@@ -51,7 +51,6 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
   const [address, setAddress] = useState(initialData?.address ?? "");
   const [lat, setLat] = useState(initialData?.coordinates?.lat?.toString() ?? "");
   const [lng, setLng] = useState(initialData?.coordinates?.lng?.toString() ?? "");
-  const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [history, setHistory] = useState(initialData?.details?.history ?? "");
   const [description, setDescription] = useState(initialData?.details?.description ?? "");
   const [prayerFocus, setPrayerFocus] = useState(initialData?.details?.prayer_focus ?? "");
@@ -87,7 +86,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
   // start a new deity (reveal canonical fields), or clear the selection.
   function selectDeity(i: number, value: string) {
     if (value === "__new__") {
-      updateDeity(i, { name_ja: "", canonical: { name_en: "", deity_type: "mythological", canonical_lore: "" } });
+      updateDeity(i, { name_ja: "", canonical: { name_en: "", deity_type: "mythological" } });
     } else if (value === "") {
       updateDeity(i, { name_ja: "", canonical: undefined });
     } else {
@@ -113,7 +112,6 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
       city: city || null,
       address: address || null,
       coordinates: lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null,
-      notes: notes || null,
       details: { history: history || null, description: description || null, prayer_focus: prayerFocus || null, best_time: bestTime || null },
       ranks: ranks.length ? ranks : undefined,
       prayer_categories: categories.length ? categories : undefined,
@@ -172,9 +170,6 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
             <input type="number" step="any" value={lng} onChange={(e) => setLng(e.target.value)} className={cls} placeholder="135.7785" />
           </Field>
         </div>
-        <Field label="Notes">
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className={textareaClass} />
-        </Field>
       </section>
 
       {/* Prose details */}
@@ -290,9 +285,6 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
                     </select>
                   </Field>
                 </div>
-                <Field label="Canonical lore">
-                  <textarea value={d.canonical?.canonical_lore ?? ""} onChange={(e) => updateDeity(i, { canonical: { ...d.canonical!, canonical_lore: e.target.value } })} rows={3} className={textareaClass} />
-                </Field>
               </div>
             )}
 
@@ -335,18 +327,18 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
               <Field label="Time (display)">
                 <input value={f.time_prose ?? ""} onChange={(e) => updateFestival(i, { time_prose: e.target.value })} className={cls} placeholder="e.g. First Sunday of May" />
               </Field>
-              <Field label="Start date (YYYY-MM-DD)">
-                <input value={f.start_date ?? ""} onChange={(e) => updateFestival(i, { start_date: e.target.value || null })} className={cls} />
-              </Field>
-              <Field label="End date (YYYY-MM-DD)">
-                <input value={f.end_date ?? ""} onChange={(e) => updateFestival(i, { end_date: e.target.value || null })} className={cls} />
-              </Field>
             </div>
+            <Field label="Origin">
+              <textarea value={f.origin ?? ""} onChange={(e) => updateFestival(i, { origin: e.target.value })} rows={2} className={textareaClass} />
+            </Field>
             <Field label="Meaning">
               <textarea value={f.meaning ?? ""} onChange={(e) => updateFestival(i, { meaning: e.target.value })} rows={2} className={textareaClass} />
             </Field>
             <Field label="Ritual">
               <textarea value={f.ritual ?? ""} onChange={(e) => updateFestival(i, { ritual: e.target.value })} rows={2} className={textareaClass} />
+            </Field>
+            <Field label="Prayer">
+              <textarea value={f.prayer ?? ""} onChange={(e) => updateFestival(i, { prayer: e.target.value })} rows={2} className={textareaClass} />
             </Field>
             <Field label="Visitor notes">
               <textarea value={f.visitor_notes ?? ""} onChange={(e) => updateFestival(i, { visitor_notes: e.target.value })} rows={2} className={textareaClass} />

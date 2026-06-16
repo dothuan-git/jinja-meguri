@@ -554,7 +554,7 @@ function PageBody({ view: shrine }: { view: View }) {
               {shrine.sources && shrine.sources.length > 0 && (
                 <div className="pt-4 border-t border-stone/10 select-none">
                   <span className="text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold block mb-1.5">HISTORICAL REFERENCES</span>
-                  <div className="space-y-1 text-xs font-mono text-[#5c685f] tracking-wide pl-0.5 select-all">
+                  <div className="space-y-1 text-xs font-mono text-[#5c685f] tracking-wide pl-0.5 select-text">
                     {shrine.sources.map(source => (
                       <div key={source} className="flex items-center gap-1.5">
                         <FileText size={11} className="text-torii/40 shrink-0" />

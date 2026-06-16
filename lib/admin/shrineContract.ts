@@ -57,7 +57,6 @@ export const ShrineInputSchema = z.object({
     lng: z.number(),
   }).nullable().optional(),
   image_urls: z.array(z.string().url()).nullable().optional(),
-  notes: z.string().nullable().optional(),
   details: z.object({
     history: z.string().nullable().optional(),
     description: z.string().nullable().optional(),

@@ -46,7 +46,6 @@ export interface ShrineRow {
   address: string | null;
   coordinates: Coordinates | null;
   image_urls: string[] | null;
-  notes: string | null;
 }
 export interface ShrineDeityRow {
   shrine_id: string;
@@ -181,7 +180,6 @@ export interface ShrineDetail extends ShrineCard {
   address: string | null;
   coordinates: Coordinates | null;
   image_urls: string[] | null;
-  notes: string | null;
   deities: DeityView[];
   ranks: RankView[];
   details: {

@@ -46,24 +46,18 @@ so it can be pasted straight into the site's deity JSON importer.
    with `null` or `[]`. **Never** use `"-"` or `""` as a placeholder.
 
 ### Prose voice & length
-`canonical_lore` should read like a **told myth**, not an encyclopedia entry — give it narrative
-momentum: the characters, what is at stake, and the vivid turning points of the story.
-- **Length follows the legend — there is no cap.** A kami with a thin record gets a tight paragraph;
-  one with a rich myth cycle (multiple defining episodes, deep genealogy) earns the room to tell it.
-  Let the story run as long as it stays substantive. As a rough feel most entries land around a
-  paragraph and major deities may run two or three; the Example below shows the **texture, not a ceiling**.
+`canonical_lore` should read like a **told myth**, storytelling voice, not an encyclopedia entry — give it narrative momentum: the characters, what is at stake, and the vivid turning points of the story.
 - **Multi-episode legends — break into paragraphs.** When a kami has several distinct episodes, separate
-  them with a blank line so the page renders them as paragraphs. In JSON this must be an **escaped `\n\n`**
-  inside the string (a raw newline is invalid; `"…rock cave.\n\nLater, during the descent…"` stays valid
+  them with a blank line so the page renders them as paragraphs. In JSON this must be an **escaped `\n`**
+  inside the string (a raw newline is invalid; `"…rock cave.\nLater, during the descent…"` stays valid
   `JSON.parse`). Don't break a single continuous episode; use it only between genuinely separate ones.
-- **Density, not word-count, is the discipline.** Never pad a thin story to fill space; never truncate
-  a rich one to hit a target. Every sentence should carry a fact or move the narrative forward.
 - **Tight, not thin.** Cut *filler* — hedging ("it is said that…"), repetition, throat-clearing, and
   meta-commentary ("this deity is notable for…") — **not** story.
 - **Don't over-compress.** Never flatten the myth into a one-line factual summary (e.g. "the kami of
   rice and prosperity"); that strips the story feeling this site exists to convey.
 - **Vivid retelling, never embellishment.** Don't add drama, invented dialogue, or detail that isn't
   in the sources — concision and length alike must never become fabrication.
+- **Call the god/goddess as kami.** Use term "kami" instead "god/goddess".
 
 ### Completeness — fill every field
 Always output **all 5 keys**, even when empty, so the shape is fixed and verifiable. Use the
@@ -87,11 +81,14 @@ type-correct empty value — never `"-"`, never `""`:
   Kojiki/Nihon Shoki myth cycle, genealogy (parents/siblings/offspring), defining episodes, domains
   (what they govern), and any major syncretic identifications (e.g. Buddhist honji-suijaku pairings).
   Keep it to the canonical story; shrine-specific regional variations belong on the shrine record, not here.
-- Choose `deity_type` by the deity's nature:
+- Choose `deity_type` by the deity's **current official status**, not historical syncretism. A kami once
+  merged with a Buddhist or other figure but since separated keeps its present type (e.g. Susanoo,
+  historically identified with Gozu Tennō, is `"mythological"`); record that history in `canonical_lore`.
   - `"mythological"` — a kami from the myth cycle / nature or cosmic deity (e.g. Amaterasu, Susanoo, Inari).
   - `"deified_human"` — a historical person enshrined as a kami (e.g. Sugawara no Michizane → Tenjin,
     Tokugawa Ieyasu → Tōshō Daigongen).
-  - `"syncretic"` — a deity defined by Shinto-Buddhist or other fusion (e.g. Hachiman, Benzaiten).
+  - `"syncretic"` — a deity whose **present** identity is itself a fusion (e.g. Hachiman, Benzaiten), not
+    one that merely had a historical syncretic phase.
   If a deity could fit two, pick the **primary** identity and explain the nuance inside `canonical_lore`.
 
 ### Field reference (the import contract)
@@ -117,7 +114,7 @@ Required keys are marked **(req)**.
   "name_ja": "天宇受売命",
   "deity_type": "mythological",
   "titles": ["Goddess of Dawn and Mirth", "Patroness of the Performing Arts", "Bringer of Laughter and Revelry"],
-  "canonical_lore": "Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the goddess who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the sun goddess hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers."
+  "canonical_lore": "Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the kami who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the kami of the sun hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers."
 }
 ```
 

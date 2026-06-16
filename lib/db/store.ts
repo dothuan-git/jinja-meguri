@@ -59,7 +59,7 @@ export const loadStore = cache(async (): Promise<Store> => {
       client.query("SELECT * FROM ranks"),
       client.query("SELECT * FROM prayer_categories"),
       client.query("SELECT * FROM deities"),
-      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls, notes FROM shrines"),
+      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls FROM shrines"),
       client.query("SELECT * FROM shrine_deities"),
       client.query("SELECT * FROM shrine_ranks"),
       client.query("SELECT * FROM shrine_prayer_categories"),

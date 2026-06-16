@@ -431,7 +431,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
             {/* ==================== SCREEN STATE: MAIN DATA RENDERS ==================== */}
             <AnimatePresence mode="popLayout">
               {viewMode === "table" ? (                   /* ----------------- 5A. TABLE GRID PRESENTATION ----------------- */
-                <div className="overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-all">
+                <div className="overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-text">
                   <table className="w-full text-left border-collapse table-auto">
                     <thead>
                       <tr className="border-b border-moss/10 bg-[#5c685f]/5 text-[10px] uppercase font-sans tracking-widest text-[#5c685f] font-bold select-none">

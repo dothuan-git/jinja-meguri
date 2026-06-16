@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working principles
+
+- **Think before acting.** Brainstorm the approach and trade-offs before writing code. For anything non-trivial, outline a short plan first instead of jumping straight in.
+- **Clarify, don't guess.** If a requirement is ambiguous or under-specified, ask before implementing rather than building on an assumption.
+- **Propose better ideas.** If you see a cleaner, safer, or more maintainable approach than the one requested, say so with brief reasoning before proceeding.
+- **Write clean, minimal code.** Favor readability and simplicity over cleverness. Reuse existing components, helpers, and the view-model layers (`lib/db/repo.ts`, `lib/types.ts`) instead of duplicating logic; add comments only for non-obvious decisions.
+- **Keep it fast.** Avoid redundant work and N+1 patterns — respect the single `loadStore()`-per-request model and do filtering/assembly in the repo layer, not at render time. Don't micro-optimize at the expense of clarity.
+- **Make surgical changes.** Touch only what the task needs and follow existing conventions, including the server-component → client-component data-handoff split.
+- **Verify before calling it done.** Run `npm run typecheck` and the relevant tests; handle errors explicitly rather than swallowing them.
+- **Keep docs in sync.** When you change code, update every related docs it affects in the same changes.
+
 ## Commands
 
 ```bash
@@ -53,6 +64,15 @@ is created per request, so admin writes show up on the next page load. The share
 - **Row types** (`ShrineRow`, `FestivalRow`, etc.) mirror DB columns exactly.
 - **View models** (`ShrineCard`, `ShrineDetail`, `CalendarEntry`, `DeityListing` data, etc.) are what the UI consumes — assembled by `lib/db/repo.ts`.
 - `ShrineCard` embeds facet membership arrays (`rank_codes`, `category_codes`, `deity_kanji`) so client-side filtering needs no additional lookups.
+
+### Schema & data model — keep `DATA_MODEL.md` in sync
+
+`docs/DATA_MODEL.md` is the human-readable reference for the database — every table, column,
+type, constraint, enum, and the view-model layers built on top. **Consult it first** when
+reasoning about the data model. **Whenever you change the DB or schema** — `docs/schema.sql`,
+`docs/seed.sql`, the row/view-model types in `lib/types.ts`, or the admin contracts in
+`lib/admin/` — **update `docs/DATA_MODEL.md` in the same change** so it never drifts. The
+research prompts and examples in `docs/ai-research/` should stay consistent with it too.
 
 ### Shrine detail: intercepting + parallel route
 
@@ -107,3 +127,12 @@ research prompts and examples) into the shrine or deity import form. Zod validat
 the key-completeness check run before the data is upserted to Neon via `lib/db/mutations.ts`.
 The schema is in `docs/schema.sql`; catalogs are seeded by `docs/seed.sql`. There is no
 separate ingest script and no `data/` directory.
+
+**Authoring order & deferred fields** (see `docs/DATA_MODEL.md` §10 for detail):
+- **Deities are created first**, with `canonical_lore`. Then shrines link them by `name_ja`; the shrine's
+  embedded `deities[].canonical` block is identity-only (no `canonical_lore`), so the shrine research
+  flow never re-gathers deity lore.
+- **Festival `start_date`/`end_date` are deferred** — left null at shrine-research time (no date fields in
+  the shrine form/prompt). Yearly dates are uploaded later into `festival_occurrences`.
+- The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
+  on import; they are just not gathered by the shrine flow. Don't strip them.

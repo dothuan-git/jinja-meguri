@@ -62,25 +62,25 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       await client.query(
         `UPDATE shrines SET
           name_en=$1, name_ja=$2, prefecture_id=$3, region_id=$4,
-          city=$5, address=$6, lat=$7, lng=$8, image_urls=$9, notes=$10, updated_at=now()
-         WHERE id=$11`,
+          city=$5, address=$6, lat=$7, lng=$8, image_urls=$9, updated_at=now()
+         WHERE id=$10`,
         [
           input.name_en, input.name_ja ?? null, prefectureId, regionId,
           input.city ?? null, input.address ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
-          input.image_urls ?? null, input.notes ?? null,
+          input.image_urls ?? null,
           shrineId,
         ],
       );
     } else {
       const ins = await client.query(
-        `INSERT INTO shrines (slug,name_en,name_ja,prefecture_id,region_id,city,address,lat,lng,image_urls,notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+        `INSERT INTO shrines (slug,name_en,name_ja,prefecture_id,region_id,city,address,lat,lng,image_urls)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
         [
           input.slug, input.name_en, input.name_ja ?? null, prefectureId, regionId,
           input.city ?? null, input.address ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
-          input.image_urls ?? null, input.notes ?? null,
+          input.image_urls ?? null,
         ],
       );
       shrineId = ins.rows[0].id as string;

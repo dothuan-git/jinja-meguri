@@ -4,19 +4,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { deleteShrineAction } from "@/app/admin/actions";
+import { useToast } from "@/components/ui/Toast";
 import type { ShrineCard } from "@/lib/types";
 
 export default function AdminShrineRow({ shrine }: { shrine: ShrineCard }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function handleDelete() {
     if (!confirm(`Delete "${shrine.name_en}"? This cannot be undone.`)) return;
     startTransition(async () => {
       const result = await deleteShrineAction(shrine.slug);
       if (result.error) {
-        alert(`Error: ${result.error}`);
+        toast.error(`Couldn't delete shrine “${shrine.name_en}”: ${result.error}`);
       } else {
+        toast.success(`Shrine “${shrine.name_en}” deleted.`);
         router.refresh();
       }
     });

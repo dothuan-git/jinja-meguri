@@ -31,8 +31,8 @@ export function makeStore(): Store {
       { id: "deity-3", name_en: "Deity Three", name_ja: "神三", titles: ["Unenshrined Spirit"], deity_type: "mythological", canonical_lore: "canon-3" },
     ],
     shrines: [
-      { id: "shrine-a", slug: "a", name_en: "Shrine A", name_ja: "甲社", prefecture_id: 1, region_id: 1, city: "Saitama", address: "addr-a", coordinates: { lat: 35.9, lng: 139.6 }, image_urls: null, notes: null },
-      { id: "shrine-b", slug: "b", name_en: "Shrine B", name_ja: "乙社", prefecture_id: 2, region_id: 2, city: "Kyōto", address: null, coordinates: null, image_urls: null, notes: null },
+      { id: "shrine-a", slug: "a", name_en: "Shrine A", name_ja: "甲社", prefecture_id: 1, region_id: 1, city: "Saitama", address: "addr-a", coordinates: { lat: 35.9, lng: 139.6 }, image_urls: null },
+      { id: "shrine-b", slug: "b", name_en: "Shrine B", name_ja: "乙社", prefecture_id: 2, region_id: 2, city: "Kyōto", address: null, coordinates: null, image_urls: null },
     ],
     shrine_deities: [
       { shrine_id: "shrine-a", deity_id: "deity-1", is_primary: true, sort_order: 1, regional_lore: "regional-1" },

@@ -131,7 +131,6 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
     address: s.address,
     coordinates: s.coordinates,
     image_urls: s.image_urls,
-    notes: s.notes,
     deities: shrineDeityViews(store, s.id),
     ranks: shrineRankViews(store, s.id),
     details: detailRow

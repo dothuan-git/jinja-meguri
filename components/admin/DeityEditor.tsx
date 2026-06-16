@@ -6,6 +6,7 @@ import { saveDeityAction } from "@/app/admin/actions";
 import type { DeityInput } from "@/lib/admin/deityContract";
 import DeityJsonImport from "@/components/admin/DeityJsonImport";
 import DeityForm from "@/components/admin/DeityForm";
+import { useToast } from "@/components/ui/Toast";
 
 interface Props {
   initialData?: DeityInput;
@@ -17,6 +18,7 @@ export default function DeityEditor({ initialData, deityId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const toast = useToast();
 
   function handleSave(data: DeityInput) {
     const formData = new FormData();
@@ -26,9 +28,15 @@ export default function DeityEditor({ initialData, deityId }: Props) {
     startTransition(async () => {
       const result = await saveDeityAction(null, formData);
       if (result?.success) {
+        toast.success(
+          deityId
+            ? `Deity “${data.name_en}” updated.`
+            : `Deity “${data.name_en}” added.`,
+        );
         router.push("/admin/dashboard");
       } else if (result?.error) {
         setError(result.error);
+        toast.error(`Couldn't save deity “${data.name_en}”. Please fix the errors shown.`);
       }
     });
   }

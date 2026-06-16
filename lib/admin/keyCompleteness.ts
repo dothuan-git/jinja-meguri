@@ -7,14 +7,19 @@
 export const EXPECTED_KEYS = {
   shrine: [
     "slug", "name_en", "name_ja", "region", "prefecture", "city", "address",
-    "coordinates", "image_urls", "notes", "details", "ranks",
+    "coordinates", "image_urls", "details", "ranks",
     "prayer_categories", "deities", "festivals", "sources",
   ],
   details: ["history", "description", "prayer_focus", "best_time"],
   deity: ["name_ja", "is_primary", "sort_order", "regional_lore", "canonical"],
-  canonical: ["name_en", "name_ja", "deity_type", "titles", "canonical_lore"],
+  // Shrine-embedded canonical block: no canonical_lore. The deity is created first
+  // (with its lore) via the standalone deity importer, then reused when the shrine
+  // is added, so the shrine JSON never re-supplies the canonical narrative.
+  canonical: ["name_en", "name_ja", "deity_type", "titles"],
+  // Standalone canonical-deity import (admin/deities/new) — carries the lore.
+  deityStandalone: ["name_en", "name_ja", "deity_type", "titles", "canonical_lore"],
   festival: [
-    "name_en", "name_ja", "time_prose", "start_date", "end_date", "origin",
+    "name_en", "name_ja", "time_prose", "origin",
     "meaning", "ritual", "prayer", "festival_type", "visitor_notes", "occurrences",
   ],
   occurrence: ["year", "start_date", "end_date", "notes"],
@@ -56,7 +61,7 @@ export function checkDeityCompleteness(data: unknown): CompletenessReport {
   if (!isObject(data)) {
     return { groups: [], totalExpected: 0, totalPresent: 0, totalMissing: 0, complete: false };
   }
-  const groups = [check(data, EXPECTED_KEYS.canonical, "deity")];
+  const groups = [check(data, EXPECTED_KEYS.deityStandalone, "deity")];
   const totalExpected = groups.reduce((n, g) => n + g.expected, 0);
   const totalPresent = groups.reduce((n, g) => n + g.present, 0);
   const totalMissing = totalExpected - totalPresent;

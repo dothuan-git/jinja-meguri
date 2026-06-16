@@ -68,7 +68,6 @@ CREATE TABLE shrines (
     lat           double precision,              -- WGS-84 latitude
     lng           double precision,              -- WGS-84 longitude
     image_urls    text[],                        -- array of external image URLs
-    notes         text,
     created_at    timestamptz NOT NULL DEFAULT now(),
     updated_at    timestamptz NOT NULL DEFAULT now()
 );

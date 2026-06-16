@@ -7,6 +7,7 @@ import type { ShrineInput } from "@/lib/admin/shrineContract";
 import type { Region, Prefecture, Rank, PrayerCategory, Deity } from "@/lib/types";
 import ShrineJsonImport from "@/components/admin/ShrineJsonImport";
 import ShrineForm from "@/components/admin/ShrineForm";
+import { useToast } from "@/components/ui/Toast";
 
 interface Props {
   initialData?: ShrineInput;
@@ -24,6 +25,7 @@ export default function ShrineEditor({ initialData, catalogs, existingDeities }:
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const toast = useToast();
 
   function handleSave(data: ShrineInput) {
     const formData = new FormData();
@@ -32,9 +34,15 @@ export default function ShrineEditor({ initialData, catalogs, existingDeities }:
     startTransition(async () => {
       const result = await saveShrineAction(null, formData);
       if (result?.success && result.slug) {
+        toast.success(
+          initialData
+            ? `Shrine “${data.name_en}” updated.`
+            : `Shrine “${data.name_en}” added.`,
+        );
         router.push("/admin");
       } else if (result?.error) {
         setError(result.error);
+        toast.error(`Couldn't save shrine “${data.name_en}”. Please fix the errors shown.`);
       }
     });
   }

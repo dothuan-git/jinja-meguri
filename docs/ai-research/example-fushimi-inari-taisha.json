@@ -8,7 +8,6 @@
   "address": "68 Fukakusa Yabunouchichō, Fushimi-ku, Kyoto 612-0882 (京都府京都市伏見区深草薮之内町68)",
   "coordinates": { "lat": 34.9671, "lng": 135.7727 },
   "image_urls": [],
-  "notes": "Coordinates point to the main shrine (honden) at the foot of Mount Inari; verify before publishing. Images to be sourced by the site owner.",
   "details": {
     "history": "Founded in 711 CE (和銅4年) by Hata no Irogu of the immigrant Hata clan, who—according to the Yamashiro no Kuni Fudoki—enshrined the kami on the three peaks of Mount Inari after an arrow he shot into a rice-cake target turned into a swan and alighted there. Fushimi Inari grew into the head shrine of the Inari cult; it appears in the Engishiki (927) as a Myōjin Taisha and rose to the highest modern rank of Kanpei-Taisha. Over the centuries its tutelary role expanded from rice and agriculture to commerce, and merchants' donations gave rise to the celebrated corridors of vermilion torii.",
     "description": "Fushimi Inari is the most famous Inari shrine in Japan and the spiritual home of the roughly 30,000 Inari shrines nationwide. Behind the vast Rōmon gate and Honden, a network of trails climbs the sacred Mount Inari through the Senbon Torii—'thousands of torii gates'—each donated by an individual or business in thanks for answered prayers. The full circuit to the summit and back takes two to three hours and passes countless sub-shrines, stone fox (kitsune) messengers, and tea houses. The grounds are open day and night and free to enter.",
@@ -27,8 +26,7 @@
         "name_en": "Inari Ōkami",
         "name_ja": "稲荷大神",
         "deity_type": "mythological",
-        "titles": ["God of Rice and Agriculture", "Patron of Commerce and Prosperity"],
-        "canonical_lore": "Uka-no-Mitama-no-Kami (宇迦之御魂神) appears in the Kojiki as a child of Susanoo and in the Nihon Shoki as a child of Izanagi and Izanami; the name means 'spirit of the grain.' From the Heian period the deity merged with the broader Inari cult and, through Buddhist syncretism, with Dakiniten, becoming one of Japan's most widely worshipped kami of rice, sustenance, and prosperity."
+        "titles": ["God of Rice and Agriculture", "Patron of Commerce and Prosperity"]
       }
     }
   ],
@@ -37,8 +35,6 @@
       "name_en": "Hatsuuma Taisai",
       "name_ja": "初午大祭",
       "time_prose": "First Day of the Horse (初午) in February — varies year to year",
-      "start_date": null,
-      "end_date": null,
       "origin": "Commemorates the descent of the kami onto Mount Inari on the first Day of the Horse (hatsuuma) in 711 CE, regarded as the shrine's founding.",
       "meaning": "The most important festival of the Inari year, a day to pray for a good harvest, prosperous business, family safety, and the fulfillment of wishes.",
       "ritual": "Worshippers ascend toward the sacred peaks and receive the shirushi no sugi (験の杉), a sprig of sacred cedar given as a token of good fortune; ema and offerings fill the precincts.",
@@ -51,8 +47,6 @@
       "name_en": "Inari Matsuri",
       "name_ja": "稲荷祭",
       "time_prose": "Mid-April departure (Shinkōsai, 神幸祭) to early-May return (Kankōsai, 還幸祭)",
-      "start_date": null,
-      "end_date": null,
       "origin": "The shrine's great spring rite, dating in its present form to the Heian period, in which the kami travel from the mountain to bless the surrounding parish.",
       "meaning": "Brings the blessings of Inari out to the people of Fukakusa and the wider Kyoto area for the planting season.",
       "ritual": "In the Shinkōsai the kami are transferred into five mikoshi and carried to the Otabisho in the city; weeks later the Kankōsai returns them to the shrine, accompanied by processions.",

@@ -32,7 +32,6 @@ export default async function EditShrinePage({ params }: { params: Promise<{ slu
     city: detail.city,
     address: detail.address,
     coordinates: detail.coordinates,
-    notes: detail.notes,
     image_urls: detail.image_urls ?? [],
     details: {
       history: detail.details?.history,
