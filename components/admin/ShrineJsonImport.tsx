@@ -8,10 +8,9 @@ interface Props {
   initialData?: ShrineInput;
   onSave: (data: ShrineInput) => void;
   pending: boolean;
-  formAction: (payload: FormData) => void;
 }
 
-export default function ShrineJsonImport({ initialData, onSave, pending, formAction }: Props) {
+export default function ShrineJsonImport({ initialData, onSave, pending }: Props) {
   const [text, setText] = useState(initialData ? JSON.stringify(initialData, null, 2) : "");
   const [parseError, setParseError] = useState<string | null>(null);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveShrineAction } from "@/app/admin/actions";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
@@ -21,17 +21,20 @@ interface Props {
 
 export default function ShrineEditor({ initialData, catalogs, existingDeities }: Props) {
   const [tab, setTab] = useState<"form" | "json">("form");
-  const [state, formAction, pending] = useActionState(saveShrineAction, null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const [, startTransition] = useTransition();
 
   function handleSave(data: ShrineInput) {
     const formData = new FormData();
     formData.set("json", JSON.stringify(data));
+    setError(null);
     startTransition(async () => {
       const result = await saveShrineAction(null, formData);
       if (result?.success && result.slug) {
         router.push("/admin");
+      } else if (result?.error) {
+        setError(result.error);
       }
     });
   }
@@ -55,14 +58,9 @@ export default function ShrineEditor({ initialData, catalogs, existingDeities }:
         ))}
       </div>
 
-      {state?.error && (
+      {error && (
         <div className="rounded bg-red-50 px-4 py-3 text-sm text-red-700">
-          <strong>Error:</strong> {state.error}
-        </div>
-      )}
-      {state?.success && (
-        <div className="rounded bg-green-50 px-4 py-3 text-sm text-green-700">
-          Shrine saved successfully.
+          <strong>Error:</strong> {error}
         </div>
       )}
 
@@ -72,14 +70,13 @@ export default function ShrineEditor({ initialData, catalogs, existingDeities }:
           catalogs={catalogs}
           existingDeities={existingDeities}
           onSave={handleSave}
-          pending={pending}
+          pending={isPending}
         />
       ) : (
         <ShrineJsonImport
           initialData={initialData}
           onSave={handleSave}
-          pending={pending}
-          formAction={formAction}
+          pending={isPending}
         />
       )}
     </div>

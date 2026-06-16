@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveDeityAction } from "@/app/admin/actions";
 import type { DeityInput } from "@/lib/admin/deityContract";
@@ -14,18 +14,21 @@ interface Props {
 
 export default function DeityEditor({ initialData, deityId }: Props) {
   const [tab, setTab] = useState<"form" | "json">("form");
-  const [state, , pending] = useActionState(saveDeityAction, null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const [, startTransition] = useTransition();
 
   function handleSave(data: DeityInput) {
     const formData = new FormData();
     formData.set("json", JSON.stringify(data));
     if (deityId) formData.set("id", deityId);
+    setError(null);
     startTransition(async () => {
       const result = await saveDeityAction(null, formData);
       if (result?.success) {
         router.push("/admin/dashboard");
+      } else if (result?.error) {
+        setError(result.error);
       }
     });
   }
@@ -49,21 +52,16 @@ export default function DeityEditor({ initialData, deityId }: Props) {
         ))}
       </div>
 
-      {state?.error && (
+      {error && (
         <div className="rounded bg-red-50 px-4 py-3 text-sm text-red-700">
-          <strong>Error:</strong> {state.error}
-        </div>
-      )}
-      {state?.success && (
-        <div className="rounded bg-green-50 px-4 py-3 text-sm text-green-700">
-          Deity saved successfully.
+          <strong>Error:</strong> {error}
         </div>
       )}
 
       {tab === "form" ? (
-        <DeityForm initialData={initialData} onSave={handleSave} pending={pending} />
+        <DeityForm initialData={initialData} onSave={handleSave} pending={isPending} />
       ) : (
-        <DeityJsonImport initialData={initialData} onSave={handleSave} pending={pending} />
+        <DeityJsonImport initialData={initialData} onSave={handleSave} pending={isPending} />
       )}
     </div>
   );
