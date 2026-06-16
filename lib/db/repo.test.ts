@@ -98,10 +98,16 @@ describe("getDeityList", () => {
     expect(d).toHaveProperty("name_en");
     expect(Array.isArray(d.titles)).toBe(true);
     expect(Array.isArray(d.shrines)).toBe(true);
-    // every deity returned is enshrined somewhere
     expect(d.shrines.length).toBeGreaterThan(0);
     expect(d.shrines[0]).toHaveProperty("slug");
     expect(d.shrines[0]).toHaveProperty("is_primary");
+  });
+
+  it("still includes deities with no shrine links", () => {
+    const list = getDeityList(store);
+    const unenshrined = list.find((d) => d.name_en === "Deity Three");
+    expect(unenshrined).toBeDefined();
+    expect(unenshrined!.shrines).toEqual([]);
   });
 });
 

@@ -215,9 +215,8 @@ export function getDeityList(store: Store): DeityListItem[] {
       shrines: links,
     };
   });
-  // only deities that are enshrined somewhere, Amaterasu/Inari first then alpha
+  // Amaterasu/Inari first then alpha; deities with no shrine links still show
   return items
-    .filter((d) => d.shrines.length > 0)
     .sort((a, b) => {
       const rank = (n: string) => (n.includes("Amaterasu") ? 0 : n.includes("Inari") ? 1 : 2);
       const ra = rank(a.name_en), rb = rank(b.name_en);

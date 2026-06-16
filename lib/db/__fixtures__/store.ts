@@ -28,6 +28,7 @@ export function makeStore(): Store {
     deities: [
       { id: "deity-1", name_en: "Deity One", name_ja: "神一", titles: ["Lord of the Sun", "Divine Ancestor"], deity_type: "mythological", canonical_lore: "canon-1" },
       { id: "deity-2", name_en: "Deity Two", name_ja: "神二", titles: ["Guardian of the Sea"], deity_type: "mythological", canonical_lore: "canon-2" },
+      { id: "deity-3", name_en: "Deity Three", name_ja: "神三", titles: ["Unenshrined Spirit"], deity_type: "mythological", canonical_lore: "canon-3" },
     ],
     shrines: [
       { id: "shrine-a", slug: "a", name_en: "Shrine A", name_ja: "甲社", prefecture_id: 1, region_id: 1, city: "Saitama", address: "addr-a", coordinates: { lat: 35.9, lng: 139.6 }, image_urls: null, notes: null },

@@ -395,7 +395,15 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                       </div>
 
                       <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 select-none">
-                        {activeDeity.shrines.map(({ shrine, isPrimary, regionalLore }) => (
+                        {activeDeity.shrines.length === 0 ? (
+                          <div className="p-6 rounded-xl border border-dashed border-stone/15 bg-stone/[0.015] text-center flex flex-col items-center gap-2">
+                            <MapPin size={16} className="text-stone/25" />
+                            <p className="text-xs font-serif text-stone/45 italic">
+                              No shrine linked yet
+                            </p>
+                          </div>
+                        ) : (
+                        activeDeity.shrines.map(({ shrine, isPrimary, regionalLore }) => (
                           <div
                             key={shrine.id}
                             className={`p-4 rounded-xl border transition-all text-left group hover:bg-stone/[0.015] ${
@@ -452,7 +460,8 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                             )}
 
                           </div>
-                        ))}
+                        ))
+                        )}
                       </div>
                     </div>
 
