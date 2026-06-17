@@ -112,6 +112,9 @@ Prayer focus:
 Best time to visit:
 <prose — nature, atmosphere, and timing>
 
+Quote:
+<short 1–2 sentence evocative epigraph capturing the shrine's spirit, or —>
+
 Ranks (tick all that apply; if none, write "none"):
 [x] <Rank value>
 [x] <Rank value>

@@ -44,6 +44,7 @@ function toView(shrine: ShrineDetail) {
     prayerFocus: shrine.categories.map((c) => c.name_en),
     prayerFocusText: shrine.details?.prayer_focus ?? "",
     description: shrine.details?.description ?? "",
+    quote: shrine.details?.quote ?? "",
     about: shrine.details?.history ?? "",
     bestTime: shrine.details?.best_time ?? "",
     primaryDeity: {
@@ -78,6 +79,53 @@ function toView(shrine: ShrineDetail) {
 }
 
 type View = ReturnType<typeof toView>;
+
+// Collapses a long lore passage to a preview with a "Read more" toggle.
+// Truncation cuts after a whole number of words, preserving the original
+// whitespace (newlines) so the preview keeps the passage's formatting.
+function CollapsibleLore({
+  text,
+  className,
+  collapsedWords = 260,
+}: {
+  text: string;
+  className?: string;
+  collapsedWords?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const trimmed = text.trim();
+
+  let count = 0;
+  let sliceEnd = trimmed.length;
+  const wordRe = /\S+/g;
+  let match: RegExpExecArray | null;
+  while ((match = wordRe.exec(trimmed)) !== null) {
+    count += 1;
+    if (count === collapsedWords) {
+      sliceEnd = match.index + match[0].length;
+      break;
+    }
+  }
+
+  if (sliceEnd >= trimmed.length) {
+    return <p className={className}>{trimmed}</p>;
+  }
+
+  const preview = trimmed.slice(0, sliceEnd).replace(/[\s.,;:—-]+$/, "");
+
+  return (
+    <p className={className}>
+      {expanded ? trimmed : <>{preview}… </>}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="inline whitespace-normal font-sans font-normal italic text-torii hover:text-torii-dark hover:underline underline-offset-2 transition-colors cursor-pointer"
+      >
+        {expanded ? "Read less" : "Read more"}
+      </button>
+    </p>
+  );
+}
 
 export default function ShrineDetailView({
   shrine,
@@ -261,23 +309,11 @@ function PageBody({ view: shrine }: { view: View }) {
               {shrine.japaneseName} <span className="text-xs font-sans tracking-widest font-normal text-stone/40 ml-1.5">({shrine.location})</span>
             </h2>
 
-            <p className="text-sm text-stone/80 font-serif leading-relaxed italic pl-3 border-l-2 border-torii/30">
-              “{shrine.description}”
-            </p>
-          </div>
-
-          <div className="w-full md:w-64 shrink-0 space-y-4 font-sans text-xs select-text md:pt-4">
-            {/* Visitation Time block - Not bold, styled clean */}
-            <div className="space-y-1">
-              <span className="text-[9px] uppercase tracking-widest font-mono text-moss/55 font-bold block select-none">Optimal Pilgrimage Timing</span>
-              <div className="flex items-start gap-1.5 text-stone text-xs leading-none">
-                <Clock size={14} className="text-moss shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-stone/90 block font-normal">{shrine.bestTime}</span>
-                  <span className="text-[10px] text-stone/50 block mt-0.5">Best Season to Visit</span>
-                </div>
-              </div>
-            </div>
+            {shrine.quote && (
+              <p className="text-sm text-stone/80 font-serif leading-relaxed italic pl-3 border-l-2 border-torii/30">
+                “{shrine.quote}”
+              </p>
+            )}
           </div>
         </div>
 
@@ -447,9 +483,10 @@ function PageBody({ view: shrine }: { view: View }) {
                   {/* Canonical Chronicle Lore text */}
                   <div className="space-y-2 pt-3 border-t border-moss/5">
                     <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Canonical Chronicle</span>
-                    <p className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line">
-                      {shrine.primaryDeity.canonicalLore}
-                    </p>
+                    <CollapsibleLore
+                      text={shrine.primaryDeity.canonicalLore}
+                      className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line"
+                    />
                   </div>
 
                   {/* Regional origins lore notes */}
@@ -793,12 +830,21 @@ function PageBody({ view: shrine }: { view: View }) {
                 </h3>
               </div>
 
-              <div className="text-xs text-stone/75 leading-relaxed font-sans max-w-2xl text-justify select-text space-y-2">
+              <div className="text-xs text-stone/75 leading-relaxed font-sans text-justify select-text space-y-2">
                 <span className="block text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold select-none">GEOGRAPHIC LANDMARKS</span>
                 <p>
                   Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
                 </p>
               </div>
+
+              {shrine.bestTime && (
+                <div className="text-xs text-stone/75 leading-relaxed font-sans text-justify select-text space-y-2">
+                  <span className="block text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold select-none">OPTIMAL PILGRIMAGE TIMING</span>
+                  <p>
+                    {shrine.bestTime}
+                  </p>
+                </div>
+              )}
 
               {/* Seamless map window, border eliminated */}
               <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-2xs bg-stone/5 border border-stone/10 group select-none">
@@ -908,11 +954,13 @@ function ModalBody({ view: shrine }: { view: View }) {
           </div>
 
           {/* Poetic Summary with faint top/bottom divider lines (minimalist/elegant) */}
-          <div className="border-t border-b border-moss/5 py-5 max-w-3xl">
-            <p className="text-stone/95 text-base md:text-lg tracking-widest leading-relaxed italic font-serif">
-              “{shrine.description}”
-            </p>
-          </div>
+          {shrine.quote && (
+            <div className="border-t border-b border-moss/5 py-5 max-w-3xl">
+              <p className="text-stone/95 text-base md:text-lg tracking-widest leading-relaxed italic font-serif">
+                “{shrine.quote}”
+              </p>
+            </div>
+          )}
         </div>
 
         {/* SECTION 1: Enshrined Shinto Pantheon (Kami) */}
@@ -954,9 +1002,10 @@ function ModalBody({ view: shrine }: { view: View }) {
               {/* Canonical Chronicle Lore text (high contrast, readable alignment for long narratives) */}
               <div className="space-y-2 pt-3 border-t border-moss/5">
                 <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Canonical Chronicle</span>
-                <p className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line">
-                  {shrine.primaryDeity.canonicalLore}
-                </p>
+                <CollapsibleLore
+                  text={shrine.primaryDeity.canonicalLore}
+                  className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line"
+                />
               </div>
 
               {/* Regional origins lore notes */}

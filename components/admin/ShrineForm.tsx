@@ -61,6 +61,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
   const [description, setDescription] = useState(initialData?.details?.description ?? "");
   const [prayerFocus, setPrayerFocus] = useState(initialData?.details?.prayer_focus ?? "");
   const [bestTime, setBestTime] = useState(initialData?.details?.best_time ?? "");
+  const [quote, setQuote] = useState(initialData?.details?.quote ?? "");
   const [ranks, setRanks] = useState<string[]>(initialData?.ranks ?? []);
   const [categories, setCategories] = useState<string[]>(initialData?.prayer_categories ?? []);
   const [deities, setDeities] = useState<DeityDraft[]>(initialData?.deities ?? [emptyDeity()]);
@@ -118,7 +119,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
       city: city || null,
       address: address || null,
       coordinates: lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null,
-      details: { history: history || null, description: description || null, prayer_focus: prayerFocus || null, best_time: bestTime || null },
+      details: { history: history || null, description: description || null, prayer_focus: prayerFocus || null, best_time: bestTime || null, quote: quote || null },
       ranks: ranks.length ? ranks : undefined,
       prayer_categories: categories.length ? categories : undefined,
       deities: deities.map((d, i) => ({
@@ -193,6 +194,9 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
         </Field>
         <Field label="Best time to visit">
           <textarea value={bestTime} onChange={(e) => setBestTime(e.target.value)} rows={2} className={textareaClass} />
+        </Field>
+        <Field label="Quote">
+          <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={2} className={textareaClass} />
         </Field>
       </section>
 

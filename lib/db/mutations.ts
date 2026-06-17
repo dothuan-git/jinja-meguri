@@ -89,8 +89,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     // shrine_details (1:1)
     if (input.details) {
       await client.query(
-        "INSERT INTO shrine_details (shrine_id,history,description,prayer_focus,best_time) VALUES ($1,$2,$3,$4,$5)",
-        [shrineId, input.details.history ?? null, input.details.description ?? null, input.details.prayer_focus ?? null, input.details.best_time ?? null],
+        "INSERT INTO shrine_details (shrine_id,history,description,prayer_focus,best_time,quote) VALUES ($1,$2,$3,$4,$5,$6)",
+        [shrineId, input.details.history ?? null, input.details.description ?? null, input.details.prayer_focus ?? null, input.details.best_time ?? null, input.details.quote ?? null],
       );
     }
 

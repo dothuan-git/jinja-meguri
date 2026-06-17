@@ -212,6 +212,7 @@ One row per shrine; topical narrative prose.
 | `description`  | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
 | `prayer_focus` | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
 | `best_time`    | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
+| `quote`        | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
 
 ### `festivals` (definition + optional dated occurrence)
 

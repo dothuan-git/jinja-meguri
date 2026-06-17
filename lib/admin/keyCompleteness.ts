@@ -10,7 +10,7 @@ export const EXPECTED_KEYS = {
     "coordinates", "image_urls", "details", "ranks",
     "prayer_categories", "deities", "festivals", "sources",
   ],
-  details: ["history", "description", "prayer_focus", "best_time"],
+  details: ["history", "description", "prayer_focus", "best_time", "quote"],
   deity: ["name_ja", "is_primary", "sort_order", "regional_lore", "canonical"],
   // Shrine-embedded canonical block: no canonical_lore. The deity is created first
   // (with its lore) via the standalone deity importer, then reused when the shrine

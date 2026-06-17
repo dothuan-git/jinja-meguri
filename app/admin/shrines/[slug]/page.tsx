@@ -38,6 +38,7 @@ export default async function EditShrinePage({ params }: { params: Promise<{ slu
       description: detail.details?.description,
       prayer_focus: detail.details?.prayer_focus,
       best_time: detail.details?.best_time,
+      quote: detail.details?.quote,
     },
     ranks: detail.ranks.map((r) => r.name_en),
     prayer_categories: detail.categories.map((c) => c.name_en),
