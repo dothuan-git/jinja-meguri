@@ -14,6 +14,7 @@ import {
   ArrowUpRight
 } from "lucide-react";
 import type { DeityListItem } from "@/lib/types";
+import { fold } from "@/lib/search";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function DeityListing({ deities }: { deities: DeityListItem[] }) {
@@ -111,14 +112,14 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
   // 4. Filter list dynamically for search dropdown suggestions
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
+    const query = fold(searchQuery);
     return deitiesList
       .map((deity, index) => ({ deity, index }))
       .filter(({ deity }) =>
-        deity.name.toLowerCase().includes(query) ||
+        fold(deity.name).includes(query) ||
         deity.japaneseName.includes(query) ||
-        deity.titles.some(t => t.toLowerCase().includes(query)) ||
-        deity.canonicalLore.toLowerCase().includes(query)
+        deity.titles.some(t => fold(t).includes(query)) ||
+        fold(deity.canonicalLore).includes(query)
       );
   }, [searchQuery, deitiesList]);
 
@@ -377,7 +378,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                       <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
                         Canonical Chronicle Chronicle (記紀神話)
                       </span>
-                      <p className="first-letter:text-3.5xl first-letter:font-serif first-letter:font-black first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 leading-relaxed font-serif text-sm md:text-base text-justify text-stone/90 select-all">
+                      <p className="first-letter:text-3.5xl first-letter:font-serif first-letter:font-black first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 leading-relaxed font-serif text-sm md:text-base text-justify text-stone/90 select-text whitespace-pre-line">
                         {activeDeity.canonicalLore}
                       </p>
                     </div>
@@ -394,7 +395,15 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                       </div>
 
                       <div className="space-y-3.5 max-h-[340px] overflow-y-auto pr-1 select-none">
-                        {activeDeity.shrines.map(({ shrine, isPrimary, regionalLore }) => (
+                        {activeDeity.shrines.length === 0 ? (
+                          <div className="p-6 rounded-xl border border-dashed border-stone/15 bg-stone/[0.015] text-center flex flex-col items-center gap-2">
+                            <MapPin size={16} className="text-stone/25" />
+                            <p className="text-xs font-serif text-stone/45 italic">
+                              No shrine linked yet
+                            </p>
+                          </div>
+                        ) : (
+                        activeDeity.shrines.map(({ shrine, isPrimary, regionalLore }) => (
                           <div
                             key={shrine.id}
                             className={`p-4 rounded-xl border transition-all text-left group hover:bg-stone/[0.015] ${
@@ -442,16 +451,17 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
 
                             {/* Geographical Regional Myth/Tradition detail specific to this shrine enshrinement */}
                             {regionalLore && (
-                              <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-serif text-[11px] md:text-xs text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-all flex gap-2">
+                              <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-serif text-[11px] md:text-xs text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-text flex gap-2">
                                 <span className="text-torii text-base leading-none font-sans font-black select-none">“</span>
-                                <div className="flex-1 text-justify">
+                                <div className="flex-1 text-justify whitespace-pre-line">
                                   {regionalLore}
                                 </div>
                               </div>
                             )}
 
                           </div>
-                        ))}
+                        ))
+                        )}
                       </div>
                     </div>
 

@@ -4,7 +4,6 @@
 -- Run AFTER schema.sql, BEFORE any shrine ingest (the ingest resolves codes -> ids).
 -- IDs are GENERATED ALWAYS AS IDENTITY, so FKs are resolved by name/code lookups.
 -- ============================================================
-
 -- ------------------------------------------------------------
 -- REGIONS (8 traditional regions)
 -- ------------------------------------------------------------
@@ -17,7 +16,6 @@ INSERT INTO regions (name_en, name_ja) VALUES
   ('Chugoku',  '中国'),
   ('Shikoku',  '四国'),
   ('Kyushu',   '九州');
-
 -- ------------------------------------------------------------
 -- PREFECTURES (47, each mapped to its region by name lookup)
 -- Note: Mie is placed in Kinki per the standard 8-region scheme (suits Ise being in-set).
@@ -74,7 +72,6 @@ FROM (VALUES
   ('Okinawa',   '沖縄県',   'Kyushu')
 ) AS p(name_en, name_ja, region_name)
 JOIN regions r ON r.name_en = p.region_name;
-
 -- ------------------------------------------------------------
 -- RANKS (consolidated cross-system list; rank_order 1 = highest prestige)
 -- "Highest rank" of a shrine = MIN(rank_order) joined at query time.
@@ -99,7 +96,6 @@ INSERT INTO ranks (name_en, description, name_ja, rank_order) VALUES
   ('Gosha',             'District Shrine',                   '郷社',      14),
   ('Sonsha',            'Village Shrine',                    '村社',      15),
   ('Beppyo-sha',        'Special-List Shrine (modern)',      '別表神社',   20);
-
 -- ------------------------------------------------------------
 -- PRAYER CATEGORIES (the "strong for" facet; 25 goriyaku, grouped for the UI)
 -- ------------------------------------------------------------

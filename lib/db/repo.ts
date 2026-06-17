@@ -56,7 +56,6 @@ function shrineDeityViews(store: Store, shrineId: string): DeityView[] {
         name_en: d.name_en,
         name_ja: d.name_ja,
         titles: d.titles ?? [],
-        role: sd.role,
         deity_type: d.deity_type,
         canonical_lore: d.canonical_lore,
         regional_lore: sd.regional_lore,
@@ -132,7 +131,6 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
     address: s.address,
     coordinates: s.coordinates,
     image_urls: s.image_urls,
-    notes: s.notes,
     deities: shrineDeityViews(store, s.id),
     ranks: shrineRankViews(store, s.id),
     details: detailRow
@@ -216,9 +214,8 @@ export function getDeityList(store: Store): DeityListItem[] {
       shrines: links,
     };
   });
-  // only deities that are enshrined somewhere, Amaterasu/Inari first then alpha
+  // Amaterasu/Inari first then alpha; deities with no shrine links still show
   return items
-    .filter((d) => d.shrines.length > 0)
     .sort((a, b) => {
       const rank = (n: string) => (n.includes("Amaterasu") ? 0 : n.includes("Inari") ? 1 : 2);
       const ra = rank(a.name_en), rb = rank(b.name_en);

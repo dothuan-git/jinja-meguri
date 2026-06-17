@@ -3,6 +3,8 @@ import { loadStore } from "@/lib/db/store";
 import { getShrineCards, getFacetCatalogs } from "@/lib/db/repo";
 import ShrineListing from "@/components/ShrineListing";
 
+export const dynamic = "force-dynamic";
+
 export default async function ShrinesPage() {
   const store = await loadStore();
   const cards = getShrineCards(store);

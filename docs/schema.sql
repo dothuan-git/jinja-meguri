@@ -47,9 +47,9 @@ CREATE TABLE deities (
     id             uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     name_en        text NOT NULL,                -- romaji / English name
     name_ja        text UNIQUE,                  -- kanji; dedup key on ingest
-    titles         text[],                       -- array of divine epithets/titles
+    titles         text[],                       -- domain/role epithets (sphere of patronage)
     deity_type     text NOT NULL
-        CHECK (deity_type IN ('origin','deified human','syncretic','imported')),
+        CHECK (deity_type IN ('mythological','deified_human','syncretic')),
     canonical_lore text                          -- Kojiki/Nihon Shoki fallback narrative
 );
 
@@ -68,7 +68,6 @@ CREATE TABLE shrines (
     lat           double precision,              -- WGS-84 latitude
     lng           double precision,              -- WGS-84 longitude
     image_urls    text[],                        -- array of external image URLs
-    notes         text,
     created_at    timestamptz NOT NULL DEFAULT now(),
     updated_at    timestamptz NOT NULL DEFAULT now()
 );
@@ -84,8 +83,7 @@ CREATE TABLE shrine_deities (
     deity_id      uuid     NOT NULL REFERENCES deities(id),
     is_primary    boolean  NOT NULL DEFAULT false,
     sort_order    smallint NOT NULL DEFAULT 0,
-    role          text,                          -- shrine-specific role
-    regional_lore text,                          -- overrides deities.canonical_lore; null = use canonical
+    regional_lore text,                          -- shrine-specific lore; null = use deities.canonical_lore
     PRIMARY KEY (shrine_id, deity_id)
 );
 
@@ -138,7 +136,7 @@ CREATE TABLE festivals (
     meaning       text,
     ritual        text,
     prayer        text,
-    festival_type text CHECK (festival_type IN ('public_witness','pilgrimage_experience')),
+    festival_type text CHECK (festival_type IN ('spectacle','pilgrimage')),
     visitor_notes text
 );
 
@@ -171,3 +169,13 @@ CREATE TABLE festival_occurrences (
 
 CREATE INDEX idx_festival_occurrences_festival ON festival_occurrences(festival_id);
 CREATE INDEX idx_festival_occurrences_year     ON festival_occurrences(year);
+
+-- ------------------------------------------------------------
+-- ADMIN ALLOWLIST
+-- ------------------------------------------------------------
+CREATE TABLE app_admin (
+    email      text PRIMARY KEY,
+    role       text NOT NULL DEFAULT 'admin'
+                   CHECK (role IN ('admin', 'editor')),
+    created_at timestamptz NOT NULL DEFAULT now()
+);

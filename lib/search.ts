@@ -1,6 +1,16 @@
 import Fuse from "fuse.js";
 import type { Store, SearchDoc, SearchResult } from "@/lib/types";
 
+// Strip diacritics (e.g. "Ōkami" → "okami") and lowercase, so ASCII queries
+// match macron'd romaji. Applied to both the index and the query. A no-op for
+// kanji/kana, and harmless on both sides since they fold identically.
+// NFD splits "Ō" into "O" + U+0304; the range drops U+0300–U+036F combining marks.
+export const fold = (s: string): string =>
+  [...s.normalize("NFD")]
+    .filter((c) => { const n = c.codePointAt(0)!; return n < 0x0300 || n > 0x036f; })
+    .join("")
+    .toLowerCase();
+
 export function toSearchDocs(store: Store): SearchDoc[] {
   return store.shrines.map((s) => {
     const deityIds = store.shrine_deities
@@ -31,7 +41,16 @@ export function toSearchDocs(store: Store): SearchDoc[] {
 }
 
 export function makeSearcher(docs: SearchDoc[]): (query: string) => SearchResult[] {
-  const fuse = new Fuse(docs, {
+  // Index against diacritic-folded copies of the searchable text; keep the
+  // original doc for display. Both index and query pass through fold().
+  const indexed = docs.map((doc) => ({
+    doc,
+    name_en: fold(doc.name_en),
+    name_ja: fold(doc.name_ja ?? ""),
+    city: fold(doc.city ?? ""),
+    blob: fold(doc.blob),
+  }));
+  const fuse = new Fuse(indexed, {
     includeScore: true,
     threshold: 0.4,
     ignoreLocation: true,
@@ -46,11 +65,11 @@ export function makeSearcher(docs: SearchDoc[]): (query: string) => SearchResult
   return (query: string) => {
     const q = query.trim();
     if (!q) return [];
-    return fuse.search(q).map((res) => ({
-      slug: res.item.slug,
-      name_en: res.item.name_en,
-      name_ja: res.item.name_ja,
-      city: res.item.city,
+    return fuse.search(fold(q)).map((res) => ({
+      slug: res.item.doc.slug,
+      name_en: res.item.doc.name_en,
+      name_ja: res.item.doc.name_ja,
+      city: res.item.doc.city,
       score: res.score ?? 1,
     }));
   };

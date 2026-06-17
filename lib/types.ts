@@ -46,14 +46,12 @@ export interface ShrineRow {
   address: string | null;
   coordinates: Coordinates | null;
   image_urls: string[] | null;
-  notes: string | null;
 }
 export interface ShrineDeityRow {
   shrine_id: string;
   deity_id: string;
   is_primary: boolean;
   sort_order: number;
-  role: string | null;
   regional_lore: string | null;
 }
 export interface ShrineRankRow {
@@ -135,7 +133,6 @@ export interface DeityView {
   name_en: string;
   name_ja: string | null;
   titles: string[];
-  role: string | null;
   deity_type: string;
   canonical_lore: string | null;
   regional_lore: string | null;
@@ -183,7 +180,6 @@ export interface ShrineDetail extends ShrineCard {
   address: string | null;
   coordinates: Coordinates | null;
   image_urls: string[] | null;
-  notes: string | null;
   deities: DeityView[];
   ranks: RankView[];
   details: {
