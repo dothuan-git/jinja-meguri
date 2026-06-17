@@ -29,6 +29,12 @@ function emptySource(): SourceDraft {
   return { url: "", title: "" };
 }
 
+// Textarea (one epithet per line) → trimmed string[]; omit the key entirely when empty.
+function cleanTitles(titles: string[] | null | undefined): string[] | undefined {
+  const cleaned = (titles ?? []).map((t) => t.trim()).filter(Boolean);
+  return cleaned.length ? cleaned : undefined;
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -117,6 +123,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
       prayer_categories: categories.length ? categories : undefined,
       deities: deities.map((d, i) => ({
         ...d,
+        canonical: d.canonical ? { ...d.canonical, titles: cleanTitles(d.canonical.titles) } : d.canonical,
         sort_order: i,
         regional_lore: d.regional_lore || null,
       })),
@@ -285,6 +292,18 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
                     </select>
                   </Field>
                 </div>
+                <Field label="Titles">
+                  <textarea
+                    value={(d.canonical?.titles ?? []).join("\n")}
+                    onChange={(e) => updateDeity(i, { canonical: { ...d.canonical!, titles: e.target.value.split("\n") } })}
+                    rows={2}
+                    className={textareaClass}
+                    placeholder={"One English domain epithet per line\ne.g. God of Rice and Agriculture"}
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    One English domain epithet per line (sphere of patronage). Mainly for new companion deities.
+                  </p>
+                </Field>
               </div>
             )}
 
