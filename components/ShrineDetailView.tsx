@@ -96,8 +96,6 @@ export default function ShrineDetailView({
 
 function PageBody({ view: shrine }: { view: View }) {
   const [activeSection, setActiveSection] = useState("overview");
-  const pageRef = useRef<HTMLDivElement>(null);
-  useEntranceReveal(pageRef);
 
   const getPrayerTagStyle = (focus: string, index: number) => {
     const styles = [
@@ -116,6 +114,10 @@ function PageBody({ view: shrine }: { view: View }) {
 
   // Scroll spy references
   const containerRef = useRef<HTMLDivElement>(null);
+  // Scope the entrance reveal to the scroll container so every [data-reveal]
+  // section animates in — not just the header. Scoping it to the header-only
+  // ref left the six content sections stuck at the opacity:0 base style.
+  useEntranceReveal(containerRef);
   const sectionRefs = {
     overview: useRef<HTMLDivElement>(null),
     deities: useRef<HTMLDivElement>(null),
@@ -201,7 +203,7 @@ function PageBody({ view: shrine }: { view: View }) {
       onScroll={handleScroll}
       className="w-full flex-1 flex flex-col h-[calc(100vh-80px)] overflow-y-auto bg-transparent relative scroll-smooth pb-16"
     >
-      <div ref={pageRef} className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
 
         {/* Floating Minimal Navigation Bar */}
         <div data-reveal="fade-up" className="flex items-center justify-between mb-4 select-none">
