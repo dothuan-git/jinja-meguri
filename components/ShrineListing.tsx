@@ -209,7 +209,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) || filters.searchQuery !== "";
 
   return (
-    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 select-none flex flex-col">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto mt-4 pb-20 z-10 select-none flex flex-col">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
       <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
