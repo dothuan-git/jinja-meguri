@@ -105,3 +105,27 @@ const RANK_FALLBACK = RANK_BAND.modern;
 export function getRankColor(name: string): string {
   return RANK_COLORS[name] ?? RANK_FALLBACK;
 }
+
+/* ------------------------------------------------------------------ */
+/* Rank descriptions — mirrors seed.sql ranks table                    */
+/* ------------------------------------------------------------------ */
+
+export const RANK_DESCRIPTIONS: Record<string, string> = {
+  "Honso":             "Supreme Head Shrine of All Shinto",
+  "Sohonsha":          "Head Shrine of a Network",
+  "Chokusaisha":       "Imperial Envoy Shrine",
+  "Ichinomiya":        "Highest Provincial Shrine",
+  "Myojin-Taisha":     "Eminent Engishiki Shrine",
+  "Shikinai-sha":      "Engishiki-listed Shrine",
+  "Kanpei-Taisha":     "Major Imperial Shrine",
+  "Kokuhei-Taisha":    "Major National Shrine",
+  "Kanpei-Chusha":     "Mid Imperial Shrine",
+  "Kokuhei-Chusha":    "Mid National Shrine",
+  "Kanpei-Shosha":     "Minor Imperial Shrine",
+  "Kokuhei-Shosha":    "Minor National Shrine",
+  "Bekkaku-Kanpeisha": "Special Imperial Shrine",
+  "Fu-Ken-sha":        "Prefectural Shrine",
+  "Gosha":             "District Shrine",
+  "Sonsha":            "Village Shrine",
+  "Beppyo-sha":        "Special-List Shrine (modern)",
+};

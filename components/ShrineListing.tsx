@@ -18,6 +18,7 @@ import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import { getCategoryColor } from "@/lib/facetColors";
+import RankTag from "@/components/RankTag";
 
 // Canonical compact chip style shared by category + rank tags across the
 // table, cards, and the shrine detail/modal views. Color comes from facetColors.
@@ -78,7 +79,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     .map((p) => p.name_en);
 
   // View toggling; hydrate from localStorage after mount (SSR-safe)
-  const [viewMode, setViewMode] = useState<"table" | "card">("card");
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
   useEffect(() => {
     const saved = localStorage.getItem("jinja-view-mode");
     if (saved === "table" || saved === "card") setViewMode(saved);
@@ -424,24 +425,18 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
             <AnimatePresence mode="popLayout">
               {viewMode === "table" ? (                   /* ----------------- 5A. TABLE GRID PRESENTATION ----------------- */
                 <div className="overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-text">
-                  <table className="w-full text-left border-collapse table-auto">
+                  <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                       <tr className="border-b border-moss/10 bg-[#5c685f]/5 text-[10px] uppercase font-sans tracking-widest text-[#5c685f] font-bold select-none">
-                        <th className="py-4 px-6 font-bold">
+                        <th className="py-4 px-6 font-bold w-[20%]">
                           <span className="flex items-center gap-1 cursor-pointer hover:text-torii" onClick={() => handleSort("name")}>
                             Shrine Sanctuary
                             <ArrowUpDown size={10} />
                           </span>
                         </th>
-                        <th className="py-4 px-4 font-bold">Main Deity</th>
-                        <th className="py-4 px-4 font-bold">Prayer Focus</th>
-                        <th className="py-4 px-4 font-bold">Best Time</th>
-                        <th className="py-4 px-6 font-bold text-right">
-                          <span className="flex items-center gap-1 cursor-pointer hover:text-torii justify-end" onClick={() => handleSort("rank")}>
-                            Titles & Ranks
-                            <ArrowUpDown size={10} />
-                          </span>
-                        </th>
+                        <th className="py-4 px-4 font-bold w-[20%]">Main Deity</th>
+                        <th className="py-4 px-4 font-bold w-[30%]">Prayer Focus</th>
+                        <th className="py-4 px-4 font-bold w-[30%]">Best Time</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-moss/10">
@@ -456,7 +451,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                            className="group hover:bg-white transition-colors duration-200 cursor-pointer text-stone font-medium"
                         >
                           {/* Column 1: Shrine Name & Location */}
-                          <td className="py-6 px-6 align-top max-w-[210px]">
+                          <td className="py-6 px-6 align-top">
                             <div className="flex flex-col space-y-1">
                               <div className="font-serif font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
                                 {card.name_en}
@@ -467,11 +462,18 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                               <span className="text-[11px] text-stone/50 font-sans tracking-wide block pt-1.5">
                                 {card.city ?? ""}, {card.prefecture}
                               </span>
+                              {card.rank_codes.length > 0 && (
+                                <div className="flex flex-wrap gap-1 pt-2">
+                                  {card.rank_codes.map((rank) => (
+                                    <RankTag key={rank} rank={rank} />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </td>
 
                           {/* Column 2: Main Deity & Titles */}
-                          <td className="py-6 px-4 align-top max-w-[240px]">
+                          <td className="py-6 px-4 align-top">
                             <div className="flex flex-col space-y-1">
                               <span className="text-[13px] text-stone font-extrabold tracking-wide leading-tight">
                                 {card.primary_deity?.name_en ?? ""}
@@ -490,7 +492,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           </td>
 
                           {/* Column 3: Prayer Focus (Normal Body Text) */}
-                          <td className="py-6 px-4 align-top max-w-[280px]">
+                          <td className="py-6 px-4 align-top">
                             <div className="flex flex-col space-y-3">
                               <p className="text-[11.5px] text-stone/70 leading-relaxed font-sans tracking-wide">
                                 {card.prayer_focus ?? ""}
@@ -506,22 +508,12 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           </td>
 
                           {/* Column 4: Best Time (Normal Typography, No Subtitle) */}
-                          <td className="py-6 px-4 align-top max-w-[190px]">
+                          <td className="py-6 px-4 align-top">
                             <p className="text-[11px] text-stone/65 font-sans leading-relaxed tracking-wide pt-0.5">
                               {card.best_time ?? ""}
                             </p>
                           </td>
 
-                          {/* Column 5: Ranks & Titles */}
-                          <td className="py-6 px-6 align-top text-right max-w-[180px]">
-                            <div className="flex flex-col items-end gap-1.5 justify-start">
-                              {card.rank_codes.map((rankTitle) => (
-                                <span key={rankTitle} className="text-[9px] text-[#5c685f]/80 tracking-widest font-mono uppercase font-black text-right whitespace-normal leading-snug">
-                                  {rankTitle}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
                         </motion.tr>
                       ))}
                     </tbody>
