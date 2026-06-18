@@ -629,7 +629,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
 
                           {/* Best Time Visitation block */}
                           <div className="pt-2.5 border-t border-moss/5 flex flex-col space-y-0.5">
-                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Recommended Season</span>
+                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
                             <p className="text-[11px] text-stone/60 leading-relaxed font-sans">
                               {card.best_time ?? ""}
                             </p>

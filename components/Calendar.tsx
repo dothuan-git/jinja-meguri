@@ -592,7 +592,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                           <div>
                                             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
                                               <Flame size={11} className="text-torii/70" />
-                                              Liturgy Procession Description (御神事儀)
+                                              Ceremonies & Rituals
                                             </span>
                                             <p className="text-[11.5px] leading-relaxed text-[#2c3e32] tracking-wide font-sans pl-3.5 border-l border-[#5e7f5a]/30 select-text">
                                               {fest.ritual}
@@ -605,7 +605,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                           <div>
                                             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
                                               <BookOpen size={11} className="text-[#48624f]" />
-                                              Ritual Aspiration & Prayer (祈願祝念)
+                                              Prayers & Intentions
                                             </span>
                                             <p className="text-[11.5px] leading-relaxed text-stone/80 tracking-wide font-sans pl-3.5 border-l border-moss/15 select-text">
                                               {fest.prayer}
@@ -618,7 +618,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                           <div className="bg-torii/[0.02] border border-torii/15 rounded-xl p-4.5">
                                             <span className="text-[9px] font-mono font-black uppercase tracking-[0.15em] text-torii flex items-center gap-1.5 mb-2 select-none">
                                               <ShieldAlert size={12} className="text-torii" />
-                                              Pilgrim Protocol & Etiquette (参拝規律)
+                                              Visitor Tips & Etiquette
                                             </span>
                                             <p className="text-[11px] leading-relaxed text-stone/85 tracking-wide font-sans select-text">
                                               {fest.type.notes}

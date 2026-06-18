@@ -339,7 +339,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                     {activeDeity.titles && activeDeity.titles.length > 0 && (
                       <div className="space-y-2 pt-5 border-t border-moss/10 select-text">
                         <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-                          Cosmic Epithets & Sphere of Patronage
+                          Divine Powers & Epithets
                         </span>
                         <div className="flex flex-col gap-2 text-xs text-stone/75 font-sans font-medium">
                           {activeDeity.titles.map((title, tIdx) => (
@@ -376,7 +376,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                     {/* A. Canonical Chronicle Lore Story */}
                     <div className="space-y-2">
                       <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-                        Canonical Chronicle Chronicle (記紀神話)
+                        Canonical Chronicle
                       </span>
                       <p className="first-letter:text-3.5xl first-letter:font-serif first-letter:font-black first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 leading-relaxed font-serif text-sm md:text-base text-justify text-stone/90 select-text whitespace-pre-line">
                         {activeDeity.canonicalLore}
@@ -387,7 +387,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                     <div className="space-y-4 pt-5 border-t border-moss/10">
                       <div>
                         <span className="text-[9px] font-bold tracking-widest text-[#782c1a] uppercase block select-none">
-                          Enshrinement Portals & Local Traditions
+                          Regional Lore & Sacred Origins
                         </span>
                         <p className="text-[11px] text-stone/50 font-sans mt-0.5 select-none">
                           This deity forms distinct relations depending on regional environments. Tap on a sanctuary to view files:

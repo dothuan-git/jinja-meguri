@@ -689,7 +689,7 @@ function PageBody({ view: shrine }: { view: View }) {
                       <div className="space-y-2">
                         <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
                           <span className="w-1.5 h-1.5 rounded-full bg-moss-light/40"></span>
-                          Sacred Liturgy & Ceremonies
+                          Ceremonies & Rituals
                         </h5>
                         <p className={`${typo.prose} pl-3.5 border-l border-stone/15 select-text`}>
                           {fest.ritual}
@@ -700,7 +700,7 @@ function PageBody({ view: shrine }: { view: View }) {
                         <div className="space-y-2">
                           <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-torii"></span>
-                            Pilgrim Supplication & Intent (心願)
+                            Prayers & Intentions
                           </h5>
                           <p className={`${typo.lore} text-justify select-text`}>
                             {fest.prayer}
@@ -714,7 +714,7 @@ function PageBody({ view: shrine }: { view: View }) {
                       <Compass size={14} className="text-torii-dark/70 mt-0.5 shrink-0" />
                       <div>
                         <span className={`${typo.fieldLabel} block mb-1 select-none`}>
-                          Pilgrim Advisory & Etiquette
+                          Visitor Tips & Etiquette
                         </span>
                         <p className={`${typo.prose} select-text`}>
                           {fest.type.notes}
@@ -856,7 +856,7 @@ function PageBody({ view: shrine }: { view: View }) {
 
               {shrine.bestTime && (
                 <div className="space-y-2 select-text">
-                  <span className={`${typo.fieldLabel} block select-none`}>OPTIMAL PILGRIMAGE TIMING</span>
+                  <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
                   <p className={typo.prose}>
                     {shrine.bestTime}
                   </p>
@@ -983,7 +983,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* SECTION 1: Enshrined Shinto Pantheon (Kami) */}
         <div className="space-y-6 pt-4">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
-            <Sparkles size={11} className="text-torii" /> Enshrined Shinto Pantheon (Kami)
+            <Sparkles size={11} className="text-torii" /> Enshrined Pantheon
           </span>
 
           <div className="space-y-6">
@@ -1099,7 +1099,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* SECTION 2: Chronicle Notes & Historical Narratives (Shrine Notes) */}
         <div className="space-y-6 pt-4">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
-            <BookOpen size={11} className="text-moss-light" /> Historical Chronicles & Sacred Notes
+            <BookOpen size={11} className="text-moss-light" /> Historical Records
           </span>
 
           <div className="space-y-6">
@@ -1120,7 +1120,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
               {/* Best visitation timing guidance */}
               <div className="bg-bamboo-light/40 backdrop-blur-3xs rounded-2xl p-5 space-y-2 border border-bamboo/10">
-                <span className={`${typo.fieldLabel} block select-none`}>Optimal Pilgrimage Timing</span>
+                <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
                 <div className={`${typo.prose} flex gap-2`}>
                   <Clock size={15} className="text-moss shrink-0 mt-0.5" />
                   <span>{shrine.bestTime}</span>
@@ -1134,7 +1134,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* SECTION 3: Event Calendar (Festivals list) */}
         <div className="space-y-6 pt-4">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
-            <Calendar size={11} className="text-moss-light" /> Sanctuary Event Calendar (Festivals)
+            <Calendar size={11} className="text-moss-light" /> Sacred Festivals
           </span>
 
           <div className="grid grid-cols-1 gap-4">
@@ -1168,13 +1168,13 @@ function ModalBody({ view: shrine }: { view: View }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1.5 text-[11px] leading-relaxed">
                   {fest.ritual && (
                     <div className="space-y-0.5">
-                      <span className={`${typo.fieldLabel} block select-none`}>Ritual Devotion</span>
+                      <span className={`${typo.fieldLabel} block select-none`}>Ceremonies & Rituals</span>
                       <p className={typo.prose}>{fest.ritual}</p>
                     </div>
                   )}
                   {fest.type.notes && (
                     <div className="space-y-0.5">
-                      <span className={`${typo.fieldLabel} block select-none`}>Pilgrim Guide Tip</span>
+                      <span className={`${typo.fieldLabel} block select-none`}>Visitor Tips & Etiquette</span>
                       <p className={typo.prose}>{fest.type.notes}</p>
                     </div>
                   )}
@@ -1188,7 +1188,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* SECTION 4: Spatial Google Maps integrated inline elegant viewport */}
         <div className="space-y-6 pt-4">
           <span className={`${typo.eyebrow} flex items-center gap-1 select-none`}>
-            <Map size={11} className="text-moss-light" /> Interactive Sanctuary Chart & Coordinates
+            <Map size={11} className="text-moss-light" /> Transit & Geography
           </span>
 
           {/* Google Map Embedded Screen */}
@@ -1219,7 +1219,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* Sources Bibliography */}
         {shrine.sources && shrine.sources.length > 0 && (
           <div className="pt-8 border-t border-moss/5 text-center sm:text-left">
-            <span className={`${typo.fieldLabel} block mb-2 select-none`}>Sources & Chronicles</span>
+            <span className={`${typo.fieldLabel} block mb-2 select-none`}>Historical References</span>
             <p className={`${typo.meta} leading-relaxed`}>
               {shrine.sources.join(" • ")}
             </p>
