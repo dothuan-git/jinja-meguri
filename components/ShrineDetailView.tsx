@@ -6,9 +6,7 @@ import { motion } from "motion/react";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Calendar,
-  Clock,
   Compass,
   Crown,
   ExternalLink,
@@ -895,89 +893,78 @@ function PageBody({ view: shrine }: { view: View }) {
 function ModalBody({ view: shrine }: { view: View }) {
   const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(shrine.name + " " + shrine.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
 
+  // Group festivals so each festival type renders as a single combined card.
+  const festivalGroups: { category: string; festivals: View["festivals"] }[] = [];
+  for (const fest of shrine.festivals) {
+    const group = festivalGroups.find((g) => g.category === fest.type.category);
+    if (group) group.festivals.push(fest);
+    else festivalGroups.push({ category: fest.type.category, festivals: [fest] });
+  }
+
   return (
     <div className="select-text">
 
-      {/* 1. Full-bleed Scenic Cover Image at the top of the narrative scroll */}
-      <div className="relative h-64 sm:h-80 md:h-[26rem] w-full shrink-0 bg-stone/5 border-b border-moss/10 overflow-hidden select-none">
+      {/* Full-bleed cover image */}
+      <div className="relative h-48 sm:h-60 md:h-72 w-full shrink-0 bg-stone/5 border-b border-moss/10 overflow-hidden select-none">
         <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} />
       </div>
 
-      {/* 2. Unified Scroll Content Block */}
-      <div className="px-6 md:px-12 py-8 space-y-10 pb-10">
+      <div className="px-6 md:px-10 py-7 space-y-9 pb-9">
 
-        {/* Title & Rank segment */}
+        {/* Identity block */}
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-1.5 select-none">
-            {shrine.ranks.map(rankTitle => (
-              <span key={rankTitle} className="bg-moss/5 text-moss/80 border border-moss/10 text-[9px] font-mono font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 shadow-3xs">
-                {rankTitle === "Ise Grand Shrine" && <Crown size={9} className="text-torii" />}
-                {rankTitle}
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+              {shrine.ranks.map((rank, i) => (
+                <span key={rank} className="inline-flex items-center gap-1">
+                  {i > 0 && <span className="opacity-30">|</span>}
+                  {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                  <span>{rank}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-4xl sm:text-5xl lg:text-5xl font-serif font-black text-stone tracking-wide leading-tight">
+                {shrine.name}
+              </h3>
+              <div className="text-lg md:text-xl font-serif text-torii-dark/95 tracking-widest" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                {shrine.japaneseName}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-stone">
+            <MapPin size={14} className="text-torii shrink-0" />
+            <span className="text-sm font-bold">{shrine.location}</span>
+            <span className="text-xs text-stone/50">{shrine.prefecture} Prefecture · {shrine.region}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {shrine.prayerFocus.map(focus => (
+              <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                {focus}
               </span>
             ))}
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-serif font-black text-stone tracking-wide leading-tight">
-                {shrine.name}
-              </h3>
-              <div className="text-lg md:text-xl font-serif text-torii-dark/95 tracking-widest pt-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                {shrine.japaneseName}
-              </div>
-            </div>
-
-            {/* Physical Domain & Sanctuary Benedictions directly under the Japanese Name */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-
-              {/* Physical domain block */}
-              <div className="space-y-2">
-                <span className={`${typo.fieldLabel} block select-none`}>Physical Domain</span>
-                <div className="flex items-start gap-2 text-stone text-sm leading-tight">
-                  <MapPin size={16} className="text-torii shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold block text-sm">{shrine.location}</span>
-                    <span className="text-xs text-stone/60">{shrine.prefecture} Prefecture, {shrine.region} Region</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Prayer Focus (Blessings) tags */}
-              <div className="space-y-2">
-                <span className={`${typo.fieldLabel} block select-none`}>Sanctuary Benedictions</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {shrine.prayerFocus.map(focus => (
-                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                      {focus}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Poetic Summary with faint top/bottom divider lines (minimalist/elegant) */}
           {shrine.quote && (
-            <div className="py-2 max-w-3xl">
-              <p className={typo.quote}>
-                “{shrine.quote}”
-              </p>
-            </div>
+            <p className={typo.quote}>
+              "{shrine.quote}"
+            </p>
           )}
         </div>
 
-        {/* SECTION 1: Enshrined Shinto Pantheon (Kami) */}
-        <div className="space-y-6 pt-4">
+        {/* Enshrined Pantheon */}
+        <div className="space-y-5">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
             <Sparkles size={11} className="text-moss-light" /> Enshrined Pantheon
           </span>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
 
-            {/* Primary Deity (No heavy left border line, pristine spacing, high contrast readable lore) */}
-            <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-6 md:p-8 border border-moss/8 shadow-3xs space-y-5">
-
+            {/* Primary Deity */}
+            <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-5 md:p-7 border border-moss/8 shadow-3xs space-y-5">
               <div>
                 <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                   Primary Enshrined Spirit
@@ -988,7 +975,6 @@ function ModalBody({ view: shrine }: { view: View }) {
                 </span>
               </div>
 
-              {/* Primary Deity Epithets (matching companion deity titles style) */}
               {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
                 <div className="pt-2 border-t border-moss/5 space-y-1">
                   <span className={`${typo.fieldLabel} block select-none`}>Divine Powers & Epithets</span>
@@ -1003,16 +989,6 @@ function ModalBody({ view: shrine }: { view: View }) {
                 </div>
               )}
 
-              {/* Canonical Chronicle Lore text (high contrast, readable alignment for long narratives) */}
-              <div className="space-y-2 pt-3 border-t border-moss/5">
-                <span className={`${typo.fieldLabel} block select-none`}>Canonical Chronicle</span>
-                <CollapsibleLore
-                  text={shrine.primaryDeity.canonicalLore}
-                  className={`${typo.prose} whitespace-pre-line`}
-                />
-              </div>
-
-              {/* Regional origins lore notes */}
               {shrine.primaryDeity.regionalLore && (
                 <div className="pt-3 border-t border-dashed border-moss/10 space-y-1">
                   <span className={`${typo.fieldLabel} block select-none`}>Regional Lore & Sacred Origins</span>
@@ -1021,61 +997,29 @@ function ModalBody({ view: shrine }: { view: View }) {
                   </p>
                 </div>
               )}
-
             </div>
 
-            {/* Redesigned Secondary/Companion Deities Section */}
+            {/* Companion Deities */}
             {shrine.secondaryDeities && shrine.secondaryDeities.length > 0 && (
-              <div className="pt-4 space-y-4">
+              <div className="space-y-4">
                 <span className="text-[9px] font-mono tracking-widest text-stone/40 uppercase font-bold bg-stone/[0.02] border border-stone/10 px-2.5 py-0.5 rounded-full inline-block select-none">
                   Companion Spirits (配祀神)
                 </span>
 
-                <div className="bg-stone/[0.015] border border-stone/5 rounded-xl p-5 md:p-6 space-y-5">
-                  {/* Name and titles aligned with main deity but significantly smaller */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {shrine.secondaryDeities.map((deity, idx) => (
-                      <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
-                        <div className="space-y-1">
-                          <span className={`${typo.fieldLabel} block select-none`}>
-                            COMPANION SPIRIT
-                          </span>
-                          <h4 className="text-sm font-serif font-black text-stone leading-tight">
-                            {deity.name}
-                          </h4>
-                          <span className="text-[10px] font-serif text-moss-light block" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                            {deity.japaneseName}
-                          </span>
-                        </div>
-
-                        {/* Companion Deity Epithets in smaller subtle text */}
-                        {deity.titles && deity.titles.length > 0 && (
-                          <div className="pt-1.5 border-t border-stone/5">
-                            <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
-                              {deity.titles.map((title, tIdx) => (
-                                <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
-                                  <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
-                                  <span>{title}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {shrine.secondaryDeities.map((deity, idx) => (
+                    <div key={deity.name + idx} className="p-4 rounded-xl bg-white/40 hover:bg-white/70 border border-stone/8 shadow-3xs transition-colors duration-300">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
+                        <span className="text-[10px] font-serif text-moss-light" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                          {deity.japaneseName}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Unified Single Lore for all Companion Deities */}
-                  {shrine.secondaryDeities.some(d => d.regionalLore) && (
-                    <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
-                      <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
-                      <div className={`${typo.lore} text-justify space-y-2`}>
-                        {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
-                          <p key={lIdx} className="whitespace-pre-line">{lore}</p>
-                        ))}
-                      </div>
+                      {deity.titles?.[0] && (
+                        <p className="mt-1.5 text-[11px] text-stone/55 font-sans italic leading-snug">{deity.titles[0]}</p>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
@@ -1083,88 +1027,43 @@ function ModalBody({ view: shrine }: { view: View }) {
           </div>
         </div>
 
-        {/* SECTION 2: Chronicle Notes & Historical Narratives (Shrine Notes) */}
-        <div className="space-y-6 pt-4">
-          <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
-            <BookOpen size={11} className="text-moss-light" /> Historical Records
-          </span>
-
-          <div className="space-y-6">
-            {/* Detailed sanctuary about history paragraph */}
-            <p className={`${typo.prose} whitespace-pre-wrap`}>
-              {shrine.about}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-
-              {/* Spiritual Target reflection card */}
-              <div className="bg-torii/5 backdrop-blur-3xs rounded-2xl p-5 space-y-2 border border-torii/5">
-                <span className={`${typo.fieldLabel} block select-none`}>Spiritual Communion Note</span>
-                <p className={typo.quote}>
-                  “{shrine.prayerFocusText}”
-                </p>
-              </div>
-
-              {/* Best visitation timing guidance */}
-              <div className="bg-bamboo-light/40 backdrop-blur-3xs rounded-2xl p-5 space-y-2 border border-bamboo/10">
-                <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
-                <div className={`${typo.prose} flex gap-2`}>
-                  <Clock size={15} className="text-moss shrink-0 mt-0.5" />
-                  <span>{shrine.bestTime}</span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: Event Calendar (Festivals list) */}
-        <div className="space-y-6 pt-4">
+        {/* Sacred Festivals */}
+        <div className="space-y-5">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
             <Calendar size={11} className="text-moss-light" /> Sacred Festivals
           </span>
 
           <div className="grid grid-cols-1 gap-4">
-            {shrine.festivals.map(fest => (
-              <div key={fest.id} className="bg-washi/50 hover:bg-white/80 rounded-2xl p-5 md:p-6 border border-moss/8 hover:shadow-3xs transition-all duration-300 space-y-4">
+            {festivalGroups.map(group => (
+              <div key={group.category} className="bg-washi/50 hover:bg-white/80 rounded-2xl p-5 md:p-6 border border-moss/8 hover:shadow-3xs transition-all duration-300 space-y-5">
 
-                {/* Festival headers */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-moss/5">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h5 className={typo.subheadingSm}>{fest.name}</h5>
-                      <span className="text-[9px] text-moss-light bg-bamboo-light border border-bamboo/15 px-1.5 py-0.5 rounded uppercase font-mono font-bold leading-none select-none">
-                        {FESTIVAL_TYPE_LABEL[fest.type.category] ?? fest.type.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="px-3 py-1 bg-torii/5 text-torii text-[10px] font-mono font-black tracking-widest rounded-lg border border-torii/15 inline-block text-center select-none">
-                    {fest.time}
+                <div className="flex items-center gap-2 pb-3 border-b border-moss/5">
+                  <span className="text-[9px] text-moss-light bg-bamboo-light border border-bamboo/15 px-1.5 py-0.5 rounded uppercase font-mono font-bold leading-none select-none">
+                    {FESTIVAL_TYPE_LABEL[group.category] ?? group.category}
+                  </span>
+                  <span className="text-[10px] font-mono text-stone/40 tracking-wide select-none">
+                    {group.festivals.length} {group.festivals.length === 1 ? "rite" : "rites"}
                   </span>
                 </div>
 
-                {/* Event description */}
-                <div className={`${typo.prose} space-y-2.5`}>
-                  {fest.meaning.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx}>{paragraph}</p>
+                <div className="space-y-5">
+                  {group.festivals.map((fest, fIdx) => (
+                    <div key={fest.id} className={`space-y-2.5 ${fIdx > 0 ? "pt-5 border-t border-dashed border-moss/10" : ""}`}>
+                      <div className="flex items-center justify-between gap-2.5 flex-wrap">
+                        <h5 className={typo.subheadingSm}>{fest.name}</h5>
+                        <span className="px-3 py-1 bg-torii/5 text-torii text-[10px] font-mono font-black tracking-widest rounded-lg border border-torii/15 inline-block text-center select-none shrink-0">
+                          {fest.time}
+                        </span>
+                      </div>
+                      {fest.meaning && (
+                        <div className={`${typo.prose} space-y-2.5`}>
+                          {fest.meaning.split("\n\n").map((paragraph, idx) => (
+                            <p key={idx}>{paragraph}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
-                </div>
-
-                {/* Ritual Devotional Elements */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1.5 text-[11px] leading-relaxed">
-                  {fest.ritual && (
-                    <div className="space-y-0.5">
-                      <span className={`${typo.fieldLabel} block select-none`}>Ceremonies & Rituals</span>
-                      <p className={typo.prose}>{fest.ritual}</p>
-                    </div>
-                  )}
-                  {fest.type.notes && (
-                    <div className="space-y-0.5">
-                      <span className={`${typo.fieldLabel} block select-none`}>Visitor Tips & Etiquette</span>
-                      <p className={typo.prose}>{fest.type.notes}</p>
-                    </div>
-                  )}
                 </div>
 
               </div>
@@ -1172,14 +1071,13 @@ function ModalBody({ view: shrine }: { view: View }) {
           </div>
         </div>
 
-        {/* SECTION 4: Spatial Google Maps integrated inline elegant viewport */}
-        <div className="space-y-6 pt-4">
+        {/* Transit & Geography */}
+        <div className="space-y-5">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
             <Map size={11} className="text-moss-light" /> Transit & Geography
           </span>
 
-          {/* Google Map Embedded Screen */}
-          <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-2xs bg-stone/5 border border-moss/8 group">
+          <div className="relative w-full h-56 md:h-72 rounded-2xl overflow-hidden shadow-2xs bg-stone/5 border border-moss/8 group">
             <iframe
               id="google-maps-embed-frame"
               className="w-full h-full border-0 absolute inset-0 transition-all duration-500 filter saturate-90 hover:saturate-100"
@@ -1190,7 +1088,6 @@ function ModalBody({ view: shrine }: { view: View }) {
             />
           </div>
 
-          {/* Deep Directions anchor link under the map */}
           <a
             id="maps-deep-link-anchor"
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shrine.name + " " + shrine.location)}`}
@@ -1203,9 +1100,8 @@ function ModalBody({ view: shrine }: { view: View }) {
           </a>
         </div>
 
-        {/* Sources Bibliography */}
         {shrine.sources && shrine.sources.length > 0 && (
-          <div className="pt-8 border-t border-moss/5 text-center sm:text-left">
+          <div className="pt-4 border-t border-moss/5 text-center sm:text-left">
             <span className={`${typo.fieldLabel} block mb-2 select-none`}>Historical References</span>
             <p className={`${typo.meta} leading-relaxed`}>
               {shrine.sources.join(" • ")}
@@ -1215,9 +1111,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
       </div>
 
-      {/* Master Chamber bottom action control bar — deep-links to the full page.
-          Plain <a> (hard navigation) so the intercepted modal route is replaced
-          by the standalone page render. */}
+      {/* Deep-link to full page. Plain <a> so the intercepted modal route is replaced. */}
       <div className="sticky bottom-0 shrink-0 p-4 md:p-5 bg-sand border-t border-moss/10 flex gap-4 z-30 justify-center items-center bg-sand/95 backdrop-blur-md select-none">
         <a
           id="explore-chronicles-cta"
@@ -1226,7 +1120,7 @@ function ModalBody({ view: shrine }: { view: View }) {
           style={{ minHeight: "44px" }}
         >
           <span>Explore Sanctuary Chronicles</span>
-          <ArrowRight size={13} className="text-bamboo group-hover:translate-x-1 transition-transform" />
+          <ArrowRight size={13} className="text-bamboo group-hover:text-white group-hover:translate-x-1 transition-all" />
         </a>
       </div>
 

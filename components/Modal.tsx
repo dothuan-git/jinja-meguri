@@ -43,7 +43,7 @@ export default function Modal({ children }: { children: React.ReactNode }) {
         >
           <div className="shrink-0 px-6 py-4 border-b border-moss/10 flex items-center justify-between bg-sand select-none">
             <div className="font-serif text-xs font-bold uppercase tracking-widest text-moss/50">
-              Sanctuary Profile Chronicles
+              Sanctuary Quick Preview
             </div>
             <button
               onClick={close}
