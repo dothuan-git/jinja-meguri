@@ -48,13 +48,13 @@ Write the prose like a **told story**, storytelling voice, not an encyclopedia e
 - **Size to the field.** Lore and `details.history` / `details.description` are the long-form fields
   (a focused paragraph, more when the story warrants). `prayer_focus`, `best_time`, and festival
   `origin` / `meaning` / `ritual` / `prayer` / `visitor_notes` are naturally shorter — a few vivid,
-  specific sentences that paint the scene.
+  specific sentences that paint the scene. `quote` is the shortest — a single 1–2 sentence epigraph.
 - **Multi-episode narratives — break into paragraphs, long-form fields only.** In `regional_lore`
   and `details.history`, you may separate distinct episodes with a
   blank line, written as an **escaped `\n`** inside the JSON string (must stay valid `JSON.parse`).
-  Keep the shorter fields (`prayer_focus`, `best_time`, `details.description`, festival
-  `origin` / `meaning` / `ritual` / `prayer` / `visitor_notes`) to a **single paragraph** — breaks
-  there are not rendered.
+  Keep the shorter fields (`prayer_focus`, `best_time`, `details.description`, `details.quote`,
+  festival `origin` / `meaning` / `ritual` / `prayer` / `visitor_notes`) to a **single paragraph** —
+  breaks there are not rendered.
 - **Tight, not thin.** Cut *filler* — hedging, repetition, throat-clearing, meta-commentary ("this
   shrine is notable for…") — **not** story.
 - **Don't over-compress.** Never flatten a myth or a festival into a one-line factual summary; that
@@ -82,7 +82,7 @@ Use the type-correct empty value — never `"-"`, never `""`:
 | Object | Keys | Count |
 |---|---|---|
 | top level | slug, name_en, name_ja, region, prefecture, city, address, coordinates, image_urls, details, ranks, prayer_categories, deities, festivals, sources | **15** |
-| `details` | history, description, prayer_focus, best_time | **4** |
+| `details` | history, description, prayer_focus, best_time, quote | **5** |
 | each `deities[]` | name_ja, is_primary, sort_order, regional_lore, canonical | **5** |
 | each `canonical` | name_en, name_ja, deity_type, titles | **4** |
 | each `festivals[]` | name_en, name_ja, time_prose, origin, meaning, ritual, prayer, festival_type, visitor_notes, occurrences | **10** |
@@ -128,6 +128,8 @@ Top level:
   - `description` — significance + visitor experience (why visit, what you see).
   - `prayer_focus` — what people pray for here, with Japanese terms.
   - `best_time` — season / atmosphere / timing advice.
+  - `quote` — a short (1–2 sentence) evocative epigraph capturing the shrine's spirit; shown as
+    the detail-view quote. Keep it tight and vivid, not a summary.
 - `ranks` — array of strings, each from **Ranks** below. Include **all** that apply (a shrine can hold
   several across the classical and modern systems). Omit the array if none apply.
 - `prayer_categories` — array of strings, each from **Prayer Categories** below ("strong for" facet).

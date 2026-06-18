@@ -118,7 +118,8 @@ CREATE TABLE shrine_details (
     history      text,    -- founding, legendary events, syncretic layers
     description  text,    -- significance + visitor experience (why visit)
     prayer_focus text,    -- prayer purposes w/ JP terms
-    best_time    text     -- nature / atmosphere / timing
+    best_time    text,    -- nature / atmosphere / timing
+    quote        text     -- short 1-2 sentence quote about the shrine
 );
 
 -- ------------------------------------------------------------

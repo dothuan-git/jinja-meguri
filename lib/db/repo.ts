@@ -139,6 +139,7 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
           description: detailRow.description,
           prayer_focus: detailRow.prayer_focus,
           best_time: detailRow.best_time,
+          quote: detailRow.quote,
         }
       : null,
     festivals,

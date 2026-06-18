@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -17,19 +17,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import { getCategoryColor } from "@/lib/facetColors";
+import RankTag from "@/components/RankTag";
 
-const getTagColors = (tag: string) => {
-  const sum = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const presets = [
-    { text: "text-[#9d4432] border-[#9d4432]/12 bg-[#9d4432]/5", bg: "" },
-    { text: "text-[#3e5f49] border-[#3e5f49]/12 bg-[#3e5f49]/5", bg: "" },
-    { text: "text-[#7a643f] border-[#7a643f]/12 bg-[#7a643f]/5", bg: "" },
-    { text: "text-[#655375] border-[#655375]/12 bg-[#655375]/5", bg: "" },
-    { text: "text-[#4b6678] border-[#4b6678]/12 bg-[#4b6678]/5", bg: "" },
-    { text: "text-[#755f46] border-[#755f46]/12 bg-[#755f46]/5", bg: "" },
-  ];
-  return presets[sum % presets.length];
-};
+// Canonical compact chip style shared by category + rank tags across the
+// table, cards, and the shrine detail/modal views. Color comes from facetColors.
+const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
 
 type Filters = {
   searchQuery: string;
@@ -86,7 +79,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     .map((p) => p.name_en);
 
   // View toggling; hydrate from localStorage after mount (SSR-safe)
-  const [viewMode, setViewMode] = useState<"table" | "card">("card");
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
   useEffect(() => {
     const saved = localStorage.getItem("jinja-view-mode");
     if (saved === "table" || saved === "card") setViewMode(saved);
@@ -94,6 +87,15 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
   useEffect(() => {
     localStorage.setItem("jinja-view-mode", viewMode);
   }, [viewMode]);
+
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  function toggleCard(slug: string) {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      next.has(slug) ? next.delete(slug) : next.add(slug);
+      return next;
+    });
+  }
 
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -207,7 +209,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) || filters.searchQuery !== "";
 
   return (
-    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 select-none flex flex-col">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto mt-4 pb-20 z-10 select-none flex flex-col">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
       <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
@@ -225,10 +227,10 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
           <span>神社一覧</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           Sacred Sanctuaries
         </h2>
-        <p className="text-stone/85 text-xs font-serif italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
+        <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
           “Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates.”
         </p>
       </div>
@@ -364,7 +366,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
         <div className="flex items-center justify-between pb-4 mb-5 border-b border-moss/15 shrink-0">
 
           <div className="flex items-center gap-2 select-none">
-            <span className="text-stone font-serif font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <span className="text-stone font-display font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               神域 (Sanctuaries)
             </span>
             <span className="text-moss font-sans tracking-wide text-[10px] bg-bamboo-light/50 border border-moss/10 px-2.5 py-0.5 rounded-full font-bold uppercase">
@@ -411,7 +413,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
         {filteredShrines.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center bg-white/60 rounded-2xl border border-slate-100 shadow-xs my-6 py-16">
             <Compass size={40} className="text-slate-300 stroke-[1.2] mb-4 animate-pulse" />
-            <h3 className="text-lg font-serif text-slate-900 font-medium tracking-wide mb-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <h3 className="text-lg font-display text-slate-900 font-medium tracking-wide mb-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               Your path reveals no shrines.
             </h3>
             <p className="text-slate-400 text-xs tracking-wide max-w-sm mb-6 leading-relaxed">
@@ -432,24 +434,18 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
             <AnimatePresence mode="popLayout">
               {viewMode === "table" ? (                   /* ----------------- 5A. TABLE GRID PRESENTATION ----------------- */
                 <div className="overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-text">
-                  <table className="w-full text-left border-collapse table-auto">
+                  <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                       <tr className="border-b border-moss/10 bg-[#5c685f]/5 text-[10px] uppercase font-sans tracking-widest text-[#5c685f] font-bold select-none">
-                        <th className="py-4 px-6 font-bold">
+                        <th className="py-4 px-6 font-bold w-[20%]">
                           <span className="flex items-center gap-1 cursor-pointer hover:text-torii" onClick={() => handleSort("name")}>
                             Shrine Sanctuary
                             <ArrowUpDown size={10} />
                           </span>
                         </th>
-                        <th className="py-4 px-4 font-bold">Main Deity</th>
-                        <th className="py-4 px-4 font-bold">Prayer Focus</th>
-                        <th className="py-4 px-4 font-bold">Best Time</th>
-                        <th className="py-4 px-6 font-bold text-right">
-                          <span className="flex items-center gap-1 cursor-pointer hover:text-torii justify-end" onClick={() => handleSort("rank")}>
-                            Titles & Ranks
-                            <ArrowUpDown size={10} />
-                          </span>
-                        </th>
+                        <th className="py-4 px-4 font-bold w-[20%]">Main Deity</th>
+                        <th className="py-4 px-4 font-bold w-[30%]">Prayer Focus</th>
+                        <th className="py-4 px-4 font-bold w-[30%]">Best Time</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-moss/10">
@@ -464,27 +460,34 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                            className="group hover:bg-white transition-colors duration-200 cursor-pointer text-stone font-medium"
                         >
                           {/* Column 1: Shrine Name & Location */}
-                          <td className="py-6 px-6 align-top max-w-[210px]">
+                          <td className="py-6 px-6 align-top">
                             <div className="flex flex-col space-y-1">
-                              <div className="font-serif font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
+                              <div className="font-display font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
                                 {card.name_en}
                               </div>
-                              <div className="text-[11px] text-[#5c685f]/70 font-serif tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <div className="text-[11px] text-[#5c685f]/70 font-display tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.name_ja ?? ""}
                               </div>
                               <span className="text-[11px] text-stone/50 font-sans tracking-wide block pt-1.5">
                                 {card.city ?? ""}, {card.prefecture}
                               </span>
+                              {card.rank_codes.length > 0 && (
+                                <div className="flex flex-wrap gap-1 pt-2">
+                                  {card.rank_codes.map((rank) => (
+                                    <RankTag key={rank} rank={rank} />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </td>
 
                           {/* Column 2: Main Deity & Titles */}
-                          <td className="py-6 px-4 align-top max-w-[240px]">
+                          <td className="py-6 px-4 align-top">
                             <div className="flex flex-col space-y-1">
                               <span className="text-[13px] text-stone font-extrabold tracking-wide leading-tight">
                                 {card.primary_deity?.name_en ?? ""}
                               </span>
-                              <span className="text-[10.5px] text-[#8a7a5f] font-serif font-semibold tracking-widest block leading-none pt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <span className="text-[10.5px] text-[#8a7a5f] font-display font-semibold tracking-widest block leading-none pt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.primary_deity?.name_ja ?? ""}
                               </span>
                               <div className="flex flex-col gap-1 pt-2">
@@ -498,41 +501,28 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           </td>
 
                           {/* Column 3: Prayer Focus (Normal Body Text) */}
-                          <td className="py-6 px-4 align-top max-w-[280px]">
+                          <td className="py-6 px-4 align-top">
                             <div className="flex flex-col space-y-3">
                               <p className="text-[11.5px] text-stone/70 leading-relaxed font-sans tracking-wide">
                                 {card.prayer_focus ?? ""}
                               </p>
                               <div className="flex flex-wrap gap-1.5">
-                                {card.category_codes.map((focus) => {
-                                  const { text } = getTagColors(focus);
-                                  return (
-                                    <span key={focus} className={`text-[8.5px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${text}`}>
-                                      {focus}
-                                    </span>
-                                  );
-                                })}
+                                {card.category_codes.map((focus) => (
+                                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                                    {focus}
+                                  </span>
+                                ))}
                               </div>
                             </div>
                           </td>
 
                           {/* Column 4: Best Time (Normal Typography, No Subtitle) */}
-                          <td className="py-6 px-4 align-top max-w-[190px]">
+                          <td className="py-6 px-4 align-top">
                             <p className="text-[11px] text-stone/65 font-sans leading-relaxed tracking-wide pt-0.5">
                               {card.best_time ?? ""}
                             </p>
                           </td>
 
-                          {/* Column 5: Ranks & Titles */}
-                          <td className="py-6 px-6 align-top text-right max-w-[180px]">
-                            <div className="flex flex-col items-end gap-1.5 justify-start">
-                              {card.rank_codes.map((rankTitle) => (
-                                <span key={rankTitle} className="text-[9px] text-[#5c685f]/80 tracking-widest font-mono uppercase font-black text-right whitespace-normal leading-snug">
-                                  {rankTitle}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
                         </motion.tr>
                       ))}
                     </tbody>
@@ -552,14 +542,18 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                       onClick={() => router.push(`/shrines/${card.slug}`)}
                       className="group flex flex-col justify-between wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.01] hover:bg-white transition-all duration-300 h-auto bg-washi/85 shrink-0"
                     >
-                      <div>
+                      {(() => {
+                        const isExpanded = expandedCards.has(card.slug);
+                        return (
+                          <>
+                      <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
                         {/* Beautiful curved top-header image with loader fallback built-in */}
                         <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} />
+                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
 
                           {/* Traditional paper/wood placard (Ofuda badge) */}
                           <div
-                            className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-serif text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
+                            className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-display text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
                             style={{ fontFamily: "'Noto Serif JP', serif" }}
                           >
                             {card.name_ja ?? ""}
@@ -571,12 +565,9 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           {/* Card Header Title and Location */}
                           <div>
                             <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                              <h4 className="text-lg font-serif font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
+                              <h4 className="text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
                                 {card.name_en}
                               </h4>
-                              <span className="text-xs text-[#5c685f]/70 font-serif tracking-wider group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {card.name_ja ?? ""}
-                              </span>
                             </div>
                             <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
                               {card.city ?? ""}, {card.prefecture}
@@ -597,7 +588,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                             <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Main Deity</span>
                             <div className="flex items-baseline gap-2">
                               <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
-                              <span className="text-[10.5px] text-torii font-serif font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.primary_deity?.name_ja ?? ""}
                               </span>
                             </div>
@@ -616,27 +607,37 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                             </p>
 
                             <div className="flex flex-wrap gap-1.5">
-                              {card.category_codes.map((focus) => {
-                                const { text } = getTagColors(focus);
-                                return (
-                                  <span key={focus} className={`text-[8.5px] font-bold tracking-wider px-2 py-0.5 rounded border ${text}`}>
-                                    {focus}
-                                  </span>
-                                );
-                              })}
+                              {card.category_codes.map((focus) => (
+                                <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                                  {focus}
+                                </span>
+                              ))}
                             </div>
                           </div>
 
                           {/* Best Time Visitation block */}
                           <div className="pt-2.5 border-t border-moss/5 flex flex-col space-y-0.5">
-                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Recommended Season</span>
+                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
                             <p className="text-[11px] text-stone/60 leading-relaxed font-sans">
                               {card.best_time ?? ""}
                             </p>
                           </div>
 
                         </div>
+                        {!isExpanded && (
+                          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-washi to-transparent pointer-events-none" />
+                        )}
                       </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
+                        className="flex items-center justify-center gap-1 border-t border-moss/10 py-2 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
+                      >
+                        {isExpanded ? "collapse" : "show more"}
+                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                          </>
+                        );
+                      })()}
                     </motion.div>
                   ))}
                 </div>
@@ -664,7 +665,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
             >
               {/* Drawer Header */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                <span className="font-serif font-bold text-slate-800 tracking-wider flex items-center gap-1">
+                <span className="font-display font-bold text-slate-800 tracking-wider flex items-center gap-1">
                   <Filter size={14} />
                   Structured Filters
                 </span>

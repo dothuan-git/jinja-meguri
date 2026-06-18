@@ -212,6 +212,7 @@ One row per shrine; topical narrative prose.
 | `description`  | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
 | `prayer_focus` | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
 | `best_time`    | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
+| `quote`        | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
 
 ### `festivals` (definition + optional dated occurrence)
 
@@ -357,8 +358,11 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
    left null until edited on the deity record.)
 3. **Festival dates are deferred.** `festivals.start_date` / `end_date` are left `null` at shrine-research
-   time — the shrine form/prompt has no festival-date fields. Concrete yearly dates are uploaded later
-   into `festival_occurrences` (manual JSON/form; a dedicated importer is a future addition).
+   time — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete yearly dates are uploaded later
+   into `festival_occurrences`: the admin **structured form** (`ShrineForm`) supports adding per-year
+   occurrences (year defaults to the current year) per festival, and the JSON import accepts
+   `festivals[].occurrences`. The festival's own `start_date`/`end_date` stay deferred/`null`; a dedicated
+   bulk importer is a future addition.
    - *Current* read path (`lib/calendar.ts`): for the queried year, an occurrence's dates win over the
      festival's own `start_date`/`end_date`; `is_fallback` when neither exists.
    - *Intended* target: a festival's effective dates resolve from the latest `festival_occurrences` row,

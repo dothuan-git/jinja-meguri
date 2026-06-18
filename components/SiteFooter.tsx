@@ -12,7 +12,7 @@ export default function SiteFooter() {
       <div className="text-[10px] font-mono tracking-[0.2em] uppercase font-bold text-stone/40">
         Jinja Meguri — 神社巡り
       </div>
-      <p className="max-w-lg text-[10px] font-serif italic text-stone/40 leading-relaxed">
+      <p className="max-w-lg text-[10px] font-display italic text-stone/40 leading-relaxed">
         AI-assisted research project. Information may contain inaccuracies; verify with official sanctuary channels before visiting.
       </p>
       <div className="text-[9px] font-mono tracking-tight text-stone/30">

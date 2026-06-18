@@ -68,6 +68,7 @@ export interface ShrineDetailRow {
   description: string | null;
   prayer_focus: string | null;
   best_time: string | null;
+  quote: string | null;
 }
 export interface FestivalRow {
   id: string;
@@ -187,6 +188,7 @@ export interface ShrineDetail extends ShrineCard {
     description: string | null;
     prayer_focus: string | null;
     best_time: string | null;
+    quote: string | null;
   } | null;
   festivals: FestivalView[];
   sources: SourceRow[];

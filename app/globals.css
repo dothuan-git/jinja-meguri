@@ -1,9 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+JP:wght@200;300;400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Spectral:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Serif+JP:wght@200;300;400;500;600;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-serif: "Cormorant Garamond", "Noto Serif JP", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", serif;
+  --font-display: "Cormorant Garamond", serif;
+  --font-quote: "Spectral", "Noto Serif JP", serif;
 
   /* Traditional Japanese Sanctuary Color Palette */
   --color-torii: #c94b32;
@@ -16,6 +18,19 @@
   --color-stone: #1a201c;
   --color-washi: #fbf9f4;
 }
+
+/* Utility aliases for display serif family
+   - `font-display` maps to the Cormorant Garamond display face used for headings
+   - keep `font-serif` as explicit mapping to the Noto Serif JP body serif so
+     existing uses continue to work until code is migrated
+*/
+.font-display { font-family: var(--font-display) !important; }
+.font-serif { font-family: var(--font-serif) !important; }
+
+/* Latin display serif (Cormorant) that falls back to Noto Serif JP for kanji —
+   mirrors the prototype's combined serif so English renders in Cormorant while
+   Japanese glyphs use Noto. */
+.font-display-jp { font-family: "Cormorant Garamond", "Noto Serif JP", serif !important; }
 
 .writing-mode-vertical {
   writing-mode: vertical-rl;

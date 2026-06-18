@@ -4,7 +4,7 @@ import Calendar from "@/components/Calendar";
 
 export const dynamic = "force-dynamic";
 
-const YEAR = 2026; // occurrences are seeded for 2026
+const YEAR = new Date().getFullYear(); // calendar tracks the current year's occurrences
 
 export default async function CalendarPage() {
   const store = await loadStore();

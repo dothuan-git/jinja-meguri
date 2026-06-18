@@ -14,9 +14,11 @@ interface Props {
 
 const DEITY_TYPES = ["mythological", "deified_human", "syncretic"] as const;
 const FESTIVAL_TYPES = ["spectacle", "pilgrimage"] as const;
+const CURRENT_YEAR = new Date().getFullYear();
 
 type DeityDraft = ShrineInput["deities"][number];
 type FestivalDraft = NonNullable<ShrineInput["festivals"]>[number];
+type OccurrenceDraft = NonNullable<FestivalDraft["occurrences"]>[number];
 type SourceDraft = NonNullable<ShrineInput["sources"]>[number];
 
 function emptyDeity(): DeityDraft {
@@ -24,6 +26,9 @@ function emptyDeity(): DeityDraft {
 }
 function emptyFestival(): FestivalDraft {
   return { name_en: "", name_ja: "", time_prose: "", festival_type: "spectacle", occurrences: [] };
+}
+function emptyOccurrence(): OccurrenceDraft {
+  return { year: CURRENT_YEAR, start_date: "", end_date: null };
 }
 function emptySource(): SourceDraft {
   return { url: "", title: "" };
@@ -61,6 +66,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
   const [description, setDescription] = useState(initialData?.details?.description ?? "");
   const [prayerFocus, setPrayerFocus] = useState(initialData?.details?.prayer_focus ?? "");
   const [bestTime, setBestTime] = useState(initialData?.details?.best_time ?? "");
+  const [quote, setQuote] = useState(initialData?.details?.quote ?? "");
   const [ranks, setRanks] = useState<string[]>(initialData?.ranks ?? []);
   const [categories, setCategories] = useState<string[]>(initialData?.prayer_categories ?? []);
   const [deities, setDeities] = useState<DeityDraft[]>(initialData?.deities ?? [emptyDeity()]);
@@ -103,6 +109,19 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
   function updateFestival(i: number, patch: Partial<FestivalDraft>) {
     setFestivals((prev) => prev.map((f, idx) => idx === i ? { ...f, ...patch } : f));
   }
+  function addOccurrence(fi: number) {
+    setFestivals((prev) => prev.map((f, idx) => idx === fi ? { ...f, occurrences: [...(f.occurrences ?? []), emptyOccurrence()] } : f));
+  }
+  function updateOccurrence(fi: number, oi: number, patch: Partial<OccurrenceDraft>) {
+    setFestivals((prev) => prev.map((f, idx) =>
+      idx === fi ? { ...f, occurrences: (f.occurrences ?? []).map((o, j) => j === oi ? { ...o, ...patch } : o) } : f
+    ));
+  }
+  function removeOccurrence(fi: number, oi: number) {
+    setFestivals((prev) => prev.map((f, idx) =>
+      idx === fi ? { ...f, occurrences: (f.occurrences ?? []).filter((_, j) => j !== oi) } : f
+    ));
+  }
   function updateSource(i: number, patch: Partial<SourceDraft>) {
     setSources((prev) => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s));
   }
@@ -118,7 +137,7 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
       city: city || null,
       address: address || null,
       coordinates: lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null,
-      details: { history: history || null, description: description || null, prayer_focus: prayerFocus || null, best_time: bestTime || null },
+      details: { history: history || null, description: description || null, prayer_focus: prayerFocus || null, best_time: bestTime || null, quote: quote || null },
       ranks: ranks.length ? ranks : undefined,
       prayer_categories: categories.length ? categories : undefined,
       deities: deities.map((d, i) => ({
@@ -127,7 +146,15 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
         sort_order: i,
         regional_lore: d.regional_lore || null,
       })),
-      festivals: festivals.length ? festivals : undefined,
+      festivals: festivals.length
+        ? festivals.map((f) => ({
+            ...f,
+            // Keep only complete occurrence rows; normalize empty end_date to null.
+            occurrences: (f.occurrences ?? [])
+              .filter((o) => o.start_date)
+              .map((o) => ({ ...o, year: Number(o.year), end_date: o.end_date || null })),
+          }))
+        : undefined,
       sources: sources.length ? sources : undefined,
     };
     onSave(data);
@@ -193,6 +220,9 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
         </Field>
         <Field label="Best time to visit">
           <textarea value={bestTime} onChange={(e) => setBestTime(e.target.value)} rows={2} className={textareaClass} />
+        </Field>
+        <Field label="Quote">
+          <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={2} className={textareaClass} />
         </Field>
       </section>
 
@@ -362,6 +392,39 @@ export default function ShrineForm({ initialData, catalogs, existingDeities, onS
             <Field label="Visitor notes">
               <textarea value={f.visitor_notes ?? ""} onChange={(e) => updateFestival(i, { visitor_notes: e.target.value })} rows={2} className={textareaClass} />
             </Field>
+
+            {/* Dates (festival_occurrences) — per-year exact dates that drive the calendar */}
+            <div className="space-y-2 rounded border border-dashed border-gray-300 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Dates</span>
+                <button type="button" onClick={() => addOccurrence(i)} className="text-xs text-stone-600 hover:text-stone-900">
+                  + Add date for {CURRENT_YEAR}
+                </button>
+              </div>
+              {(f.occurrences ?? []).length === 0 && (
+                <p className="text-xs text-gray-400">No dates yet — undated festivals don’t appear on the calendar.</p>
+              )}
+              {(f.occurrences ?? []).map((o, oi) => (
+                <div key={oi} className="flex items-end gap-2">
+                  <div className="w-24">
+                    <Field label={`Year (now ${CURRENT_YEAR})`}>
+                      <input type="number" value={o.year} onChange={(e) => updateOccurrence(i, oi, { year: Number(e.target.value) })} className={cls} />
+                    </Field>
+                  </div>
+                  <div className="flex-1">
+                    <Field label="Start date *">
+                      <input type="date" value={o.start_date} onChange={(e) => updateOccurrence(i, oi, { start_date: e.target.value })} className={cls} />
+                    </Field>
+                  </div>
+                  <div className="flex-1">
+                    <Field label="End date">
+                      <input type="date" value={o.end_date ?? ""} onChange={(e) => updateOccurrence(i, oi, { end_date: e.target.value || null })} className={cls} />
+                    </Field>
+                  </div>
+                  <button type="button" onClick={() => removeOccurrence(i, oi)} className="mb-1.5 text-xs text-red-500 hover:text-red-700">✕</button>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </section>
