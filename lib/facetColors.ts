@@ -107,6 +107,34 @@ export function getRankColor(name: string): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Deity types — three origin categories                               */
+/* mythological: cosmic/ancient indigo · deified_human: warm amber    */
+/* syncretic: sage teal (blended tradition)                            */
+/* ------------------------------------------------------------------ */
+
+const DEITY_TYPE_COLORS: Record<string, string> = {
+  mythological:  "text-[#4a4270] border-[#4a4270]/15 bg-[#4a4270]/5", // cosmic indigo
+  deified_human: "text-[#7a5c2a] border-[#7a5c2a]/15 bg-[#7a5c2a]/5", // warm amber
+  syncretic:     "text-[#2f6b5e] border-[#2f6b5e]/15 bg-[#2f6b5e]/5", // sage teal
+};
+
+const DEITY_TYPE_FALLBACK = "text-[#5f6b5a] border-[#5f6b5a]/12 bg-[#5f6b5a]/5";
+
+export function getDeityTypeColor(type: string): string {
+  return DEITY_TYPE_COLORS[type] ?? DEITY_TYPE_FALLBACK;
+}
+
+const DEITY_TYPE_TEXT: Record<string, string> = {
+  mythological:  "text-[#4a4270]",
+  deified_human: "text-[#7a5c2a]",
+  syncretic:     "text-[#2f6b5e]",
+};
+
+export function getDeityTypeTextColor(type: string): string {
+  return DEITY_TYPE_TEXT[type] ?? "text-[#5f6b5a]";
+}
+
+/* ------------------------------------------------------------------ */
 /* Rank descriptions — mirrors seed.sql ranks table                    */
 /* ------------------------------------------------------------------ */
 

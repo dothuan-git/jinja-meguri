@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import type { DeityListItem } from "@/lib/types";
 import { fold } from "@/lib/search";
+import { DEITY_TYPE_LABEL } from "@/lib/labels";
+import { getDeityTypeTextColor } from "@/lib/facetColors";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function DeityListing({ deities }: { deities: DeityListItem[] }) {
@@ -35,6 +37,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
       deities.map((d) => ({
         name: d.name_en,
         japaneseName: d.name_ja ?? "",
+        deityType: d.deity_type,
         titles: d.titles,
         canonicalLore: d.canonical_lore ?? "",
         shrines: d.shrines.map((s) => ({
@@ -332,8 +335,8 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                           <span className="text-sm font-serif text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                             {activeDeity.japaneseName}
                           </span>
-                          <span className="text-[10px] font-mono tracking-widest text-[#5e7f5a] font-bold select-none">
-                            神霊
+                          <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(activeDeity.deityType)}`}>
+                            {DEITY_TYPE_LABEL[activeDeity.deityType] ?? activeDeity.deityType}
                           </span>
                         </div>
                       </div>

@@ -18,8 +18,8 @@ import {
 import type { ShrineDetail } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
-import { getCategoryColor } from "@/lib/facetColors";
-import { FESTIVAL_TYPE_LABEL } from "@/lib/labels";
+import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
+import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
 
 // Canonical compact chip style shared with the shrine listing (table + cards)
 // so category and rank tags read identically across every view. Color classes
@@ -71,6 +71,7 @@ function toView(shrine: ShrineDetail) {
     primaryDeity: {
       name: primary?.name_en ?? "",
       japaneseName: primary?.name_ja ?? "",
+      deityType: primary?.deity_type ?? "",
       titles: primary?.titles ?? [],
       canonicalLore: primary?.canonical_lore ?? "",
       regionalLore: primary?.regional_lore ?? "",
@@ -78,6 +79,7 @@ function toView(shrine: ShrineDetail) {
     secondaryDeities: companionsOf(shrine).map((d) => ({
       name: d.name_en,
       japaneseName: d.name_ja ?? "",
+      deityType: d.deity_type,
       titles: d.titles,
       regionalLore: d.regional_lore ?? "",
     })),
@@ -466,9 +468,14 @@ function PageBody({ view: shrine }: { view: View }) {
                     <h4 className={typo.subheading}>
                       {shrine.primaryDeity.name}
                     </h4>
-                    <span className="text-xs font-serif text-moss mt-1 block font-medium" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                      {shrine.primaryDeity.japaneseName}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                        {shrine.primaryDeity.japaneseName}
+                      </span>
+                      <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
+                        {DEITY_TYPE_LABEL[shrine.primaryDeity.deityType] ?? shrine.primaryDeity.deityType}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Primary Deity Epithets */}
@@ -525,9 +532,14 @@ function PageBody({ view: shrine }: { view: View }) {
                               <h4 className="text-sm font-serif font-black text-stone leading-tight">
                                 {deity.name}
                               </h4>
-                              <span className="text-[10px] font-serif text-moss-light block" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {deity.japaneseName}
-                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                  {deity.japaneseName}
+                                </span>
+                                <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
+                                  {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
+                                </span>
+                              </div>
                             </div>
 
                             {/* Companion Deity Epithets in smaller subtle text */}
@@ -964,15 +976,20 @@ function ModalBody({ view: shrine }: { view: View }) {
           <div className="space-y-5">
 
             {/* Primary Deity */}
-            <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-5 md:p-7 border border-moss/8 shadow-3xs space-y-5">
+            <div className="bg-washi/70 hover:bg-white/80 rounded-2xl p-5 md:p-7 border border-moss/8 hover:shadow-3xs transition-all duration-300 space-y-5">
               <div>
                 <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                   Primary Enshrined Spirit
                 </span>
                 <h4 className={typo.subheading}>{shrine.primaryDeity.name}</h4>
-                <span className="text-xs font-serif text-moss mt-1 block font-medium" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                  {shrine.primaryDeity.japaneseName}
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    {shrine.primaryDeity.japaneseName}
+                  </span>
+                  <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
+                    {DEITY_TYPE_LABEL[shrine.primaryDeity.deityType] ?? shrine.primaryDeity.deityType}
+                  </span>
+                </div>
               </div>
 
               {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
@@ -1006,20 +1023,34 @@ function ModalBody({ view: shrine }: { view: View }) {
                   Companion Spirits (配祀神)
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {shrine.secondaryDeities.map((deity, idx) => (
-                    <div key={deity.name + idx} className="p-4 rounded-xl bg-white/40 hover:bg-white/70 border border-stone/8 shadow-3xs transition-colors duration-300">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
-                        <span className="text-[10px] font-serif text-moss-light" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                          {deity.japaneseName}
-                        </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {shrine.secondaryDeities.map((deity, idx) => (
+                      <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 hover:shadow-3xs transition-all duration-300 flex flex-col justify-between">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              {deity.japaneseName}
+                            </span>
+                            <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
+                              {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
+                            </span>
+                          </div>
+                        </div>
+                        {deity.titles && deity.titles.length > 0 && (
+                          <div className="pt-1.5 border-t border-stone/5">
+                            <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
+                              {deity.titles.map((title, tIdx) => (
+                                <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
+                                  <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
+                                  <span>{title}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      {deity.titles?.[0] && (
-                        <p className="mt-1.5 text-[11px] text-stone/55 font-sans italic leading-snug">{deity.titles[0]}</p>
-                      )}
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
