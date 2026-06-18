@@ -22,6 +22,7 @@ import {
   X
 } from "lucide-react";
 import type { CalendarFestival } from "@/lib/types";
+import { FESTIVAL_TYPE_LABEL } from "@/lib/labels";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 // Poetic lunar month structure
@@ -71,7 +72,7 @@ type LinkedFestival = {
   meaning: string;
   ritual: string;
   prayer: string;
-  type: { category: "public_witness" | "pilgrimage_experience"; notes: string };
+  type: { category: "spectacle" | "pilgrimage" | ""; notes: string };
   month: number | null;
   start_date: string | null;
   end_date: string | null;
@@ -84,7 +85,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
   useEntranceReveal(containerRef);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string>("all"); // "all", "public_witness", "pilgrimage_experience"
+  const [activeCategory, setActiveCategory] = useState<string>("all"); // "all", "spectacle", "pilgrimage"
   const [expandedFestivals, setExpandedFestivals] = useState<Record<string, boolean>>({});
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(6); // Default to June (6)
@@ -103,9 +104,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
     ritual: f.ritual ?? "",
     prayer: f.prayer ?? "",
     type: {
-      category: (f.festival_type ?? "").toLowerCase().includes("pilgrim")
-        ? "pilgrimage_experience"
-        : "public_witness",
+      category: (f.festival_type ?? "") as "spectacle" | "pilgrimage" | "",
       notes: f.visitor_notes ?? "",
     },
     month: f.month,
@@ -200,7 +199,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-24 z-10 select-none">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto mt-4 pb-24 z-10 select-none">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
       <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
@@ -218,7 +217,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
           <span>祭時暦</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
           Festival Liturgy
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
@@ -227,7 +226,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 2. SEASONAL TERMINOLOGY RESOURCE BANNER */}
-      <div data-reveal="fade-up" className="w-full bg-[#ffffff] border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-washi border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
         <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
           <div className="w-10 h-10 rounded-xl bg-torii/5 border border-torii/15 flex items-center justify-center text-torii shrink-0 shadow-3xs">
             <Sun size={18} className="stroke-[1.5]" />
@@ -251,7 +250,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                 key={kanji}
                 className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 text-stone ${firstSeasonMatch.bg} border-moss/5 shadow-3xs shrink-0`}
               >
-                <span className={`text-xs font-serif font-black ${firstSeasonMatch.color}`}>{kanji}</span>
+                <span className={`text-xs font-display font-black ${firstSeasonMatch.color}`}>{kanji}</span>
                 <span className="text-[8px] font-mono tracking-widest uppercase font-black text-[#5c685f]">
                   {firstSeasonMatch.name.split(" • ")[1]}
                 </span>
@@ -320,27 +319,27 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              All Rites (全祭事)
+              All Rites
             </button>
             <button
-              onClick={() => setActiveCategory("public_witness")}
+              onClick={() => setActiveCategory("spectacle")}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-widest uppercase font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeCategory === "public_witness"
+                activeCategory === "spectacle"
                   ? "bg-white text-torii-dark shadow-3xs border border-[#dfdbd2]"
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              Public Spectacle (衆民観祭)
+              {FESTIVAL_TYPE_LABEL.spectacle}
             </button>
             <button
-              onClick={() => setActiveCategory("pilgrimage_experience")}
+              onClick={() => setActiveCategory("pilgrimage")}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-widest uppercase font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeCategory === "pilgrimage_experience"
+                activeCategory === "pilgrimage"
                   ? "bg-white text-torii-dark shadow-3xs border border-[#dfdbd2]"
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              Quiet Pilgrimage (深参密儀)
+              {FESTIVAL_TYPE_LABEL.pilgrimage}
             </button>
           </div>
 
@@ -357,7 +356,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 5. SPLIT TIMELINE GRID (MAIN CALENDAR MATRIX) */}
-      <div data-reveal="rise" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative pb-16">
+      <div data-reveal="rise" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative pb-16">
 
         {/* LEFT COLUMN: THE CORE CHRONOLOGICAL TIMELINE PATH (col-span-12 lg:col-span-10) */}
         <div className="col-span-12 lg:col-span-10 space-y-16">
@@ -369,7 +368,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                 exit={{ opacity: 0 }}
                 className="w-full text-center py-24 border border-dashed border-moss/10 rounded-2xl bg-white"
               >
-                <div className="text-stone/30 font-serif font-black text-2xl mb-2" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                <div className="text-stone/30 font-display font-black text-2xl mb-2" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                   契合無効
                 </div>
                 <p className="text-stone/60 font-sans text-xs tracking-wide">
@@ -390,7 +389,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-start relative border-l border-stone/15 pl-6 md:pl-10 ml-[18px] md:ml-[26px] pb-12 scroll-mt-24"
+                    className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-6 items-start relative border-l border-stone/15 pl-6 md:pl-10 ml-[18px] md:ml-[26px] pb-12 scroll-mt-24"
                   >
 
                     {/* Minimal traditional red dot bullet on the timeline axis */}
@@ -401,13 +400,13 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
 
                       {/* CLEAN DESKTOP SIDE TIMELINE IN TRADITIONAL JAPANESE STYLE */}
                       <div className="hidden md:flex flex-col items-start sticky top-28 select-none py-1">
-                        <span className="text-[22px] font-serif font-light text-[#5c685f]/85 tracking-wide leading-none">
+                        <span className="text-[22px] font-display font-light text-[#5c685f]/85 tracking-wide leading-none">
                           {monthInfo.wamei}
                         </span>
 
                         <div className="flex items-end gap-3.5 mt-3 mb-2.5">
                           <span
-                            className="text-4xl lg:text-[46px] font-serif font-bold text-[#1c1d1a] leading-none select-all"
+                            className="text-4xl lg:text-[46px] font-display font-bold text-[#1c1d1a] leading-none select-all"
                             style={{ fontFamily: "'Noto Serif JP', serif" }}
                           >
                             {monthInfo.kanji}
@@ -417,7 +416,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                           </span>
                         </div>
 
-                        <span className="text-[12.5px] font-serif italic text-[#635f58]/80 leading-relaxed tracking-wider select-text">
+                        <span className="text-[12.5px] font-display italic text-[#635f58]/80 leading-relaxed tracking-wider select-text">
                           “{monthInfo.meaning}”
                         </span>
 
@@ -431,7 +430,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                       <div className="md:hidden flex items-center justify-between bg-white border border-moss/10 rounded-xl p-4 w-full mb-4 shadow-3xs">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-lg bg-torii/5 border border-torii/15 flex flex-col items-center justify-center shrink-0">
-                            <span className="text-torii text-base font-serif font-black leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                            <span className="text-torii text-base font-display font-black leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                               {monthInfo.kanji}
                             </span>
                             <span className="text-[7.5px] font-mono text-moss font-bold leading-none mt-1">
@@ -440,14 +439,14 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                           </div>
                           <div>
                             <div className="flex items-baseline gap-1.5">
-                              <h3 className="text-sm font-serif font-bold text-stone">
+                              <h3 className="text-sm font-display font-bold text-stone">
                                 {monthInfo.wamei}
                               </h3>
                               <span className="text-[8px] font-mono text-moss-light uppercase tracking-widest">
                                 {monthInfo.name}
                               </span>
                             </div>
-                            <p className="text-[10px] text-stone/70 font-serif italic mt-0.5">
+                            <p className="text-[10px] text-stone/70 font-display italic mt-0.5">
                               “{monthInfo.meaning}”
                             </p>
                           </div>
@@ -498,22 +497,24 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                       <div className="p-1 rounded-sm bg-sand border border-[#dfdbd2] flex items-center justify-center shrink-0">
                                         {getContextualIcon(fest.name, fest.meaning)}
                                       </div>
-                                      <h4 className="text-base md:text-lg font-serif font-black text-stone group-hover:text-torii transition-colors leading-tight" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                        {englishName} {japaneseName && <span className="text-stone/60 font-normal text-xs md:text-sm font-serif ml-1.5">({japaneseName})</span>}
+                                      <h4 className="text-base md:text-lg font-serif font-black text-stone group-hover:text-torii transition-colors leading-tight">
+                                        {englishName} {japaneseName && <span className="text-stone/60 font-normal text-xs md:text-sm font-display-jp ml-1.5">({japaneseName})</span>}
                                       </h4>
                                     </div>
                                   </div>
 
                                   {/* Category Badge - moved here under name */}
-                                  <div className="pt-1 select-none">
-                                    <span className={`inline-block text-[8.5px] font-mono tracking-widest uppercase px-2.5 py-1 rounded-md font-bold border ${
-                                      fest.type.category === "pilgrimage_experience"
-                                        ? "bg-torii/[0.03] text-torii-dark border-torii/15"
-                                        : "bg-bamboo-light text-moss/90 border-bamboo/15"
-                                    }`}>
-                                      {fest.type.category === "pilgrimage_experience" ? "深参密儀 • Pilgrimage" : "衆民観祭 • Public Witness"}
-                                    </span>
-                                  </div>
+                                  {fest.type.category && (
+                                    <div className="pt-1 select-none">
+                                      <span className={`inline-block text-[8.5px] font-mono tracking-widest uppercase px-2.5 py-1 rounded-md font-bold border ${
+                                        fest.type.category === "pilgrimage"
+                                          ? "bg-torii/[0.03] text-torii-dark border-torii/15"
+                                          : "bg-bamboo-light text-moss/90 border-bamboo/15"
+                                      }`}>
+                                        {fest.type.category === "pilgrimage" ? "深参密儀 • Pilgrimage" : "衆民観祭 • Public Festival"}
+                                      </span>
+                                    </div>
+                                  )}
 
                                   {/* Interactive Host Shrine & Location Link */}
                                   <div className="inline-block pt-1">
@@ -532,8 +533,8 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                   </div>
 
                                   {/* Compact Meaning / Intention */}
-                                  <p className="text-stone/75 text-xs mt-3 leading-relaxed tracking-wider select-text">
-                                    {isExpanded ? fest.meaning.split("\n\n")[0] : `${fest.meaning.split("\n\n")[0].substring(0, 160)}...`}
+                                  <p className="text-stone/75 text-xs mt-3 leading-relaxed tracking-wider select-text whitespace-pre-line">
+                                    {isExpanded ? fest.meaning : `${fest.meaning.split("\n\n")[0].substring(0, 160)}...`}
                                   </p>
 
                                 </div>
@@ -575,17 +576,6 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
 
                                       {/* Expanded event description entire card */}
                                       <div className="space-y-6">
-
-                                        {/* Cosmology & History */}
-                                        <div>
-                                          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-torii-dark flex items-center gap-1.5 mb-2 select-none">
-                                            <Sun size={11} className="text-torii" />
-                                            Cosmological Origin & Mythology (神徳源流)
-                                          </span>
-                                          <p className="text-[12px] font-serif leading-relaxed italic text-stone/85 tracking-wide whitespace-pre-line border-l border-torii/15 pl-3.5 select-text">
-                                            {fest.meaning}
-                                          </p>
-                                        </div>
 
                                         {/* Liturgical Procession */}
                                         {fest.ritual && (
@@ -659,7 +649,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
         </div>
 
         {/* RIGHT COLUMN: STICKY LUNAR CHRONICLE INDEX (DESKTOP EXCLUSIVE RAIL) (col-span-2) */}
-        <div className="hidden lg:block lg:col-span-2 sticky top-28 self-start ml-2">
+        <div className="hidden lg:block lg:col-span-2 sticky top-28 self-start">
 
           <div className="bg-white border border-[#e5dfd3] p-4.5 rounded-xl shadow-[2px_2px_10px_rgba(26,32,28,0.02)] relative group/rail">
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-torii" />
@@ -687,7 +677,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                       {mInfo.kanji[0]}
                     </span>
                     <div className="flex flex-col leading-none">
-                      <span className="text-[11.5px] font-serif font-black tracking-wider block">
+                      <span className="text-[11.5px] font-display font-black tracking-wider block">
                         {mInfo.wamei}
                       </span>
                       <span className="text-[7.5px] font-mono text-moss-light uppercase tracking-widest block mt-0.5 font-bold">
@@ -703,7 +693,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
           </div>
 
           {/* Minimal design philosophy quote sticker below the index */}
-          <div className="mt-4 p-3 border border-moss/5 rounded-lg bg-white/40 text-center text-[10px] text-stone/60 font-serif italic leading-relaxed select-none">
+          <div className="mt-4 p-3 border border-moss/5 rounded-lg bg-white/40 text-center text-[10px] text-stone/60 font-display italic leading-relaxed select-none">
             “The sun rises over the Eastern Torii; the term cycles and the seasons balance.”
           </div>
 
@@ -727,15 +717,15 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                 {/* Modal Header */}
                 <div className="bg-sand/40 border-b border-[#e5dfd3] px-5 py-4 flex items-center justify-between gap-4 shrink-0">
                   <div className="flex items-center gap-3">
-                    <div className="border border-torii/15 text-torii text-base md:text-xl font-serif font-black px-2.5 py-1.5 rounded bg-white shadow-3xs" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    <div className="border border-torii/15 text-torii text-base md:text-xl font-display font-black px-2.5 py-1.5 rounded bg-white shadow-3xs" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                       {POETIC_MONTHS[calendarMonth]?.kanji}
                     </div>
                     <div className="leading-tight">
-                      <h3 className="text-stone font-serif text-sm md:text-base font-black flex items-baseline gap-1.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                      <h3 className="text-stone font-display text-sm md:text-base font-black flex items-baseline gap-1.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                         <span>{POETIC_MONTHS[calendarMonth]?.wamei} ({POETIC_MONTHS[calendarMonth]?.name})</span>
                         <span className="text-xs font-mono font-medium text-stone/50">{calendarYear}</span>
                       </h3>
-                      <p className="text-[10px] text-stone/60 font-serif italic">
+                      <p className="text-[10px] text-stone/60 font-display italic">
                         “{POETIC_MONTHS[calendarMonth]?.meaning}”
                       </p>
                     </div>
@@ -876,7 +866,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                               {/* Event Listing Grid block (Google Calendar style) */}
                               <div className="mt-1 flex-1 overflow-y-auto space-y-0.5 select-none scrollbar-none max-h-[48px] md:max-h-[65px]">
                                 {cell.isCurrentMonth && cellEvents.slice(0, 3).map((fest) => {
-                                  const isPilgrimage = fest.type.category === "pilgrimage_experience";
+                                  const isPilgrimage = fest.type.category === "pilgrimage";
                                   return (
                                     <div
                                       key={fest.id}
@@ -914,7 +904,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                       <span className="text-[9px] font-mono tracking-widest uppercase font-black text-moss-light">
                         Liturgy Agenda • 御暦簿
                       </span>
-                      <h4 className="text-stone font-serif text-base font-black mt-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                      <h4 className="text-stone font-display text-base font-black mt-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                         {selectedDay ? (
                           <>
                             {POETIC_MONTHS[selectedDay.month]?.name} {selectedDay.day}
@@ -923,7 +913,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                       </h4>
                       {selectedDay && (
                         <span className="text-[10px] font-serif italic text-stone/60 mt-0.5">
-                          Traditional Term: {POETIC_MONTHS[selectedDay.month]?.wamei} ({POETIC_MONTHS[selectedDay.month]?.kanji})
+                          {POETIC_MONTHS[selectedDay.month]?.wamei} ({POETIC_MONTHS[selectedDay.month]?.kanji})
                         </span>
                       )}
                     </div>
@@ -940,7 +930,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                         if (agendaEvents.length === 0) {
                           return (
                             <div className="text-center py-12 select-none">
-                              <span className="text-[32px] font-serif font-light text-stone/15 block" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <span className="text-[32px] font-display font-light text-stone/15 block" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 静
                               </span>
                               <h5 className="text-[11.5px] font-serif font-black text-stone/70 mt-2">
@@ -954,7 +944,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                         }
 
                         return agendaEvents.map((fest) => {
-                          const isPilgrimage = fest.type.category === "pilgrimage_experience";
+                          const isPilgrimage = fest.type.category === "pilgrimage";
                           const match = fest.name.match(/^(.*?)\s*\((.*?)\)$/);
                           const englishName = match ? match[1].trim() : fest.name;
                           const japaneseName = match ? match[2].trim() : "";
@@ -1004,11 +994,11 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
 
                                 {/* Narrative Titles */}
                                 <div>
-                                  <h5 className="text-[13.5px] font-serif font-black text-stone leading-snug group-hover/agenda:text-torii transition-colors" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                  <h5 className="text-[13.5px] font-serif font-black text-stone leading-snug group-hover/agenda:text-torii transition-colors">
                                     {englishName}
                                   </h5>
                                   {japaneseName && (
-                                    <span className="text-[10px] font-serif text-moss block font-medium mt-1 leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                    <span className="text-[10px] font-display-jp text-moss block font-medium mt-1 leading-none">
                                       {japaneseName}
                                     </span>
                                   )}
