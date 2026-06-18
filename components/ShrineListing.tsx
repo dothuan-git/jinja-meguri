@@ -17,19 +17,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import { getCategoryColor } from "@/lib/facetColors";
 
-const getTagColors = (tag: string) => {
-  const sum = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const presets = [
-    { text: "text-[#9d4432] border-[#9d4432]/12 bg-[#9d4432]/5", bg: "" },
-    { text: "text-[#3e5f49] border-[#3e5f49]/12 bg-[#3e5f49]/5", bg: "" },
-    { text: "text-[#7a643f] border-[#7a643f]/12 bg-[#7a643f]/5", bg: "" },
-    { text: "text-[#655375] border-[#655375]/12 bg-[#655375]/5", bg: "" },
-    { text: "text-[#4b6678] border-[#4b6678]/12 bg-[#4b6678]/5", bg: "" },
-    { text: "text-[#755f46] border-[#755f46]/12 bg-[#755f46]/5", bg: "" },
-  ];
-  return presets[sum % presets.length];
-};
+// Canonical compact chip style shared by category + rank tags across the
+// table, cards, and the shrine detail/modal views. Color comes from facetColors.
+const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
 
 type Filters = {
   searchQuery: string;
@@ -504,14 +496,11 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                                 {card.prayer_focus ?? ""}
                               </p>
                               <div className="flex flex-wrap gap-1.5">
-                                {card.category_codes.map((focus) => {
-                                  const { text } = getTagColors(focus);
-                                  return (
-                                    <span key={focus} className={`text-[8.5px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${text}`}>
-                                      {focus}
-                                    </span>
-                                  );
-                                })}
+                                {card.category_codes.map((focus) => (
+                                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                                    {focus}
+                                  </span>
+                                ))}
                               </div>
                             </div>
                           </td>
@@ -616,14 +605,11 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                             </p>
 
                             <div className="flex flex-wrap gap-1.5">
-                              {card.category_codes.map((focus) => {
-                                const { text } = getTagColors(focus);
-                                return (
-                                  <span key={focus} className={`text-[8.5px] font-bold tracking-wider px-2 py-0.5 rounded border ${text}`}>
-                                    {focus}
-                                  </span>
-                                );
-                              })}
+                              {card.category_codes.map((focus) => (
+                                <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                                  {focus}
+                                </span>
+                              ))}
                             </div>
                           </div>
 

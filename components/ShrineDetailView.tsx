@@ -13,7 +13,6 @@ import {
   Crown,
   ExternalLink,
   FileText,
-  Heart,
   Map,
   MapPin,
   Sparkles,
@@ -21,6 +20,13 @@ import {
 import type { ShrineDetail } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import { getCategoryColor } from "@/lib/facetColors";
+import { FESTIVAL_TYPE_LABEL } from "@/lib/labels";
+
+// Canonical compact chip style shared with the shrine listing (table + cards)
+// so category and rank tags read identically across every view. Color classes
+// come from lib/facetColors.
+const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
 
 // One canonical class string per text role. Used by both PageBody and
 // ModalBody so the same content reads identically in page and modal.
@@ -30,7 +36,7 @@ import { useEntranceReveal } from "@/components/useEntranceReveal";
 const typo = {
   eyebrow: "text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-moss-light",
   sectionTitle: "text-2xl font-serif font-black text-stone",
-  subheading: "text-xl md:text-2xl font-serif font-black text-stone leading-tight",
+  subheading: "text-xl md:text-xl font-serif font-black text-stone leading-tight",
   subheadingSm: "text-sm md:text-base font-serif font-black text-stone leading-tight",
   fieldLabel: "text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50",
   prose: "text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify",
@@ -85,9 +91,7 @@ function toView(shrine: ShrineDetail) {
       ritual: f.ritual ?? "",
       prayer: f.prayer ?? "",
       type: {
-        category: (f.festival_type ?? "").toLowerCase().includes("pilgrim")
-          ? ("pilgrimage_experience" as const)
-          : ("public_witness" as const),
+        category: f.festival_type ?? "",
         notes: f.visitor_notes ?? "",
       },
     })),
@@ -161,18 +165,6 @@ export default function ShrineDetailView({
 
 function PageBody({ view: shrine }: { view: View }) {
   const [activeSection, setActiveSection] = useState("overview");
-
-  const getPrayerTagStyle = (focus: string, index: number) => {
-    const styles = [
-      "bg-emerald-50 text-emerald-800 border-emerald-200/50 hover:bg-emerald-100/60", // Muted forest green
-      "bg-orange-50 text-torii-dark border-orange-200/50 hover:bg-orange-100/60", // Lacquer red/orange
-      "bg-blue-50 text-blue-800 border-blue-200/40 hover:bg-blue-100/60", // Clear indigo stream
-      "bg-amber-50 text-amber-800 border-amber-200/50 hover:bg-amber-100/60", // Rice/harvest gold
-      "bg-purple-50 text-purple-800 border-purple-200/50 hover:bg-purple-100/60", // Sacred wisteria purple
-      "bg-bamboo-light text-moss-light border-moss/10 hover:bg-white", // Clean sand gray
-    ];
-    return styles[index % styles.length];
-  };
 
   // Goshuin Stamp local interactive state
   const [stampReceived, setStampReceived] = useState<string | null>(null);
@@ -323,7 +315,10 @@ function PageBody({ view: shrine }: { view: View }) {
             </div>
 
             <h2 className="text-xl md:text-2xl font-serif font-black text-stone select-text">
-              {shrine.japaneseName} <span className="text-xs font-sans tracking-widest font-normal text-stone/40 ml-1.5">({shrine.location})</span>
+              {shrine.japaneseName}{" "}
+              <span className="text-xs font-sans tracking-widest font-normal text-stone/40 ml-1.5">
+                ({[shrine.location, shrine.prefecture].filter(Boolean).join(", ") || "Japan"})
+              </span>
             </h2>
 
             {shrine.quote && (
@@ -424,13 +419,9 @@ function PageBody({ view: shrine }: { view: View }) {
                 </h3>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-1 select-none">
-                {shrine.prayerFocus.map((focus, index) => (
-                  <span
-                    key={focus}
-                    className={`text-xs font-mono tracking-wider px-2.5 py-1 rounded-md border inline-flex items-center gap-1 font-bold shadow-3xs transition-all duration-200 ${getPrayerTagStyle(focus, index)}`}
-                  >
-                    <Heart size={10} />
+              <div className="flex flex-wrap gap-1.5 pt-1 select-none">
+                {shrine.prayerFocus.map((focus) => (
+                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
                     {focus}
                   </span>
                 ))}
@@ -670,7 +661,7 @@ function PageBody({ view: shrine }: { view: View }) {
                       <div className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase font-bold text-stone/40 select-none">
                         <span>Ritual Type //</span>
                         <span className="text-torii-dark bg-torii/5 border border-torii/10 px-1.5 py-0.5 rounded-sm">
-                          {fest.type.category === "pilgrimage_experience" ? "Sacred Sanctuary Pilgrimage" : "Public Witness & Procession"}
+                          {FESTIVAL_TYPE_LABEL[fest.type.category] ?? fest.type.category}
                         </span>
                       </div>
                     </div>
@@ -736,12 +727,12 @@ function PageBody({ view: shrine }: { view: View }) {
             className="relative scroll-mt-14 pt-2"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
-              参
+              印
             </div>
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className={`${typo.eyebrow} block select-none`}>参 — Chapter V</span>
+                <span className={`${typo.eyebrow} block select-none`}>印 — Chapter V</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
                   Sacred Stamp
                 </h3>
@@ -954,13 +945,9 @@ function ModalBody({ view: shrine }: { view: View }) {
               {/* Prayer Focus (Blessings) tags */}
               <div className="space-y-2">
                 <span className={`${typo.fieldLabel} block select-none`}>Sanctuary Benedictions</span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {shrine.prayerFocus.map(focus => (
-                    <span
-                      key={focus}
-                      className="bg-bamboo-light/40 text-moss-light border border-bamboo/15 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-md inline-flex items-center gap-1 font-bold"
-                    >
-                      <Heart size={10} className="text-moss-light/70" />
+                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
                       {focus}
                     </span>
                   ))}
@@ -983,7 +970,7 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* SECTION 1: Enshrined Shinto Pantheon (Kami) */}
         <div className="space-y-6 pt-4">
           <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
-            <Sparkles size={11} className="text-torii" /> Enshrined Pantheon
+            <Sparkles size={11} className="text-moss-light" /> Enshrined Pantheon
           </span>
 
           <div className="space-y-6">
@@ -1021,7 +1008,7 @@ function ModalBody({ view: shrine }: { view: View }) {
                 <span className={`${typo.fieldLabel} block select-none`}>Canonical Chronicle</span>
                 <CollapsibleLore
                   text={shrine.primaryDeity.canonicalLore}
-                  className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line"
+                  className={`${typo.prose} whitespace-pre-line`}
                 />
               </div>
 
@@ -1147,7 +1134,7 @@ function ModalBody({ view: shrine }: { view: View }) {
                     <div className="flex items-center gap-2">
                       <h5 className={typo.subheadingSm}>{fest.name}</h5>
                       <span className="text-[9px] text-moss-light bg-bamboo-light border border-bamboo/15 px-1.5 py-0.5 rounded uppercase font-mono font-bold leading-none select-none">
-                        {fest.type.category === "pilgrimage_experience" ? "Pilgrimage" : "Public Witness"}
+                        {FESTIVAL_TYPE_LABEL[fest.type.category] ?? fest.type.category}
                       </span>
                     </div>
                   </div>
@@ -1187,7 +1174,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
         {/* SECTION 4: Spatial Google Maps integrated inline elegant viewport */}
         <div className="space-y-6 pt-4">
-          <span className={`${typo.eyebrow} flex items-center gap-1 select-none`}>
+          <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
             <Map size={11} className="text-moss-light" /> Transit & Geography
           </span>
 
