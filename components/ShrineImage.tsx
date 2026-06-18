@@ -8,6 +8,8 @@ interface ShrineImageProps {
   className?: string; // Kept for compatibility with other components
   shrineId?: string;
   prefecture?: string;
+  nameJa?: string; // Japanese name; its first character is used as the watermark kanji
+  compact?: boolean; // Smaller kanji watermark for the listing card's short image header
 }
 
 interface PlaceholderConfig {
@@ -78,7 +80,7 @@ const PLACEHOLDER_MAP: Record<string, PlaceholderConfig> = {
  *  ③ Sacred Torii Gate arch in structural vermilion.
  *  ④ Frosted washi-paper prefecture location tag in upper boundary.
  */
-export default function ShrineImage({ src, alt, className = "", shrineId, prefecture }: ShrineImageProps) {
+export default function ShrineImage({ src, alt, className = "", shrineId, prefecture, nameJa, compact = false }: ShrineImageProps) {
   // Extract custom configuration from shrineId, or match by alt keywords, or use default
   let config: PlaceholderConfig = {
     pha: "#bcc3bb",
@@ -104,6 +106,9 @@ export default function ShrineImage({ src, alt, className = "", shrineId, prefec
   // Double check that we prioritize the passed prefecture if available to stay aligned with the data
   const finalPref = prefecture || config.pref;
 
+  // Watermark kanji: first character of the Japanese name, falling back to the per-shrine mark
+  const mark = nameJa?.trim().charAt(0) || config.mark;
+
   return (
     <div 
       className="shrine-img relative overflow-hidden w-full h-full bg-[#ece4d4] select-none rounded-xl isolate flex items-center justify-center border border-moss/5"
@@ -126,10 +131,11 @@ export default function ShrineImage({ src, alt, className = "", shrineId, prefec
           className="kanji-mark font-serif font-black text-center select-none pointer-events-none tracking-widest text-[#1a201c]/10"
           style={{ 
             fontFamily: "'Noto Serif JP', serif",
-            fontSize: "clamp(100px, 16vw, 150px)"
+            fontSize: compact ? "clamp(64px, 11vw, 104px)" : "clamp(100px, 16vw, 150px)",
+            ...(compact && { lineHeight: 1 })
           }}
         >
-          {config.mark}
+          {mark}
         </span>
       </div>
 

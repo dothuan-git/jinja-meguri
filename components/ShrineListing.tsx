@@ -88,6 +88,15 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
     localStorage.setItem("jinja-view-mode", viewMode);
   }, [viewMode]);
 
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  function toggleCard(slug: string) {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      next.has(slug) ? next.delete(slug) : next.add(slug);
+      return next;
+    });
+  }
+
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [sorting, setSorting] = useState<{ field: SortField; direction: SortDirection }>({
@@ -533,10 +542,14 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                       onClick={() => router.push(`/shrines/${card.slug}`)}
                       className="group flex flex-col justify-between wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.01] hover:bg-white transition-all duration-300 h-auto bg-washi/85 shrink-0"
                     >
-                      <div>
+                      {(() => {
+                        const isExpanded = expandedCards.has(card.slug);
+                        return (
+                          <>
+                      <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
                         {/* Beautiful curved top-header image with loader fallback built-in */}
                         <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} />
+                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
 
                           {/* Traditional paper/wood placard (Ofuda badge) */}
                           <div
@@ -555,9 +568,6 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                               <h4 className="text-lg font-serif font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
                                 {card.name_en}
                               </h4>
-                              <span className="text-xs text-[#5c685f]/70 font-serif tracking-wider group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {card.name_ja ?? ""}
-                              </span>
                             </div>
                             <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
                               {card.city ?? ""}, {card.prefecture}
@@ -614,7 +624,20 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           </div>
 
                         </div>
+                        {!isExpanded && (
+                          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-washi to-transparent pointer-events-none" />
+                        )}
                       </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
+                        className="flex items-center justify-center gap-1 border-t border-moss/10 py-2 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
+                      >
+                        {isExpanded ? "collapse" : "show more"}
+                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                          </>
+                        );
+                      })()}
                     </motion.div>
                   ))}
                 </div>
