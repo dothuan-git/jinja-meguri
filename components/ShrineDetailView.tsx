@@ -1025,7 +1025,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {shrine.secondaryDeities.map((deity, idx) => (
-                      <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 hover:shadow-3xs transition-all duration-300 flex flex-col justify-between">
+                      <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 shadow-3xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between">
                         <div className="space-y-1">
                           <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
                           <div className="flex items-center gap-2 mt-0.5">

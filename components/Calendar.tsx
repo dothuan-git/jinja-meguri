@@ -527,7 +527,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                     >
                                       <MapPin size={11} className="text-moss-light group-hover/host:text-torii transition-colors shrink-0" />
                                       <span className="underline decoration-torii/15 group-hover/host:decoration-torii/50">
-                                        Host: {fest.shrine.name} • {fest.shrine.location} ({fest.shrine.prefecture} Pref.)
+                                        {fest.shrine.name} • {fest.shrine.location} ({fest.shrine.prefecture} Pref.)
                                       </span>
                                     </button>
                                   </div>
@@ -871,7 +871,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                     <div
                                       key={fest.id}
                                       title={fest.name}
-                                      className={`text-[8px] md:text-[9.5px] font-serif font-black truncate py-0.5 px-1 rounded border flex items-center gap-1 leading-none shadow-3xs hover:brightness-[0.98] transition-all ${
+                                      className={`text-[8px] md:text-[9.5px] font-display font-bold truncate py-0.5 px-1 rounded border flex items-center gap-1 leading-none shadow-3xs hover:brightness-[0.98] transition-all ${
                                         isPilgrimage
                                           ? "bg-torii/[0.04] text-torii-dark border-torii/15"
                                           : "bg-bamboo-light text-moss border-bamboo/15"
@@ -912,8 +912,9 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                         ) : "Select A Day"}
                       </h4>
                       {selectedDay && (
-                        <span className="text-[10px] font-serif italic text-stone/60 mt-0.5">
-                          {POETIC_MONTHS[selectedDay.month]?.wamei} ({POETIC_MONTHS[selectedDay.month]?.kanji})
+                        <span className="text-[10px] italic text-stone/60 mt-0.5">
+                          <span className="font-display">{POETIC_MONTHS[selectedDay.month]?.wamei}</span>
+                          {" "}(<span className="font-serif">{POETIC_MONTHS[selectedDay.month]?.kanji}</span>)
                         </span>
                       )}
                     </div>
@@ -1011,7 +1012,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                     <span className="truncate">{fest.shrine.name}</span>
                                   </div>
                                   <div className="text-[9px] text-stone/45 pl-3.5 font-mono tracking-wider leading-none">
-                                    {fest.shrine.location}
+                                    {fest.shrine.location}{fest.shrine.prefecture ? `, ${fest.shrine.prefecture}` : ""}
                                   </div>
                                 </div>
                               </div>

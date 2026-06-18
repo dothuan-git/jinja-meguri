@@ -42,7 +42,7 @@ export default function Modal({ children }: { children: React.ReactNode }) {
           className="relative w-full md:w-[50vw] h-full bg-washi md:border-l border-moss/10 shadow-2xl flex flex-col z-50 overflow-hidden washi-paper sumi-shadow"
         >
           <div className="shrink-0 px-6 py-4 border-b border-moss/10 flex items-center justify-between bg-washi select-none">
-            <div className="font-serif text-xs font-bold uppercase tracking-widest text-moss/50">
+            <div className="font-display text-xs font-bold uppercase tracking-widest text-moss/50">
               Sanctuary Quick Preview
             </div>
             <button

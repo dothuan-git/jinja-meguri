@@ -552,10 +552,10 @@ export default function LandingPageClient() {
 
       {/* Massive Background Calligraphy (Shunyu style background atmosphere) */}
       <div className="bg-calligraphy absolute right-4 sm:right-12 md:right-24 top-[12%] bottom-[12%] pointer-events-none flex flex-col justify-center items-center gap-4 sm:gap-6 md:gap-10 select-none z-0">
-        <span className={`char-1 font-serif font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>神</span>
-        <span className={`char-2 font-serif font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>社</span>
-        <span className={`char-3 font-serif font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>巡</span>
-        <span className={`char-4 font-serif font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>礼</span>
+        <span className={`char-1 font-display font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>神</span>
+        <span className={`char-2 font-display font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>社</span>
+        <span className={`char-3 font-display font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>巡</span>
+        <span className={`char-4 font-display font-black text-[15vw] md:text-[11vw] ${seasonStyles.charColor} ${seasonStyles.charOpacity} transition-all duration-1000 leading-none select-none filter blur-[0.5px]`}>礼</span>
       </div>
 
       {/* Top Header Row for Atmosphere & Season/Sound Controllers */}

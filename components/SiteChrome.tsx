@@ -33,7 +33,7 @@ export default function SiteChrome() {
             神
           </div>
           <div>
-            <span className="font-serif text-sm tracking-[0.25em] text-stone group-hover:text-torii transition-colors font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <span className="font-display text-sm tracking-[0.25em] text-stone group-hover:text-torii transition-colors font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               神社巡り
             </span>
             <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase block font-semibold">
@@ -66,7 +66,7 @@ export default function SiteChrome() {
       {/* Mobile top banner */}
       <div className="md:hidden w-full flex items-center justify-center gap-2 py-4 bg-washi/85 backdrop-blur-sm border-b border-moss/10 z-20 shrink-0">
         <div className="w-5.5 h-5.5 hanko-seal text-[11px] p-0 flex items-center justify-center font-bold">神</div>
-        <Link href="/" className="font-serif text-sm tracking-[0.25em] text-stone pl-[0.25em] cursor-pointer font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <Link href="/" className="font-display text-sm tracking-[0.25em] text-stone pl-[0.25em] cursor-pointer font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           神社巡り
         </Link>
       </div>

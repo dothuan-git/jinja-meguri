@@ -227,7 +227,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
           <span>神社一覧</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           Sacred Sanctuaries
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
@@ -366,7 +366,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
         <div className="flex items-center justify-between pb-4 mb-5 border-b border-moss/15 shrink-0">
 
           <div className="flex items-center gap-2 select-none">
-            <span className="text-stone font-serif font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <span className="text-stone font-display font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               神域 (Sanctuaries)
             </span>
             <span className="text-moss font-sans tracking-wide text-[10px] bg-bamboo-light/50 border border-moss/10 px-2.5 py-0.5 rounded-full font-bold uppercase">
@@ -413,7 +413,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
         {filteredShrines.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center bg-white/60 rounded-2xl border border-slate-100 shadow-xs my-6 py-16">
             <Compass size={40} className="text-slate-300 stroke-[1.2] mb-4 animate-pulse" />
-            <h3 className="text-lg font-serif text-slate-900 font-medium tracking-wide mb-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <h3 className="text-lg font-display text-slate-900 font-medium tracking-wide mb-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               Your path reveals no shrines.
             </h3>
             <p className="text-slate-400 text-xs tracking-wide max-w-sm mb-6 leading-relaxed">
@@ -462,10 +462,10 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           {/* Column 1: Shrine Name & Location */}
                           <td className="py-6 px-6 align-top">
                             <div className="flex flex-col space-y-1">
-                              <div className="font-serif font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
+                              <div className="font-display font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
                                 {card.name_en}
                               </div>
-                              <div className="text-[11px] text-[#5c685f]/70 font-serif tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <div className="text-[11px] text-[#5c685f]/70 font-display tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.name_ja ?? ""}
                               </div>
                               <span className="text-[11px] text-stone/50 font-sans tracking-wide block pt-1.5">
@@ -487,7 +487,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                               <span className="text-[13px] text-stone font-extrabold tracking-wide leading-tight">
                                 {card.primary_deity?.name_en ?? ""}
                               </span>
-                              <span className="text-[10.5px] text-[#8a7a5f] font-serif font-semibold tracking-widest block leading-none pt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <span className="text-[10.5px] text-[#8a7a5f] font-display font-semibold tracking-widest block leading-none pt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.primary_deity?.name_ja ?? ""}
                               </span>
                               <div className="flex flex-col gap-1 pt-2">
@@ -553,7 +553,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
 
                           {/* Traditional paper/wood placard (Ofuda badge) */}
                           <div
-                            className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-serif text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
+                            className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-display text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
                             style={{ fontFamily: "'Noto Serif JP', serif" }}
                           >
                             {card.name_ja ?? ""}
@@ -565,7 +565,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                           {/* Card Header Title and Location */}
                           <div>
                             <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                              <h4 className="text-lg font-serif font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
+                              <h4 className="text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
                                 {card.name_en}
                               </h4>
                             </div>
@@ -588,7 +588,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
                             <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Main Deity</span>
                             <div className="flex items-baseline gap-2">
                               <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
-                              <span className="text-[10.5px] text-torii font-serif font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.primary_deity?.name_ja ?? ""}
                               </span>
                             </div>
@@ -665,7 +665,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
             >
               {/* Drawer Header */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                <span className="font-serif font-bold text-slate-800 tracking-wider flex items-center gap-1">
+                <span className="font-display font-bold text-slate-800 tracking-wider flex items-center gap-1">
                   <Filter size={14} />
                   Structured Filters
                 </span>

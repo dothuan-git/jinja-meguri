@@ -176,7 +176,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
           <span>八百万の神々</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           Deity Chronicles
         </h2>
 
@@ -247,10 +247,10 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-serif font-black text-stone group-hover:text-torii transition-colors">
+                        <span className="text-xs font-display font-black text-stone group-hover:text-torii transition-colors">
                           {deity.name}
                         </span>
-                        <span className="text-[10px] font-serif text-moss-light">
+                        <span className="text-[10px] font-display text-moss-light">
                           ({deity.japaneseName})
                         </span>
                       </div>
@@ -317,7 +317,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
                         </span>
 
                         {/* Traditional Vermillion Square Hanko Stamp */}
-                        <div className="w-12 h-12 border border-torii/80 text-torii font-bold font-serif text-[10px] leading-tight tracking-wider flex items-center justify-center p-1.5 rotate-[-2.5deg] shadow-[inset_0_0_2px_rgba(201,75,50,0.25)] select-none shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                        <div className="w-12 h-12 border border-torii/80 text-torii font-bold font-display text-[10px] leading-tight tracking-wider flex items-center justify-center p-1.5 rotate-[-2.5deg] shadow-[inset_0_0_2px_rgba(201,75,50,0.25)] select-none shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                           <div className="text-center font-black select-none">
                             {activeDeity.japaneseName.slice(0, 2)}
                             <br />
@@ -328,11 +328,11 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
 
                       {/* Display Divine Names */}
                       <div className="space-y-1">
-                        <h3 className="text-3xl md:text-4xl font-serif font-black text-stone tracking-tight leading-tight select-all">
+                        <h3 className="text-3xl md:text-4xl font-display font-black text-stone tracking-tight leading-tight select-all">
                           {activeDeity.name}
                         </h3>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-serif text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                          <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                             {activeDeity.japaneseName}
                           </span>
                           <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(activeDeity.deityType)}`}>
