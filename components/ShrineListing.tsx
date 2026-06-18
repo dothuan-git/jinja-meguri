@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -228,7 +228,7 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           Sacred Sanctuaries
         </h2>
-        <p className="text-stone/85 text-xs font-serif italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
+        <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
           “Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates.”
         </p>
       </div>

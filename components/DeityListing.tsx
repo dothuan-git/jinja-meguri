@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -177,7 +177,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
           Deity Chronicles
         </h2>
 
-        <p className="text-stone/85 text-xs font-serif italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
+        <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
           “Trace the cosmological patronees, divine celestial chronicles, and localized regional mythologies of ancient spirits.”
         </p>
       </div>

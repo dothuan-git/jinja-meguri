@@ -22,6 +22,23 @@ import type { ShrineDetail } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
+// One canonical class string per text role. Used by both PageBody and
+// ModalBody so the same content reads identically in page and modal.
+// Role split: serif = headings/quotes/lore · sans = informational prose
+// · mono = labels/meta. Layout utilities (spacing, whitespace, select-*)
+// stay inline at the call site, composed via template strings.
+const typo = {
+  eyebrow: "text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-moss-light",
+  sectionTitle: "text-2xl font-serif font-black text-stone",
+  subheading: "text-xl md:text-2xl font-serif font-black text-stone leading-tight",
+  subheadingSm: "text-sm md:text-base font-serif font-black text-stone leading-tight",
+  fieldLabel: "text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50",
+  prose: "text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify",
+  quote: "text-base font-quote italic text-stone/85 leading-relaxed border-l-2 border-torii/30 pl-4",
+  lore: "text-xs md:text-sm font-quote italic text-stone/75 leading-relaxed border-l border-moss/20 pl-3.5",
+  meta: "text-xs font-mono text-stone/50 tracking-wide",
+} as const;
+
 function primaryOf(shrine: ShrineDetail) {
   return shrine.deities.find((d) => d.is_primary) ?? shrine.deities[0] ?? null;
 }
@@ -148,11 +165,11 @@ function PageBody({ view: shrine }: { view: View }) {
   const getPrayerTagStyle = (focus: string, index: number) => {
     const styles = [
       "bg-emerald-50 text-emerald-800 border-emerald-200/50 hover:bg-emerald-100/60", // Muted forest green
-      "bg-orange-50 text-[#af3a23] border-orange-200/50 hover:bg-orange-100/60", // Lacquer red/orange
+      "bg-orange-50 text-torii-dark border-orange-200/50 hover:bg-orange-100/60", // Lacquer red/orange
       "bg-blue-50 text-blue-800 border-blue-200/40 hover:bg-blue-100/60", // Clear indigo stream
       "bg-amber-50 text-amber-800 border-amber-200/50 hover:bg-amber-100/60", // Rice/harvest gold
       "bg-purple-50 text-purple-800 border-purple-200/50 hover:bg-purple-100/60", // Sacred wisteria purple
-      "bg-[#ecefe9] text-moss-light border-moss/10 hover:bg-white", // Clean sand gray
+      "bg-bamboo-light text-moss-light border-moss/10 hover:bg-white", // Clean sand gray
     ];
     return styles[index % styles.length];
   };
@@ -310,7 +327,7 @@ function PageBody({ view: shrine }: { view: View }) {
             </h2>
 
             {shrine.quote && (
-              <p className="text-sm text-stone/80 font-serif leading-relaxed italic pl-3 border-l-2 border-torii/30">
+              <p className={typo.quote}>
                 “{shrine.quote}”
               </p>
             )}
@@ -401,8 +418,8 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">福 — Chapter I</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>福 — Chapter I</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Sanctuary Blessing
                 </h3>
               </div>
@@ -420,11 +437,11 @@ function PageBody({ view: shrine }: { view: View }) {
               </div>
 
               {/* Editorial styled highlight content text */}
-              <div className="py-4 text-stone/85 text-base font-serif tracking-wide leading-relaxed pl-4 border-l border-moss/35 select-text">
+              <div className={`${typo.quote} py-4 select-text`}>
                 “{shrine.prayerFocusText}”
               </div>
 
-              <p className="text-stone/75 leading-relaxed font-sans text-xs select-text text-justify">
+              <p className={`${typo.prose} select-text`}>
                 {shrine.description} Each pilgrimage to {shrine.name} reinforces the spiritual tie (en) between humanity and the subtle forces of nature, aligning ancestral customs with personal mindfulness.
               </p>
             </div>
@@ -443,8 +460,8 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">神 — Chapter II</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>神 — Chapter II</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Enshrined Pantheon
                 </h3>
               </div>
@@ -454,10 +471,10 @@ function PageBody({ view: shrine }: { view: View }) {
                 {/* Primary Deity (Matches ShrineDetailModal beautiful card layout) */}
                 <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-6 md:p-8 border border-moss/8 shadow-3xs space-y-5">
                   <div>
-                    <span className="text-[9px] font-mono tracking-widest text-[#3b5948] uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
+                    <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                       Primary Enshrined Spirit
                     </span>
-                    <h4 className="text-xl md:text-2xl font-serif font-black text-stone leading-tight">
+                    <h4 className={typo.subheading}>
                       {shrine.primaryDeity.name}
                     </h4>
                     <span className="text-xs font-serif text-moss mt-1 block font-medium" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -468,7 +485,7 @@ function PageBody({ view: shrine }: { view: View }) {
                   {/* Primary Deity Epithets */}
                   {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
                     <div className="pt-2 border-t border-moss/5 space-y-1">
-                      <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Divine Powers & Epithets</span>
+                      <span className={`${typo.fieldLabel} block select-none`}>Divine Powers & Epithets</span>
                       <div className="flex flex-col gap-1 text-xs text-stone/60 font-sans font-medium">
                         {shrine.primaryDeity.titles.map((title, tIdx) => (
                           <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
@@ -482,18 +499,18 @@ function PageBody({ view: shrine }: { view: View }) {
 
                   {/* Canonical Chronicle Lore text */}
                   <div className="space-y-2 pt-3 border-t border-moss/5">
-                    <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Canonical Chronicle</span>
+                    <span className={`${typo.fieldLabel} block select-none`}>Canonical Chronicle</span>
                     <CollapsibleLore
                       text={shrine.primaryDeity.canonicalLore}
-                      className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line"
+                      className={`${typo.prose} whitespace-pre-line`}
                     />
                   </div>
 
                   {/* Regional origins lore notes */}
                   {shrine.primaryDeity.regionalLore && (
                     <div className="pt-3 border-t border-dashed border-moss/10 space-y-1">
-                      <span className="text-[9px] font-bold tracking-wider text-torii-dark/70 uppercase block select-none">Regional Lore & Sacred Origins</span>
-                      <p className="text-xs md:text-sm text-stone/80 font-serif italic leading-relaxed text-justify whitespace-pre-line border-l border-torii/30 pl-3.5">
+                      <span className={`${typo.fieldLabel} block select-none`}>Regional Lore & Sacred Origins</span>
+                      <p className={`${typo.lore} text-justify whitespace-pre-line`}>
                         {shrine.primaryDeity.regionalLore}
                       </p>
                     </div>
@@ -513,7 +530,7 @@ function PageBody({ view: shrine }: { view: View }) {
                         {shrine.secondaryDeities.map((deity, idx) => (
                           <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
                             <div className="space-y-1">
-                              <span className="text-[8px] font-mono tracking-wider text-moss-light/80 block select-none">
+                              <span className={`${typo.fieldLabel} block select-none`}>
                                 COMPANION SPIRIT
                               </span>
                               <h4 className="text-sm font-serif font-black text-stone leading-tight">
@@ -544,8 +561,8 @@ function PageBody({ view: shrine }: { view: View }) {
                       {/* Unified Single Lore for all Companion Deities */}
                       {shrine.secondaryDeities.some(d => d.regionalLore) && (
                         <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
-                          <span className="text-[8px] font-mono tracking-wider text-stone/40 uppercase block select-none font-bold">LORE & SANCTUARY RELATION</span>
-                          <div className="text-[11px] md:text-xs text-stone/60 font-serif italic leading-relaxed text-justify border-l border-moss/20 pl-3.5 space-y-2">
+                          <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
+                          <div className={`${typo.lore} text-justify space-y-2`}>
                             {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
                               <p key={lIdx} className="whitespace-pre-line">{lore}</p>
                             ))}
@@ -573,18 +590,18 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">史 — Chapter III</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>史 — Chapter III</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Historical Records
                 </h3>
               </div>
 
               {/* Dynamic Drop Cap stylings like a real book, letting text flow without boxes */}
-              <div className="text-stone/80 text-xs md:text-sm leading-relaxed tracking-wider select-text space-y-4 text-justify">
-                <p className="first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1 font-serif text-slate-800">
+              <div className="space-y-4 select-text">
+                <p className={`${typo.prose} first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1`}>
                   {shrine.about}
                 </p>
-                <p className="font-serif leading-relaxed text-slate-800 pt-1">
+                <p className={`${typo.prose} pt-1`}>
                   The physical wood architecture itself reflects standard Jinja styling, resisting weather patterns through continuous Shikinen Sengu reconstructions or traditional conservation methods, preserving early structural wisdom for visitors to observe.
                 </p>
               </div>
@@ -592,8 +609,8 @@ function PageBody({ view: shrine }: { view: View }) {
               {/* References citations segment */}
               {shrine.sources && shrine.sources.length > 0 && (
                 <div className="pt-4 border-t border-stone/10 select-none">
-                  <span className="text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold block mb-1.5">HISTORICAL REFERENCES</span>
-                  <div className="space-y-1 text-xs font-mono text-[#5c685f] tracking-wide pl-0.5 select-text">
+                  <span className={`${typo.fieldLabel} block mb-1.5`}>HISTORICAL REFERENCES</span>
+                  <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
                     {shrine.sources.map(source => (
                       <div key={source} className="flex items-center gap-1.5">
                         <FileText size={11} className="text-torii/40 shrink-0" />
@@ -619,8 +636,8 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">祭 — Chapter IV</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>祭 — Chapter IV</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Sacred Festivals
                 </h3>
               </div>
@@ -639,12 +656,12 @@ function PageBody({ view: shrine }: { view: View }) {
                           <span className="font-mono text-xs text-torii-dark font-bold tracking-widest select-none">
                             0{idx + 1} //
                           </span>
-                          <h4 className="text-xl md:text-2xl font-serif font-bold text-stone tracking-wide select-text">
+                          <h4 className={`${typo.subheading} tracking-wide select-text`}>
                             {fest.name}
                           </h4>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest font-bold text-[#8a7a6b] uppercase select-none shrink-0">
-                          <Calendar size={13} className="text-[#8a7a6b]/70" />
+                        <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest font-bold text-stone/50 uppercase select-none shrink-0">
+                          <Calendar size={13} className="text-stone/40" />
                           <span>{fest.time}</span>
                         </div>
                       </div>
@@ -661,7 +678,7 @@ function PageBody({ view: shrine }: { view: View }) {
                     {/* Main Narrative — flows beautifully as professional typography */}
                     <div className="space-y-4 text-justify select-text">
                       {fest.meaning.split('\n\n').map((paragraph, pIdx) => (
-                        <p key={pIdx} className="text-stone/90 text-[13.5px] md:text-sm font-serif leading-relaxed text-left text-stone">
+                        <p key={pIdx} className={typo.prose}>
                           {paragraph}
                         </p>
                       ))}
@@ -670,22 +687,22 @@ function PageBody({ view: shrine }: { view: View }) {
                     {/* Ritual Sequence & Pilgrim Aspirations - Clean columns with accent left lines rather than cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
                       <div className="space-y-2">
-                        <h5 className="text-[10px] font-mono font-bold tracking-widest uppercase text-moss-light select-none flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#5c685f]/40"></span>
+                        <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-moss-light/40"></span>
                           Sacred Liturgy & Ceremonies
                         </h5>
-                        <p className="text-stone/80 text-xs md:text-[13px] font-sans leading-relaxed pl-3.5 border-l border-stone/15 text-justify select-text">
+                        <p className={`${typo.prose} pl-3.5 border-l border-stone/15 select-text`}>
                           {fest.ritual}
                         </p>
                       </div>
 
                       {fest.prayer && (
                         <div className="space-y-2">
-                          <h5 className="text-[10px] font-mono font-bold tracking-widest uppercase text-torii-dark select-none flex items-center gap-2">
+                          <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-torii"></span>
                             Pilgrim Supplication & Intent (心願)
                           </h5>
-                          <p className="text-[#782c1a]/90 text-xs md:text-[13px] font-serif italic leading-relaxed pl-3.5 border-l border-torii/20 text-justify select-text">
+                          <p className={`${typo.lore} text-justify select-text`}>
                             {fest.prayer}
                           </p>
                         </div>
@@ -693,13 +710,13 @@ function PageBody({ view: shrine }: { view: View }) {
                     </div>
 
                     {/* Pilgrim Advisory - minimalist subtle card to separate it clearly as an instruction */}
-                    <div className="text-xs text-[#5c685f]/90 bg-stone/5 px-4 py-3 border border-stone/10 rounded-sm flex items-start gap-2.5 leading-relaxed">
+                    <div className="bg-stone/5 px-4 py-3 border border-stone/10 rounded-sm flex items-start gap-2.5">
                       <Compass size={14} className="text-torii-dark/70 mt-0.5 shrink-0" />
                       <div>
-                        <span className="font-semibold text-[9px] uppercase tracking-wider block text-stone mb-1 select-none font-sans">
+                        <span className={`${typo.fieldLabel} block mb-1 select-none`}>
                           Pilgrim Advisory & Etiquette
                         </span>
-                        <p className="text-stone/80 text-xs font-sans text-justify leading-relaxed select-text">
+                        <p className={`${typo.prose} select-text`}>
                           {fest.type.notes}
                         </p>
                       </div>
@@ -724,15 +741,15 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">参 — Chapter V</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>参 — Chapter V</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Sacred Stamp
                 </h3>
               </div>
 
               {/* 1. DYNAMIC GOSHUIN STAMP WITHOUT EXTRA TEXT AREAS */}
               <div className="py-4 border-b border-stone/10 space-y-4">
-                <p className="text-xs text-[#5c685f] leading-relaxed">
+                <p className="text-xs text-stone/70 leading-relaxed font-sans">
                   A traditional vermillion ink imprint (御朱印) acting as official sacred receipt of your personal communion at {shrine.name}.
                 </p>
 
@@ -824,23 +841,23 @@ function PageBody({ view: shrine }: { view: View }) {
 
             <div className="space-y-6">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-moss-light font-bold block select-none">地 — Chapter VI</span>
-                <h3 className="text-2xl font-serif font-black text-stone select-text">
+                <span className={`${typo.eyebrow} block select-none`}>地 — Chapter VI</span>
+                <h3 className={`${typo.sectionTitle} select-text`}>
                   Transit & Geography
                 </h3>
               </div>
 
-              <div className="text-xs text-stone/75 leading-relaxed font-sans text-justify select-text space-y-2">
-                <span className="block text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold select-none">GEOGRAPHIC LANDMARKS</span>
-                <p>
+              <div className="space-y-2 select-text">
+                <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
+                <p className={typo.prose}>
                   Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
                 </p>
               </div>
 
               {shrine.bestTime && (
-                <div className="text-xs text-stone/75 leading-relaxed font-sans text-justify select-text space-y-2">
-                  <span className="block text-[8px] font-mono tracking-widest text-[#5c685f] uppercase font-bold select-none">OPTIMAL PILGRIMAGE TIMING</span>
-                  <p>
+                <div className="space-y-2 select-text">
+                  <span className={`${typo.fieldLabel} block select-none`}>OPTIMAL PILGRIMAGE TIMING</span>
+                  <p className={typo.prose}>
                     {shrine.bestTime}
                   </p>
                 </div>
@@ -924,7 +941,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
               {/* Physical domain block */}
               <div className="space-y-2">
-                <span className="text-[10px] uppercase tracking-widest font-mono text-moss/40 font-bold block select-none">Physical Domain</span>
+                <span className={`${typo.fieldLabel} block select-none`}>Physical Domain</span>
                 <div className="flex items-start gap-2 text-stone text-sm leading-tight">
                   <MapPin size={16} className="text-torii shrink-0 mt-0.5" />
                   <div>
@@ -936,14 +953,14 @@ function ModalBody({ view: shrine }: { view: View }) {
 
               {/* Prayer Focus (Blessings) tags */}
               <div className="space-y-2">
-                <span className="text-[10px] uppercase tracking-widest font-mono text-moss/40 font-bold block select-none">Sanctuary Benedictions</span>
+                <span className={`${typo.fieldLabel} block select-none`}>Sanctuary Benedictions</span>
                 <div className="flex flex-wrap gap-2">
                   {shrine.prayerFocus.map(focus => (
                     <span
                       key={focus}
-                      className="bg-bamboo-light/40 text-[#3b5948] border border-bamboo/15 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-md inline-flex items-center gap-1 font-bold"
+                      className="bg-bamboo-light/40 text-moss-light border border-bamboo/15 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-md inline-flex items-center gap-1 font-bold"
                     >
-                      <Heart size={10} className="text-[#3b5948]/70" />
+                      <Heart size={10} className="text-moss-light/70" />
                       {focus}
                     </span>
                   ))}
@@ -955,8 +972,8 @@ function ModalBody({ view: shrine }: { view: View }) {
 
           {/* Poetic Summary with faint top/bottom divider lines (minimalist/elegant) */}
           {shrine.quote && (
-            <div className="border-t border-b border-moss/5 py-5 max-w-3xl">
-              <p className="text-stone/95 text-base md:text-lg tracking-widest leading-relaxed italic font-serif">
+            <div className="py-2 max-w-3xl">
+              <p className={typo.quote}>
                 “{shrine.quote}”
               </p>
             </div>
@@ -965,7 +982,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
         {/* SECTION 1: Enshrined Shinto Pantheon (Kami) */}
         <div className="space-y-6 pt-4">
-          <span className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#3b5948] uppercase font-black select-none">
+          <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
             <Sparkles size={11} className="text-torii" /> Enshrined Shinto Pantheon (Kami)
           </span>
 
@@ -975,10 +992,10 @@ function ModalBody({ view: shrine }: { view: View }) {
             <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-6 md:p-8 border border-moss/8 shadow-3xs space-y-5">
 
               <div>
-                <span className="text-[9px] font-mono tracking-widest text-[#3b5948] uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
+                <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                   Primary Enshrined Spirit
                 </span>
-                <h4 className="text-xl md:text-2xl font-serif font-black text-stone leading-tight">{shrine.primaryDeity.name}</h4>
+                <h4 className={typo.subheading}>{shrine.primaryDeity.name}</h4>
                 <span className="text-xs font-serif text-moss mt-1 block font-medium" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                   {shrine.primaryDeity.japaneseName}
                 </span>
@@ -987,7 +1004,7 @@ function ModalBody({ view: shrine }: { view: View }) {
               {/* Primary Deity Epithets (matching companion deity titles style) */}
               {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
                 <div className="pt-2 border-t border-moss/5 space-y-1">
-                  <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Divine Powers & Epithets</span>
+                  <span className={`${typo.fieldLabel} block select-none`}>Divine Powers & Epithets</span>
                   <div className="flex flex-col gap-1 text-xs text-stone/60 font-sans font-medium">
                     {shrine.primaryDeity.titles.map((title, tIdx) => (
                       <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
@@ -1001,7 +1018,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
               {/* Canonical Chronicle Lore text (high contrast, readable alignment for long narratives) */}
               <div className="space-y-2 pt-3 border-t border-moss/5">
-                <span className="text-[9px] font-bold tracking-wider text-moss/50 uppercase block select-none">Canonical Chronicle</span>
+                <span className={`${typo.fieldLabel} block select-none`}>Canonical Chronicle</span>
                 <CollapsibleLore
                   text={shrine.primaryDeity.canonicalLore}
                   className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans text-justify whitespace-pre-line"
@@ -1011,8 +1028,8 @@ function ModalBody({ view: shrine }: { view: View }) {
               {/* Regional origins lore notes */}
               {shrine.primaryDeity.regionalLore && (
                 <div className="pt-3 border-t border-dashed border-moss/10 space-y-1">
-                  <span className="text-[9px] font-bold tracking-wider text-torii-dark/70 uppercase block select-none">Regional Lore & Sacred Origins</span>
-                  <p className="text-xs md:text-sm text-stone/80 font-serif italic leading-relaxed text-justify whitespace-pre-line border-l border-torii/30 pl-3.5">
+                  <span className={`${typo.fieldLabel} block select-none`}>Regional Lore & Sacred Origins</span>
+                  <p className={`${typo.lore} text-justify whitespace-pre-line`}>
                     {shrine.primaryDeity.regionalLore}
                   </p>
                 </div>
@@ -1033,7 +1050,7 @@ function ModalBody({ view: shrine }: { view: View }) {
                     {shrine.secondaryDeities.map((deity, idx) => (
                       <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
                         <div className="space-y-1">
-                          <span className="text-[8px] font-mono tracking-wider text-moss-light/80 block select-none">
+                          <span className={`${typo.fieldLabel} block select-none`}>
                             COMPANION SPIRIT
                           </span>
                           <h4 className="text-sm font-serif font-black text-stone leading-tight">
@@ -1064,8 +1081,8 @@ function ModalBody({ view: shrine }: { view: View }) {
                   {/* Unified Single Lore for all Companion Deities */}
                   {shrine.secondaryDeities.some(d => d.regionalLore) && (
                     <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
-                      <span className="text-[8px] font-mono tracking-wider text-stone/40 uppercase block select-none font-bold">LORE & SANCTUARY RELATION</span>
-                      <div className="text-[11px] md:text-xs text-stone/60 font-serif italic leading-relaxed text-justify border-l border-moss/20 pl-3.5 space-y-2">
+                      <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
+                      <div className={`${typo.lore} text-justify space-y-2`}>
                         {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
                           <p key={lIdx} className="whitespace-pre-line">{lore}</p>
                         ))}
@@ -1081,13 +1098,13 @@ function ModalBody({ view: shrine }: { view: View }) {
 
         {/* SECTION 2: Chronicle Notes & Historical Narratives (Shrine Notes) */}
         <div className="space-y-6 pt-4">
-          <span className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#3b5948] uppercase font-black select-none">
-            <BookOpen size={11} className="text-[#3b5948]" /> Historical Chronicles & Sacred Notes
+          <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
+            <BookOpen size={11} className="text-moss-light" /> Historical Chronicles & Sacred Notes
           </span>
 
           <div className="space-y-6">
             {/* Detailed sanctuary about history paragraph */}
-            <p className="text-xs md:text-sm text-stone/85 font-sans leading-relaxed text-justify whitespace-pre-wrap">
+            <p className={`${typo.prose} whitespace-pre-wrap`}>
               {shrine.about}
             </p>
 
@@ -1095,16 +1112,16 @@ function ModalBody({ view: shrine }: { view: View }) {
 
               {/* Spiritual Target reflection card */}
               <div className="bg-torii/5 backdrop-blur-3xs rounded-2xl p-5 space-y-2 border border-torii/5">
-                <span className="text-[9px] font-mono tracking-widest text-torii-dark uppercase font-black block select-none">Spiritual Communion Note</span>
-                <p className="text-xs md:text-sm font-serif text-stone/95 leading-relaxed">
+                <span className={`${typo.fieldLabel} block select-none`}>Spiritual Communion Note</span>
+                <p className={typo.quote}>
                   “{shrine.prayerFocusText}”
                 </p>
               </div>
 
               {/* Best visitation timing guidance */}
               <div className="bg-bamboo-light/40 backdrop-blur-3xs rounded-2xl p-5 space-y-2 border border-bamboo/10">
-                <span className="text-[9px] font-mono tracking-widest text-[#3b5948] uppercase font-black block select-none">Optimal Pilgrimage Timing</span>
-                <div className="text-xs md:text-sm text-stone/85 leading-relaxed font-sans flex gap-2">
+                <span className={`${typo.fieldLabel} block select-none`}>Optimal Pilgrimage Timing</span>
+                <div className={`${typo.prose} flex gap-2`}>
                   <Clock size={15} className="text-moss shrink-0 mt-0.5" />
                   <span>{shrine.bestTime}</span>
                 </div>
@@ -1116,8 +1133,8 @@ function ModalBody({ view: shrine }: { view: View }) {
 
         {/* SECTION 3: Event Calendar (Festivals list) */}
         <div className="space-y-6 pt-4">
-          <span className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#3b5948] uppercase font-black select-none">
-            <Calendar size={11} className="text-[#3b5948]" /> Sanctuary Event Calendar (Festivals)
+          <span className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
+            <Calendar size={11} className="text-moss-light" /> Sanctuary Event Calendar (Festivals)
           </span>
 
           <div className="grid grid-cols-1 gap-4">
@@ -1128,8 +1145,8 @@ function ModalBody({ view: shrine }: { view: View }) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-moss/5">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <h5 className="font-serif font-black text-sm md:text-base text-stone leading-tight">{fest.name}</h5>
-                      <span className="text-[9px] text-[#3b5948] bg-bamboo-light border border-bamboo/15 px-1.5 py-0.5 rounded uppercase font-mono font-bold leading-none select-none">
+                      <h5 className={typo.subheadingSm}>{fest.name}</h5>
+                      <span className="text-[9px] text-moss-light bg-bamboo-light border border-bamboo/15 px-1.5 py-0.5 rounded uppercase font-mono font-bold leading-none select-none">
                         {fest.type.category === "pilgrimage_experience" ? "Pilgrimage" : "Public Witness"}
                       </span>
                     </div>
@@ -1141,7 +1158,7 @@ function ModalBody({ view: shrine }: { view: View }) {
                 </div>
 
                 {/* Event description */}
-                <div className="space-y-2.5 text-xs text-stone/80 leading-relaxed font-sans text-justify">
+                <div className={`${typo.prose} space-y-2.5`}>
                   {fest.meaning.split('\n\n').map((paragraph, idx) => (
                     <p key={idx}>{paragraph}</p>
                   ))}
@@ -1151,14 +1168,14 @@ function ModalBody({ view: shrine }: { view: View }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1.5 text-[11px] leading-relaxed">
                   {fest.ritual && (
                     <div className="space-y-0.5">
-                      <span className="font-bold text-moss/70 block uppercase tracking-wider font-mono text-[9px] select-none">Ritual Devotion</span>
-                      <p className="text-[#415146] text-justify">{fest.ritual}</p>
+                      <span className={`${typo.fieldLabel} block select-none`}>Ritual Devotion</span>
+                      <p className={typo.prose}>{fest.ritual}</p>
                     </div>
                   )}
                   {fest.type.notes && (
                     <div className="space-y-0.5">
-                      <span className="font-bold text-torii-dark/75 block uppercase tracking-wider font-mono text-[9px] select-none">Pilgrim Guide Tip</span>
-                      <p className="text-stone/80 text-justify">{fest.type.notes}</p>
+                      <span className={`${typo.fieldLabel} block select-none`}>Pilgrim Guide Tip</span>
+                      <p className={typo.prose}>{fest.type.notes}</p>
                     </div>
                   )}
                 </div>
@@ -1170,8 +1187,8 @@ function ModalBody({ view: shrine }: { view: View }) {
 
         {/* SECTION 4: Spatial Google Maps integrated inline elegant viewport */}
         <div className="space-y-6 pt-4">
-          <span className="text-[10px] uppercase tracking-widest font-mono text-moss/40 font-bold flex items-center gap-1 select-none">
-            <Map size={11} className="text-[#3b5948]" /> Interactive Sanctuary Chart & Coordinates
+          <span className={`${typo.eyebrow} flex items-center gap-1 select-none`}>
+            <Map size={11} className="text-moss-light" /> Interactive Sanctuary Chart & Coordinates
           </span>
 
           {/* Google Map Embedded Screen */}
@@ -1202,8 +1219,8 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* Sources Bibliography */}
         {shrine.sources && shrine.sources.length > 0 && (
           <div className="pt-8 border-t border-moss/5 text-center sm:text-left">
-            <span className="text-[9px] font-mono tracking-widest text-[#3b5948]/50 uppercase font-black block mb-2 select-none">Sources & Chronicles</span>
-            <p className="text-[10px] font-serif text-stone/50 tracking-normal leading-relaxed">
+            <span className={`${typo.fieldLabel} block mb-2 select-none`}>Sources & Chronicles</span>
+            <p className={`${typo.meta} leading-relaxed`}>
               {shrine.sources.join(" • ")}
             </p>
           </div>

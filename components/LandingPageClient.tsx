@@ -687,7 +687,7 @@ export default function LandingPageClient() {
           <div className="flex flex-col items-center md:items-start gap-5 select-none shrink-0 max-w-xs sm:max-w-sm md:max-w-md my-auto py-2">
             
             {/* English Narrative in modern thin typography */}
-            <div className={`prose-col-eng max-w-xs space-y-3 text-center md:text-left text-[11px] sm:text-xs font-serif italic leading-relaxed transition-colors duration-1000 ${seasonStyles.engText}`}>
+            <div className={`prose-col-eng max-w-xs space-y-3 text-center md:text-left text-[11px] sm:text-xs font-display italic leading-relaxed transition-colors duration-1000 ${seasonStyles.engText}`}>
               <p className="border-l-2 md:border-l-0 md:border-r-2 border-torii px-3 md:px-0 md:pr-3">
                 "Ma (間) specifies that beauty remains in empty space while light dances. 
                 Step beyond the vermilion gateway, where centuries of silence, moss garden spirits, 

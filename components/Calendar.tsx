@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
@@ -221,7 +221,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           Festival Liturgy
         </h2>
-        <p className="text-stone/85 text-xs font-serif italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
+        <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
           “Synchronize with ancient rhythms. Discover where the deities perform their sacred alignments across the annual rotation of natural terms.”
         </p>
       </div>
