@@ -59,10 +59,16 @@ function EditFrame({ initialData, catalogs, onCancel, onSaved, children }: Props
         return v == null ? "" : String(v);
       },
       // Empty input → null, matching the structured form's normalization.
-      setField: (path, value) => setDraft((prev) => setAtPath(prev, path, value === "" ? null : value)),
+      setField: (path, value) => {
+        if (path === "slug") return;
+        setDraft((prev) => setAtPath(prev, path, value === "" ? null : value));
+      },
       getValue: (path) => getAtPath(draft, path),
       // Raw set — no coercion, so arrays and the prefecture/region strings pass through verbatim.
-      setValue: (path, value) => setDraft((prev) => setAtPath(prev, path, value)),
+      setValue: (path, value) => {
+        if (path === "slug") return;
+        setDraft((prev) => setAtPath(prev, path, value));
+      },
       findDeityIndex: (nameJa) => draft.deities.findIndex((d) => d.name_ja === nameJa),
       catalogs,
     }),
@@ -93,7 +99,7 @@ function EditFrame({ initialData, catalogs, onCancel, onSaved, children }: Props
             <span>Cancel</span>
           </button>
           <button
-            onClick={() => save(draft)}
+            onClick={() => save({ ...draft, slug: initialData.slug })}
             disabled={saving}
             className="flex items-center gap-1.5 rounded-full bg-torii px-4 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-torii-dark disabled:opacity-60"
           >

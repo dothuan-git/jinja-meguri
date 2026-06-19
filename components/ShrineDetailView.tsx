@@ -13,12 +13,14 @@ import {
   Crown,
   ExternalLink,
   FileText,
+  Lock,
   Map,
   MapPin,
   Pencil,
   Sparkles,
 } from "lucide-react";
-import type { ShrineDetail, EditCatalogs } from "@/lib/types";
+import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
+import { buildEmbedUrl } from "@/lib/maps";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
@@ -29,6 +31,7 @@ import {
   EditableSelect,
 } from "@/components/shrineEdit/context";
 import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
+import LocationEditPopup from "@/components/shrineEdit/LocationEditPopup";
 
 // Admin-only in-place editor; lazily loaded so its draft/toast/save chunk ships
 // only when an admin actually enters edit mode, keeping the public bundle lean.
@@ -108,7 +111,9 @@ function toView(shrine: ShrineDetail) {
     festivals: shrine.festivals.map((f) => ({
       id: f.id,
       name: f.name_en,
+      name_ja: f.name_ja ?? "",
       time: f.time_prose ?? "",
+      origin: f.origin ?? "",
       meaning: f.meaning ?? "",
       ritual: f.ritual ?? "",
       prayer: f.prayer ?? "",
@@ -118,6 +123,8 @@ function toView(shrine: ShrineDetail) {
       },
     })),
     sources: shrine.sources.map((s) => s.title ?? s.url),
+    coordinates: shrine.coordinates,
+    address: shrine.address,
   };
 }
 
@@ -231,6 +238,12 @@ function PageBody({
   const edit = useShrineEdit();
   const editing = Boolean(edit?.editing);
   const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.japaneseName) : -1;
+
+  const [locationPopupOpen, setLocationPopupOpen] = useState(false);
+  // In edit mode, derive map coordinates from the live draft so Apply reflects immediately.
+  const mapCoordinates = editing
+    ? (edit?.getValue("coordinates") as Coordinates | null)
+    : shrine.coordinates;
 
   // Goshuin Stamp local interactive state
   const [stampReceived, setStampReceived] = useState<string | null>(null);
@@ -444,6 +457,15 @@ function PageBody({
                 )}
               </span>
             </h2>
+
+            {editing && (
+              <div className="flex items-center gap-1.5 select-none pointer-events-none">
+                <Lock size={11} className="text-stone/35 shrink-0" />
+                <span className="text-[10px] font-mono text-stone/40 tracking-wide">
+                  URL slug: <span className="text-stone/60 font-semibold">{edit!.getValue("slug") as string}</span>
+                </span>
+              </div>
+            )}
 
             {(editing || shrine.quote) && (
               <EditableProse
@@ -856,6 +878,17 @@ function PageBody({
                               {fest.name}
                             </h4>
                           </EditableText>
+                          <EditableText
+                            path={`festivals.${idx}.name_ja`}
+                            ariaLabel="Festival name (Japanese)"
+                            editClassName="text-base font-serif font-medium text-moss w-36"
+                          >
+                            {fest.name_ja && (
+                              <span className="text-base font-serif font-medium text-moss/70 select-text" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                ({fest.name_ja})
+                              </span>
+                            )}
+                          </EditableText>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest font-bold text-stone/50 uppercase select-none shrink-0">
                           <Calendar size={13} className="text-stone/40" />
@@ -905,6 +938,21 @@ function PageBody({
                         ))}
                       </div>
                     </EditableProse>
+
+                    {/* Festival Origin — shown below meaning, no label */}
+                    {(editing || fest.origin) && (
+                      <EditableProse
+                        path={`festivals.${idx}.origin`}
+                        rows={4}
+                        ariaLabel="Festival origin"
+                        placeholder="Festival origins & history…"
+                        editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
+                      >
+                        <p className={`${typo.prose} select-text`}>
+                          {fest.origin}
+                        </p>
+                      </EditableProse>
+                    )}
 
                     {/* Ritual Sequence & Pilgrim Aspirations - Clean columns with accent left lines rather than cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
@@ -1117,14 +1165,33 @@ function PageBody({
                 </div>
               )}
 
-              {/* Seamless map window, border eliminated */}
-              <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-2xs bg-stone/5 border border-stone/10 group select-none">
-                <iframe
-                  className="w-full h-full border-0 absolute inset-0 transition-opacity filter saturate-75 hover:saturate-100"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(shrine.name + " " + shrine.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                  title={`Geography chart of ${shrine.name}`}
-                  loading="lazy"
-                />
+              {/* Seamless map window — outer wrapper lets popup escape overflow:hidden */}
+              <div className="relative">
+                <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-2xs bg-stone/5 border border-stone/10 group select-none">
+                  <iframe
+                    className="w-full h-full border-0 absolute inset-0 transition-opacity filter saturate-75 hover:saturate-100"
+                    src={buildEmbedUrl({ coordinates: mapCoordinates, name: shrine.name, city: shrine.location || null })}
+                    title={`Geography chart of ${shrine.name}`}
+                    loading="lazy"
+                  />
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={() => setLocationPopupOpen(true)}
+                      aria-label="Edit address and coordinates"
+                      className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-lg border border-torii/40 bg-sand/90 backdrop-blur-sm px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-torii shadow-sm hover:bg-torii hover:text-white transition-colors pointer-events-auto"
+                    >
+                      <MapPin size={11} />
+                      <span>Location</span>
+                    </button>
+                  )}
+                </div>
+                {editing && (
+                  <LocationEditPopup
+                    open={locationPopupOpen}
+                    onClose={() => setLocationPopupOpen(false)}
+                  />
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2 select-none">
@@ -1334,7 +1401,14 @@ function ModalBody({ view: shrine }: { view: View }) {
                   {group.festivals.map((fest, fIdx) => (
                     <div key={fest.id} className={`space-y-2.5 ${fIdx > 0 ? "pt-5 border-t border-dashed border-moss/10" : ""}`}>
                       <div className="flex items-center justify-between gap-2.5 flex-wrap">
-                        <h5 className={typo.subheadingSm}>{fest.name}</h5>
+                        <h5 className={typo.subheadingSm}>
+                          {fest.name}
+                          {fest.name_ja && (
+                            <span className="text-xs font-serif font-medium text-moss/70 ml-1.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              ({fest.name_ja})
+                            </span>
+                          )}
+                        </h5>
                         <span className="px-3 py-1 bg-torii/5 text-torii text-[10px] font-mono font-black tracking-widest rounded-lg border border-torii/15 inline-block text-center select-none shrink-0">
                           {fest.time}
                         </span>

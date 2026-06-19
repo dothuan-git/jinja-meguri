@@ -36,3 +36,24 @@ so dates don't have to be edited row-by-row.
 
 **Note:** the `festivals.start_date`/`end_date` columns and their Zod contract fields stay — they remain
 valid on import even though the shrine research flow no longer gathers them.
+
+---
+
+## Admin image upload & editor
+
+**Why:** The inline shrine editor currently only stores images as pasted URL strings in
+`image_urls[]`. Admins cannot upload files, reorder images, or remove stale URLs interactively.
+
+### Feature scope
+
+- **Upload:** File `<input>` or drag-and-drop zone in the inline editor. Accepted formats: JPEG,
+  WebP, PNG. Files upload to object storage (Supabase Storage or S3-compatible); the resulting
+  public URL is appended to `draft.image_urls`.
+- **Reorder:** Current `image_urls` displayed as draggable thumbnail chips. First item = cover
+  image (shown in listing cards and detail header). Drag to reorder; cover position visually
+  distinguished.
+- **Remove:** Each chip has an × button that splices the URL from the array.
+- **Integration point:** New `EditableImages` component in `components/shrineEdit/` wrapping the
+  existing image section, wiring into `edit.setValue("image_urls", [...])`. The mutation already
+  persists the full array — no schema changes needed.
+- **Storage action:** Upload server action in `app/admin/actions.ts` alongside `saveShrineAction`.
