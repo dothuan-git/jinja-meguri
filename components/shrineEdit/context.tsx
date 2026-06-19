@@ -15,6 +15,8 @@ import type { EditCatalogs } from "@/lib/types";
  */
 export interface ShrineEditApi {
   editing: boolean;
+  /** "create" = brand-new shrine (slug editable, draft-driven deity/festival editors); "update" = in-place edit. */
+  mode: "create" | "update";
   getField: (path: string) => string;
   setField: (path: string, value: string) => void;
   /** Raw draft value at a path (no string coercion) — for array/collection fields. */

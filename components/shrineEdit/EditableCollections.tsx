@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useShrineEdit } from "@/components/shrineEdit/context";
+import { typo } from "@/components/shrineEdit/detailStyles";
 
 /**
  * Collection editors for the in-place shrine editor. Like the scalar primitives
@@ -28,9 +29,12 @@ const editPlus =
 /** Catalog-bound multi-value field (ranks, prayer categories): chips with X + a `+` that reveals a picker. */
 export function EditableChips({
   kind,
+  label,
   children,
 }: {
   kind: ChipKind;
+  /** Small leading label, shown in the create flow where empty chips lack surrounding context. */
+  label?: string;
   children: React.ReactNode;
 }) {
   const api = useShrineEdit();
@@ -49,6 +53,9 @@ export function EditableChips({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      {api.mode === "create" && label && (
+        <span className={`${typo.fieldLabel} mr-1 select-none`}>{label}</span>
+      )}
       {selected.map((value) => (
         <span key={value} className={editChip}>
           <span>{value}</span>

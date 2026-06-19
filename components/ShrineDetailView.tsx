@@ -29,7 +29,6 @@ import {
   useShrineEdit,
   EditableText,
   EditableProse,
-  EditableSelect,
 } from "@/components/shrineEdit/context";
 import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
 import LocationEditPopup from "@/components/shrineEdit/LocationEditPopup";
@@ -44,31 +43,15 @@ const ShrineEditProvider = dynamic(() => import("@/components/shrineEdit/ShrineE
 export interface ShrineDetailEditor {
   initialData: ShrineInput;
   catalogs: EditCatalogs;
+  /** "create" mounts the editor immediately on an empty draft; default "update". */
+  mode?: "create" | "update";
 }
 import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
 import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
-
-// Canonical compact chip style shared with the shrine listing (table + cards)
-// so category and rank tags read identically across every view. Color classes
-// come from lib/facetColors.
-const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
-
-// One canonical class string per text role. Used by both PageBody and
-// ModalBody so the same content reads identically in page and modal.
-// Role split: serif = headings/quotes/lore · sans = informational prose
-// · mono = labels/meta. Layout utilities (spacing, whitespace, select-*)
-// stay inline at the call site, composed via template strings.
-const typo = {
-  eyebrow: "text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-moss-light",
-  sectionTitle: "text-2xl font-serif font-black text-stone",
-  subheading: "text-xl md:text-xl font-serif font-black text-stone leading-tight",
-  subheadingSm: "text-sm md:text-base font-serif font-black text-stone leading-tight",
-  fieldLabel: "text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50",
-  prose: "text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify",
-  quote: "text-base font-quote italic text-stone/85 leading-relaxed border-l-2 border-torii/30 pl-4",
-  lore: "text-xs md:text-sm font-quote italic text-stone/75 leading-relaxed border-l border-moss/20 pl-3.5",
-  meta: "text-xs font-mono text-stone/50 tracking-wide",
-} as const;
+import { CHIP, typo } from "@/components/shrineEdit/detailStyles";
+import DeityCreateEditor from "@/components/shrineEdit/DeityCreateEditor";
+import FestivalCreateEditor from "@/components/shrineEdit/FestivalCreateEditor";
+import FestivalBlock from "@/components/shrineEdit/FestivalBlock";
 
 function primaryOf(shrine: ShrineDetail) {
   return shrine.deities.find((d) => d.is_primary) ?? shrine.deities[0] ?? null;
@@ -190,14 +173,31 @@ export default function ShrineDetailView({
 }) {
   const [editing, setEditing] = useState(false);
   const router = useRouter();
+  const creating = editor?.mode === "create";
 
   if (variant === "modal") return <ModalBody view={toView(shrine)} />;
+
+  // Create flow: mount the editor immediately on an empty draft (no read view).
+  if (creating && editor) {
+    return (
+      <ShrineEditProvider
+        initialData={editor.initialData}
+        catalogs={editor.catalogs}
+        mode="create"
+        onCancel={() => router.push("/shrines")}
+        onSaved={(savedSlug) => router.push(`/shrines/${savedSlug}`)}
+      >
+        <PageBody view={toView(shrine)} />
+      </ShrineEditProvider>
+    );
+  }
 
   if (editing && editor) {
     return (
       <ShrineEditProvider
         initialData={editor.initialData}
         catalogs={editor.catalogs}
+        mode="update"
         onCancel={() => setEditing(false)}
         onSaved={(savedSlug) => {
           setEditing(false);
@@ -239,6 +239,7 @@ function PageBody({
   // In-place edit API (null on the public/read path → every primitive is inert).
   const edit = useShrineEdit();
   const editing = Boolean(edit?.editing);
+  const creating = edit?.mode === "create";
   const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.japaneseName) : -1;
 
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
@@ -373,6 +374,7 @@ function PageBody({
             <EditableText
               path="name_en"
               ariaLabel="Shrine name (English)"
+              placeholder="Shrine name (English)"
               editClassName="w-full max-w-2xl text-2xl md:text-4xl font-serif font-black tracking-tight leading-none text-white bg-stone/60 backdrop-blur-sm pointer-events-auto"
             >
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none text-white drop-shadow-xs select-text">
@@ -392,7 +394,7 @@ function PageBody({
         {/* Fast Facts Row (Subtle layout with typography blocks, no frames) */}
         <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
           <div className="flex-1 space-y-2 max-w-2xl">
-            <EditableChips kind="ranks">
+            <EditableChips kind="ranks" label="Ranks">
               <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
                 {shrine.ranks.map((rank, i) => (
                   <span key={rank} className="inline-flex items-center gap-1">
@@ -408,6 +410,7 @@ function PageBody({
               <EditableText
                 path="name_ja"
                 ariaLabel="Shrine name (Japanese)"
+                placeholder="社名（漢字）"
                 editClassName="w-64 max-w-full text-xl md:text-2xl font-serif font-black text-stone"
               >
                 <>{shrine.japaneseName}</>
@@ -436,6 +439,11 @@ function PageBody({
                       aria-label="Prefecture"
                       className="inline-block bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
                     >
+                      {creating && (
+                        <option value="" disabled>
+                          — prefecture —
+                        </option>
+                      )}
                       {edit!.catalogs.prefectures.map((p) => (
                         <option key={p.name_en} value={p.name_en}>
                           {p.name_en}
@@ -450,12 +458,28 @@ function PageBody({
               </span>
             </h2>
 
-            {editing && (
+            {editing && !creating && (
               <div className="flex items-center gap-1.5 select-none pointer-events-none">
                 <Lock size={11} className="text-stone/35 shrink-0" />
                 <span className="text-[10px] font-mono text-stone/40 tracking-wide">
                   URL slug: <span className="text-stone/60 font-semibold">{edit!.getValue("slug") as string}</span>
                 </span>
+              </div>
+            )}
+
+            {creating && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono text-stone/40 tracking-wide select-none">URL slug:</span>
+                <input
+                  value={edit!.getField("slug")}
+                  onChange={(e) =>
+                    // Slugs are lowercase letters, digits and hyphens only (contract regex).
+                    edit!.setValue("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
+                  }
+                  placeholder="my-shrine-name"
+                  aria-label="URL slug"
+                  className="w-56 max-w-full bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-[11px] font-mono text-stone/70"
+                />
               </div>
             )}
 
@@ -494,7 +518,7 @@ function PageBody({
               { id: "festivals", label: "Sacred Festivals", kanji: "祭" },
               { id: "pilgrimage", label: "Sacred Stamp", kanji: "印" },
               { id: "location", label: "Transit & Geography", kanji: "地" },
-            ].map(sec => {
+            ].filter((sec) => !creating || sec.id !== "pilgrimage").map(sec => {
               const isActive = activeSection === sec.id;
               return (
                 <li key={sec.id}>
@@ -565,7 +589,7 @@ function PageBody({
                 </h3>
               </div>
 
-              <EditableChips kind="prayerCategories">
+              <EditableChips kind="prayerCategories" label="Prayer categories">
                 <div className="flex flex-wrap gap-1.5 pt-1 select-none">
                   {shrine.prayerFocus.map((focus) => (
                     <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
@@ -623,6 +647,10 @@ function PageBody({
 
               <div className="space-y-6">
 
+                {creating ? (
+                  <DeityCreateEditor />
+                ) : (
+                <>
                 {/* Primary Deity (Matches ShrineDetailModal beautiful card layout) */}
                 <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-6 md:p-8 border border-moss/8 shadow-3xs space-y-5">
                   <div>
@@ -770,6 +798,8 @@ function PageBody({
                     </div>
                   </div>
                 )}
+                </>
+                )}
 
               </div>
             </div>
@@ -849,172 +879,19 @@ function PageBody({
 
               {/* Festival listings - elegant box-free editorial design */}
               <div className="space-y-16">
-                {shrine.festivals.map((fest, idx) => (
-                  <div
-                    key={fest.id}
-                    className="group relative space-y-6 pt-8 border-t border-stone/10 first:border-t-0 first:pt-0 transition-all"
-                  >
-                    {/* Editorial Header */}
-                    <div className="space-y-3">
-                      <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 border-b border-stone/5 pb-2">
-                        <div className="flex items-baseline gap-2.5 flex-wrap">
-                          <span className="font-mono text-xs text-torii-dark font-bold tracking-widest select-none">
-                            0{idx + 1} //
-                          </span>
-                          <EditableText
-                            path={`festivals.${idx}.name_en`}
-                            ariaLabel="Festival name"
-                            editClassName={`${typo.subheading} tracking-wide w-full`}
-                          >
-                            <h4 className={`${typo.subheading} tracking-wide select-text`}>
-                              {fest.name}
-                            </h4>
-                          </EditableText>
-                          <EditableText
-                            path={`festivals.${idx}.name_ja`}
-                            ariaLabel="Festival name (Japanese)"
-                            editClassName="text-base font-serif font-medium text-moss w-36"
-                          >
-                            {fest.name_ja && (
-                              <span className="text-base font-serif font-medium text-moss/70 select-text" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                ({fest.name_ja})
-                              </span>
-                            )}
-                          </EditableText>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest font-bold text-stone/50 uppercase select-none shrink-0">
-                          <Calendar size={13} className="text-stone/40" />
-                          <EditableText
-                            path={`festivals.${idx}.time_prose`}
-                            ariaLabel="Festival time"
-                            placeholder="e.g. First Sunday of May"
-                            editClassName="w-40 text-xs font-mono tracking-widest font-bold text-stone/60 uppercase"
-                          >
-                            <span>{fest.time}</span>
-                          </EditableText>
-                        </div>
-                      </div>
-
-                      {/* Accent Metadata line */}
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase font-bold text-stone/40 select-none">
-                        <span>Ritual Type //</span>
-                        <EditableSelect
-                          path={`festivals.${idx}.festival_type`}
-                          ariaLabel="Festival type"
-                          options={[
-                            { value: "spectacle", label: "Spectacle" },
-                            { value: "pilgrimage", label: "Pilgrimage" },
-                          ]}
-                          className="text-[10px] font-mono tracking-widest uppercase font-bold text-torii-dark"
-                        >
-                          <span className="text-torii-dark bg-torii/5 border border-torii/10 px-1.5 py-0.5 rounded-sm">
-                            {FESTIVAL_TYPE_LABEL[fest.type.category] ?? fest.type.category}
-                          </span>
-                        </EditableSelect>
-                      </div>
-                    </div>
-
-                    {/* Main Narrative — flows beautifully as professional typography */}
-                    <EditableProse
-                      path={`festivals.${idx}.meaning`}
-                      rows={8}
-                      ariaLabel="Festival meaning"
-                      placeholder="What the festival means / its significance…"
-                      editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
-                    >
-                      <div className="space-y-4 text-justify select-text">
-                        {fest.meaning.split('\n\n').map((paragraph, pIdx) => (
-                          <p key={pIdx} className={typo.prose}>
-                            {paragraph}
-                          </p>
-                        ))}
-                      </div>
-                    </EditableProse>
-
-                    {/* Festival Origin — shown below meaning, no label */}
-                    {(editing || fest.origin) && (
-                      <EditableProse
-                        path={`festivals.${idx}.origin`}
-                        rows={4}
-                        ariaLabel="Festival origin"
-                        placeholder="Festival origins & history…"
-                        editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
-                      >
-                        <p className={`${typo.prose} select-text`}>
-                          {fest.origin}
-                        </p>
-                      </EditableProse>
-                    )}
-
-                    {/* Ritual Sequence & Pilgrim Aspirations - Clean columns with accent left lines rather than cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
-                      <div className="space-y-2">
-                        <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-moss-light/40"></span>
-                          Ceremonies & Rituals
-                        </h5>
-                        <EditableProse
-                          path={`festivals.${idx}.ritual`}
-                          rows={5}
-                          ariaLabel="Festival ritual"
-                          placeholder="Ceremonies & rituals…"
-                          editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
-                        >
-                          <p className={`${typo.prose} pl-3.5 border-l border-stone/15 select-text`}>
-                            {fest.ritual}
-                          </p>
-                        </EditableProse>
-                      </div>
-
-                      {(editing || fest.prayer) && (
-                        <div className="space-y-2">
-                          <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-torii"></span>
-                            Prayers & Intentions
-                          </h5>
-                          <EditableProse
-                            path={`festivals.${idx}.prayer`}
-                            rows={5}
-                            ariaLabel="Festival prayer"
-                            placeholder="Prayers & intentions…"
-                            editClassName="w-full text-xs md:text-sm font-quote italic text-stone/75"
-                          >
-                            <p className={`${typo.lore} text-justify select-text`}>
-                              {fest.prayer}
-                            </p>
-                          </EditableProse>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Pilgrim Advisory - minimalist subtle card to separate it clearly as an instruction */}
-                    <div className="bg-stone/5 px-4 py-3 border border-stone/10 rounded-sm flex items-start gap-2.5">
-                      <Compass size={14} className="text-torii-dark/70 mt-0.5 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className={`${typo.fieldLabel} block mb-1 select-none`}>
-                          Visitor Tips & Etiquette
-                        </span>
-                        <EditableProse
-                          path={`festivals.${idx}.visitor_notes`}
-                          rows={4}
-                          ariaLabel="Festival visitor notes"
-                          placeholder="Visitor tips & etiquette…"
-                          editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
-                        >
-                          <p className={`${typo.prose} select-text`}>
-                            {fest.type.notes}
-                          </p>
-                        </EditableProse>
-                      </div>
-                    </div>
-
-                  </div>
-                ))}
+                {creating ? (
+                  <FestivalCreateEditor />
+                ) : (
+                  shrine.festivals.map((fest, idx) => (
+                    <FestivalBlock key={fest.id} fest={fest} idx={idx} />
+                  ))
+                )}
               </div>
             </div>
           </section>
 
-          {/* SECTION 5: PILGRIM SEALS (ONLY THE INTERACTIVE GOSHUIN STAMP) */}
+          {/* SECTION 5: PILGRIM SEALS (ONLY THE INTERACTIVE GOSHUIN STAMP) — n/a for an unsaved new shrine */}
+          {!creating && (
           <section
             id="pilgrimage"
             ref={sectionRefs.pilgrimage}
@@ -1113,6 +990,7 @@ function PageBody({
 
             </div>
           </section>
+          )}
 
           {/* SECTION 6: GEOGRAPHY MAP */}
           <section
@@ -1133,12 +1011,14 @@ function PageBody({
                 </h3>
               </div>
 
-              <div className="space-y-2 select-text">
-                <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
-                <p className={typo.prose}>
-                  Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
-                </p>
-              </div>
+              {!creating && (
+                <div className="space-y-2 select-text">
+                  <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
+                  <p className={typo.prose}>
+                    Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
+                  </p>
+                </div>
+              )}
 
               {(editing || shrine.bestTime) && (
                 <div className="space-y-2 select-text">
@@ -1208,7 +1088,7 @@ function PageBody({
       {canEdit && (
         <>
           <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
-            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
                 Admin Controls
               </span>

@@ -51,6 +51,30 @@ export function shrineDetailToInput(detail: ShrineDetail): ShrineInput {
 }
 
 /**
+ * Empty draft seed for the create-on-detail-page flow: every field blank/null with a
+ * single primary deity stub (the contract requires ≥1 deity, exactly one primary).
+ */
+export function emptyShrineInput(): ShrineInput {
+  return {
+    slug: "",
+    name_en: "",
+    name_ja: null,
+    region: "",
+    prefecture: "",
+    city: null,
+    address: null,
+    coordinates: null,
+    image_urls: [],
+    details: { history: null, description: null, prayer_focus: null, best_time: null, quote: null },
+    ranks: [],
+    prayer_categories: [],
+    deities: [{ name_ja: "", is_primary: true, sort_order: 0, regional_lore: null }],
+    festivals: [],
+    sources: [],
+  };
+}
+
+/**
  * Build the catalog option lists the in-place editor's dropdowns offer. Pure
  * derivation from the already-loaded {@link Store}; called only for admins so
  * these lists never ship to the public bundle.
@@ -67,5 +91,17 @@ export function buildEditCatalogs(store: Store): EditCatalogs {
     prefectures: [...store.prefectures]
       .sort((a, b) => a.name_en.localeCompare(b.name_en))
       .map((p) => ({ name_en: p.name_en, region: regionById.get(p.region_id) ?? "" })),
+    // Selectable deities for the create-flow picker (keyed on name_ja, the dedup key).
+    deities: [...store.deities]
+      .filter((d) => d.name_ja)
+      .sort((a, b) => a.name_en.localeCompare(b.name_en))
+      .map((d) => ({
+        id: d.id,
+        name_en: d.name_en,
+        name_ja: d.name_ja,
+        deity_type: d.deity_type,
+        titles: d.titles ?? [],
+        canonical_lore: d.canonical_lore,
+      })),
   };
 }

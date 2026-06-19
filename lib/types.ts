@@ -122,6 +122,16 @@ export interface EditCatalogs {
   ranks: string[]; // all rank name_en, ordered by rank_order
   prayerCategories: string[]; // all category name_en
   prefectures: { name_en: string; region: string }[]; // all 47 + their region name_en
+  // Existing deities for the create-flow picker: enough to link by name_ja and to
+  // render the linked deity's canonical lore/type/titles read-only on the create page.
+  deities?: {
+    id: string;
+    name_en: string;
+    name_ja: string | null;
+    deity_type: string;
+    titles: string[];
+    canonical_lore: string | null;
+  }[];
 }
 
 // --- View models (what the UI consumes) ---

@@ -357,14 +357,19 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    **no `canonical_lore`** — the deity already has it, so `SHRINE_RESEARCH_PROMPT.md` never re-gathers it.
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
    left null until edited on the deity record.)
-3. **Festival dates are deferred.** `festivals.start_date` / `end_date` are left `null` at shrine-research
-   time — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete yearly dates are uploaded later
-   into `festival_occurrences`: the admin **structured form** (`ShrineForm`) supports adding per-year
-   occurrences (year defaults to the current year) per festival, and the JSON import accepts
-   `festivals[].occurrences`. The festival's own `start_date`/`end_date` stay deferred/`null`; a dedicated
-   bulk importer is a future addition.
+3. **Festival dates are deferred (at research time).** `festivals.start_date` / `end_date` are left
+   `null` by the JSON-import shrine flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
+   yearly dates are uploaded later into `festival_occurrences`: the admin **structured form** (`ShrineForm`)
+   supports adding per-year occurrences (year defaults to the current year) per festival, and the JSON
+   import accepts `festivals[].occurrences`. A dedicated bulk importer is a future addition.
+   - The **in-place create page** (`/shrines/new`, `FestivalBlock`'s `DefaultDateField`) *does* collect a
+     festival's own `start_date`/`end_date` as **default, year-agnostic month-day** values (month + day
+     selects). They are stored as `YYYY-MM-DD` with the **current year as a placeholder** (the column is a
+     full `date`); the year carries no meaning — these are intended as recurring defaults.
    - *Current* read path (`lib/calendar.ts`): for the queried year, an occurrence's dates win over the
-     festival's own `start_date`/`end_date`; `is_fallback` when neither exists.
+     festival's own `start_date`/`end_date`; `is_fallback` when neither exists. **Caveat:** the read path
+     compares these defaults *literally* by year, so a default stored with the placeholder year only
+     surfaces on that year's calendar until the recurrence resolution below lands.
    - *Intended* target: a festival's effective dates resolve from the latest `festival_occurrences` row,
      falling back to the previous year's occurrence when a year is skipped. The occurrences importer and
      this resolution change are deferred — spec in [`ROADMAP.md`](./ROADMAP.md).

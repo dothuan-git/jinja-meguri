@@ -105,6 +105,16 @@ excluded from indexing (`app/admin/layout.tsx` sets `robots: noindex`).
   catalog code→id resolution).
 - **Authoring aids:** `lib/admin/keyCompleteness.ts` checks a pasted object carries every
   expected key; AI research prompts and example JSON live in `docs/ai-research/`.
+- **In-place edit + create on the detail layout:** admins see an "Admin Controls" bar on the
+  shrine detail page (Edit/Delete) and on the listing (`/shrines`, "Add shrine"). Both reuse
+  `ShrineDetailView` + the lazy `components/shrineEdit/ShrineEditProvider` over a draft
+  `ShrineInput`. The provider's `mode` ("update" | "create") gates create-only behavior:
+  `app/shrines/new/page.tsx` (admin-guarded) mounts the editor immediately on
+  `emptyShrineInput()`, with `DeityCreateEditor`/`FestivalCreateEditor` adding draft-driven
+  add/remove + a deity link-or-create picker and an editable slug. `app/@modal/(.)shrines/new`
+  returns null so the listing→`/shrines/new` soft-nav isn't captured as a `slug=new` modal.
+  Both edit and create save through the same `useShrineSave` → `saveShrineAction` → `upsertShrine`
+  pipeline. The structured form + JSON import at `/admin/shrines/new` remains an alternative.
 
 ### Maps
 
@@ -132,7 +142,10 @@ separate ingest script and no `data/` directory.
 - **Deities are created first**, with `canonical_lore`. Then shrines link them by `name_ja`; the shrine's
   embedded `deities[].canonical` block is identity-only (no `canonical_lore`), so the shrine research
   flow never re-gathers deity lore.
-- **Festival `start_date`/`end_date` are deferred** — left null at shrine-research time (no date fields in
-  the shrine form/prompt). Yearly dates are uploaded later into `festival_occurrences`.
+- **Festival `start_date`/`end_date` are deferred in the JSON-import flow** — left null at shrine-research
+  time (no date fields in the prompt). Yearly dates are uploaded later into `festival_occurrences`. The
+  **in-place create page** (`/shrines/new`) does collect them as default, year-agnostic month-day values
+  (stored `YYYY-MM-DD` with the current year as a placeholder). See `docs/DATA_MODEL.md` §10 for the
+  calendar read-path caveat.
 - The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
   on import; they are just not gathered by the shrine flow. Don't strip them.
