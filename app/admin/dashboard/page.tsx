@@ -25,6 +25,12 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">Shrine Admin</h1>
         <div className="flex items-center gap-3">
           <Link
+            href="/admin/occurrences/new"
+            className="rounded border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+          >
+            + Festival dates
+          </Link>
+          <Link
             href="/admin/deities/new"
             className="rounded border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
           >

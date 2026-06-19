@@ -3,7 +3,8 @@
 import { assertAdmin } from "@/lib/auth/server";
 import { ShrineInputSchema } from "@/lib/admin/shrineContract";
 import { DeityInputSchema } from "@/lib/admin/deityContract";
-import { upsertShrine, deleteShrine, upsertDeity, updateDeity, deleteDeity } from "@/lib/db/mutations";
+import { OccurrenceImportSchema } from "@/lib/admin/occurrenceContract";
+import { upsertShrine, deleteShrine, upsertDeity, updateDeity, deleteDeity, upsertOccurrences } from "@/lib/db/mutations";
 
 export async function saveShrineAction(
   _prevState: { error?: string; success?: boolean } | null,
@@ -66,6 +67,38 @@ export async function saveDeityAction(
     }
     const { name_ja } = await upsertDeity(result.data);
     return { success: true, name_ja };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Database error" };
+  }
+}
+
+export async function saveOccurrencesAction(
+  _prevState: { error?: string; success?: boolean } | null,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean; count?: number }> {
+  await assertAdmin();
+
+  const raw = formData.get("json") as string | null;
+  if (!raw) return { error: "No data submitted" };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { error: "Invalid JSON" };
+  }
+
+  const result = OccurrenceImportSchema.safeParse(parsed);
+  if (!result.success) {
+    const msgs = result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
+    return { error: msgs };
+  }
+
+  const targets = Array.isArray(result.data) ? result.data : [result.data];
+
+  try {
+    const { count } = await upsertOccurrences(targets);
+    return { success: true, count };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Database error" };
   }

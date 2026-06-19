@@ -23,6 +23,8 @@ export const EXPECTED_KEYS = {
     "meaning", "ritual", "prayer", "festival_type", "visitor_notes", "occurrences",
   ],
   occurrence: ["year", "start_date", "end_date", "notes"],
+  // Standalone bulk occurrence import (admin/occurrences/new).
+  occurrenceImport: ["shrine_slug", "festival_name_en", "occurrences"],
   source: ["url", "title"],
 } as const;
 
@@ -66,6 +68,28 @@ export function checkDeityCompleteness(data: unknown): CompletenessReport {
   const totalPresent = groups.reduce((n, g) => n + g.present, 0);
   const totalMissing = totalExpected - totalPresent;
   return { groups, totalExpected, totalPresent, totalMissing, complete: totalMissing === 0 };
+}
+
+// Standalone bulk occurrence import (admin/occurrences/new) — a single target object or an array
+// of them, each carrying an occurrences[] array.
+export function checkOccurrencesCompleteness(data: unknown): CompletenessReport {
+  const targets = Array.isArray(data) ? data : [data];
+  const groups: CompletenessGroup[] = [];
+  targets.forEach((t, i) => {
+    if (!isObject(t)) return;
+    const label = targets.length > 1 ? `target[${i}]` : "target";
+    groups.push(check(t, EXPECTED_KEYS.occurrenceImport, label));
+    if (Array.isArray(t.occurrences)) {
+      t.occurrences.forEach((o, j) => {
+        if (!isObject(o)) return;
+        groups.push(check(o, EXPECTED_KEYS.occurrence, `${label}.occurrences[${j}]`));
+      });
+    }
+  });
+  const totalExpected = groups.reduce((n, g) => n + g.expected, 0);
+  const totalPresent = groups.reduce((n, g) => n + g.present, 0);
+  const totalMissing = totalExpected - totalPresent;
+  return { groups, totalExpected, totalPresent, totalMissing, complete: groups.length > 0 && totalMissing === 0 };
 }
 
 export function checkCompleteness(data: unknown): CompletenessReport {

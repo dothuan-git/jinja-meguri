@@ -1,0 +1,17 @@
+[
+  {
+    "shrine_slug": "fushimi-inari-taisha",
+    "festival_name_en": "Hatsuuma Taisai",
+    "occurrences": [
+      { "year": 2025, "start_date": "2025-02-06", "end_date": null, "notes": "First Day of the Horse" },
+      { "year": 2026, "start_date": "2026-02-08", "end_date": null, "notes": null }
+    ]
+  },
+  {
+    "shrine_slug": "fushimi-inari-taisha",
+    "festival_name_en": "Motomiya Sai",
+    "occurrences": [
+      { "year": 2026, "start_date": "2026-07-22", "end_date": "2026-07-23", "notes": null }
+    ]
+  }
+]

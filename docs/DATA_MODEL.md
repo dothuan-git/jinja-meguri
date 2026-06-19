@@ -234,8 +234,13 @@ One row per shrine; topical narrative prose.
 
 > `festival_type` ∈ `spectacle` | `pilgrimage`.
 
-Index `idx_festivals_shrine`. The festival row holds the definition and, for fixed-Gregorian events,
-its own dates; lunar / "Nth-weekday" events leave dates null and rely on `festival_occurrences`.
+Index `idx_festivals_shrine`. UNIQUE `(shrine_id, name_en)`. The festival row holds the definition and,
+for fixed-Gregorian events, its own (year-agnostic) default dates; lunar / "Nth-weekday" events leave
+dates null and rely on `festival_occurrences`. The UNIQUE constraint gives festivals a **stable identity**:
+`upsertShrine` upserts festivals by `(shrine_id, name_en)` rather than delete-and-reinsert, so a
+festival keeps its `id` (and therefore its `festival_occurrences`) across a shrine re-import or inline
+edit. Festivals absent from a re-import are deleted (their occurrences cascade); **renaming** a festival
+is a new identity and drops the old one's occurrences.
 
 ### `festival_occurrences` (yearly exact dates)
 Concrete dated instances for festivals that can't be computed (lunar, Nth-weekday). Added manually each January.
@@ -250,7 +255,13 @@ Concrete dated instances for festivals that can't be computed (lunar, Nth-weekda
 | `notes`       | `text`     | Yes      | —                                 | Year-specific notes.                   |
 
 UNIQUE `(festival_id, year)`. Indexes `idx_festival_occurrences_festival`, `idx_festival_occurrences_year`.
-The calendar queries by **range overlap** (`start_date <= range_end AND end_date >= range_start`).
+
+Uploaded via the **bulk occurrences importer** at `/admin/occurrences/new` (JSON paste or structured
+form): each target is `{ shrine_slug, festival_name_en, occurrences: [{ year, start_date, end_date?, notes? }] }`
+(a single object or an array). The festival is resolved by `(shrine_slug, festival_name_en)` — unique via
+the festivals constraint above — and rows upsert on `(festival_id, year)`. Contract: `lib/admin/occurrenceContract.ts`;
+mutation: `upsertOccurrences` in `lib/db/mutations.ts`; action: `saveOccurrencesAction`. Example JSON:
+`docs/ai-research/example-festival-occurrences.json`.
 
 ### `sources` (provenance)
 
@@ -359,20 +370,22 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    left null until edited on the deity record.)
 3. **Festival dates are deferred (at research time).** `festivals.start_date` / `end_date` are left
    `null` by the JSON-import shrine flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
-   yearly dates are uploaded later into `festival_occurrences`: the admin **structured form** (`ShrineForm`)
-   supports adding per-year occurrences (year defaults to the current year) per festival, and the JSON
-   import accepts `festivals[].occurrences`. A dedicated bulk importer is a future addition.
+   yearly dates are uploaded later into `festival_occurrences`: via the **bulk occurrences importer**
+   (`/admin/occurrences/new`, JSON or form — see the `festival_occurrences` table above), the admin
+   **structured form** (`ShrineForm`) per-festival occurrences, or `festivals[].occurrences` in a shrine
+   JSON import.
    - The **in-place create page** (`/shrines/new`, `FestivalBlock`'s `DefaultDateField`) *does* collect a
      festival's own `start_date`/`end_date` as **default, year-agnostic month-day** values (month + day
      selects). They are stored as `YYYY-MM-DD` with the **current year as a placeholder** (the column is a
      full `date`); the year carries no meaning — these are intended as recurring defaults.
-   - *Current* read path (`lib/calendar.ts`): for the queried year, an occurrence's dates win over the
-     festival's own `start_date`/`end_date`; `is_fallback` when neither exists. **Caveat:** the read path
-     compares these defaults *literally* by year, so a default stored with the placeholder year only
-     surfaces on that year's calendar until the recurrence resolution below lands.
-   - *Intended* target: a festival's effective dates resolve from the latest `festival_occurrences` row,
-     falling back to the previous year's occurrence when a year is skipped. The occurrences importer and
-     this resolution change are deferred — spec in [`ROADMAP.md`](./ROADMAP.md).
+   - **Read path** (`resolveCalendarDates` in `lib/calendar.ts`, used by `getFestivalYear` and
+     `entriesForMonth`) — **calendar only**: for the calendar's year, (1) an occurrence for **that exact
+     year** wins and is used literally; (2) otherwise the festival's **default month-day is projected onto
+     that year** (so a recurring default surfaces every year, and the day-grid pins it); (3) otherwise the
+     festival is undated (`is_fallback`). There is **no previous-year-occurrence fallback** — a festival
+     with only past occurrences and no default won't appear until its current-year occurrence (or a default)
+     is added. The **shrine detail page is unchanged** — it shows the festival's own stored dates and never
+     reads occurrences.
 
 > The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
 > on import — they are simply not gathered by the shrine research flow. Don't remove them.

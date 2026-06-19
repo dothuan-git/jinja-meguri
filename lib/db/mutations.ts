@@ -2,6 +2,7 @@ import "server-only";
 import { pool } from "@/lib/db/store";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import type { DeityInput } from "@/lib/admin/deityContract";
+import type { OccurrenceImportTarget } from "@/lib/admin/occurrenceContract";
 import type { PoolClient } from "pg";
 
 // Resolve a catalog name to its numeric id; throws if not found.
@@ -56,8 +57,9 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       await client.query("DELETE FROM shrine_ranks WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_prayer_categories WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_details WHERE shrine_id = $1", [shrineId]);
-      await client.query("DELETE FROM festivals WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM sources WHERE shrine_id = $1", [shrineId]);
+      // NB: festivals are NOT wiped here — they are upserted by (shrine_id, name_en) below so that
+      // their separately-uploaded festival_occurrences survive a shrine re-import/inline edit.
 
       await client.query(
         `UPDATE shrines SET
@@ -115,11 +117,25 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       );
     }
 
-    // festivals + festival_occurrences
+    // festivals + festival_occurrences — identity-stable: upsert by (shrine_id, name_en) so a
+    // festival keeps its id (and its occurrences) across shrine re-imports. Inline occurrences also
+    // upsert by (festival_id, year); existing occurrence rows not in the input are left untouched.
+    const inputFestivalNames = (input.festivals ?? []).map((f) => f.name_en);
+    // Remove festivals the admin dropped from the input (their occurrences cascade — correct).
+    await client.query(
+      "DELETE FROM festivals WHERE shrine_id = $1 AND name_en <> ALL($2)",
+      [shrineId, inputFestivalNames],
+    );
     for (const f of input.festivals ?? []) {
       const fRes = await client.query(
         `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         ON CONFLICT (shrine_id,name_en) DO UPDATE SET
+           name_ja=EXCLUDED.name_ja, time_prose=EXCLUDED.time_prose,
+           start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
+           origin=EXCLUDED.origin, meaning=EXCLUDED.meaning, ritual=EXCLUDED.ritual,
+           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes
+         RETURNING id`,
         [
           shrineId, f.name_en, f.name_ja ?? null, f.time_prose ?? null,
           f.start_date ?? null, f.end_date ?? null,
@@ -130,7 +146,10 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       const festivalId = fRes.rows[0].id as string;
       for (const occ of f.occurrences ?? []) {
         await client.query(
-          "INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes) VALUES ($1,$2,$3,$4,$5)",
+          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes)
+           VALUES ($1,$2,$3,$4,$5)
+           ON CONFLICT (festival_id,year) DO UPDATE SET
+             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes`,
           [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null],
         );
       }
@@ -193,4 +212,46 @@ export async function deleteDeity(id: string): Promise<void> {
 export async function deleteShrine(slug: string): Promise<void> {
   // ON DELETE CASCADE handles all child rows except deities (intentionally kept)
   await pool.query("DELETE FROM shrines WHERE slug = $1", [slug]);
+}
+
+// Bulk-upsert yearly festival dates. Each target resolves a festival via (shrine_slug, festival_name_en)
+// — unique thanks to festivals' UNIQUE(shrine_id, name_en) — then upserts its occurrences on
+// (festival_id, year). Returns how many occurrence rows were written. All-or-nothing in one transaction.
+export async function upsertOccurrences(
+  targets: OccurrenceImportTarget[],
+): Promise<{ count: number }> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    let count = 0;
+    for (const t of targets) {
+      const fRes = await client.query(
+        `SELECT f.id FROM festivals f
+         JOIN shrines s ON s.id = f.shrine_id
+         WHERE s.slug = $1 AND f.name_en = $2`,
+        [t.shrine_slug, t.festival_name_en],
+      );
+      if (!fRes.rows[0]) {
+        throw new Error(`No festival "${t.festival_name_en}" found at shrine "${t.shrine_slug}"`);
+      }
+      const festivalId = fRes.rows[0].id as string;
+      for (const occ of t.occurrences) {
+        await client.query(
+          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes)
+           VALUES ($1,$2,$3,$4,$5)
+           ON CONFLICT (festival_id,year) DO UPDATE SET
+             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes`,
+          [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null],
+        );
+        count++;
+      }
+    }
+    await client.query("COMMIT");
+    return { count };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }

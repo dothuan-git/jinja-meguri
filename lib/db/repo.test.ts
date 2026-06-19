@@ -84,6 +84,44 @@ describe("getFestivalYear", () => {
     // month is null (fallback) or 1..12
     expect(f.month === null || (f.month! >= 1 && f.month! <= 12)).toBe(true);
   });
+
+  // festival-1 has a default 2026-07-30..2026-08-02; festival-2 has no default date.
+  const occ = (festival_id: string, year: number, start: string, end: string | null) => ({
+    id: `occ-${festival_id}-${year}`, festival_id, year, start_date: start, end_date: end, notes: null,
+  });
+  const storeWith = (occurrences: ReturnType<typeof occ>[]) => ({ ...store, festival_occurrences: occurrences });
+
+  it("uses the current-year occurrence over the default", () => {
+    const list = getFestivalYear(storeWith([occ("festival-1", 2026, "2026-08-10", "2026-08-11")]), 2026);
+    const f1 = list.find((f) => f.festival_id === "festival-1")!;
+    expect(f1.start_date).toBe("2026-08-10");
+    expect(f1.month).toBe(8);
+    expect(f1.is_fallback).toBe(false);
+  });
+
+  it("projects the default month-day onto the queried year when no occurrence", () => {
+    const f1 = getFestivalYear(store, 2027).find((f) => f.festival_id === "festival-1")!;
+    expect(f1.start_date).toBe("2027-07-30");
+    expect(f1.end_date).toBe("2027-08-02");
+    expect(f1.month).toBe(7);
+    expect(f1.is_fallback).toBe(false);
+  });
+
+  it("uses a current-year occurrence for a festival that has no default", () => {
+    const f2 = getFestivalYear(storeWith([occ("festival-2", 2026, "2026-06-14", null)]), 2026)
+      .find((f) => f.festival_id === "festival-2")!;
+    expect(f2.start_date).toBe("2026-06-14");
+    expect(f2.is_fallback).toBe(false);
+  });
+
+  it("is undated (is_fallback) with no occurrence and no default", () => {
+    // festival-2 has only a 2026 occurrence; querying 2027 leaves it with nothing to show.
+    const f2 = getFestivalYear(storeWith([occ("festival-2", 2026, "2026-06-14", null)]), 2027)
+      .find((f) => f.festival_id === "festival-2")!;
+    expect(f2.start_date).toBeNull();
+    expect(f2.month).toBeNull();
+    expect(f2.is_fallback).toBe(true);
+  });
 });
 
 describe("getAllSlugs", () => {

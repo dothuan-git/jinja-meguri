@@ -1,9 +1,35 @@
-import type { Store, CalendarEntry } from "@/lib/types";
+import type { Store, CalendarEntry, FestivalOccurrenceRow } from "@/lib/types";
 
 export function monthRange(year: number, month: number): { start: string; end: string } {
   const pad = (n: number) => String(n).padStart(2, "0");
   const lastDay = new Date(year, month, 0).getDate(); // month is 1-based; day 0 of next = last of this
   return { start: `${year}-${pad(month)}-01`, end: `${year}-${pad(month)}-${pad(lastDay)}` };
+}
+
+// Swap a YYYY-MM-DD date's year, keeping its month-day. Used to project a festival's
+// (year-agnostic) default date onto the calendar's current year.
+function projectToYear(date: string | null, year: number): string | null {
+  return date ? `${year}-${date.slice(5)}` : null;
+}
+
+// Effective festival dates for the calendar in a given year:
+//  1. an occurrence for that exact year wins (used literally),
+//  2. otherwise the festival's default month-day is projected onto that year,
+//  3. otherwise the festival is undated (is_fallback).
+// No previous-year-occurrence fallback — every resolved date is in `year`, so the day grid pins it.
+export function resolveCalendarDates(
+  occForYear: FestivalOccurrenceRow | undefined,
+  f: { start_date: string | null; end_date: string | null },
+  year: number,
+): { start_date: string | null; end_date: string | null; is_fallback: boolean } {
+  if (occForYear) {
+    return { start_date: occForYear.start_date, end_date: occForYear.end_date, is_fallback: false };
+  }
+  const start = projectToYear(f.start_date, year);
+  if (!start) return { start_date: null, end_date: null, is_fallback: true };
+  let end = projectToYear(f.end_date, year);
+  if (end && end < start) end = `${year + 1}-${(f.end_date as string).slice(5)}`; // festival crosses New Year
+  return { start_date: start, end_date: end, is_fallback: false };
 }
 
 function shrineContext(store: Store, shrineId: string) {
@@ -33,12 +59,10 @@ export function entriesForMonth(store: Store, year: number, month: number): Cale
     const ctx = shrineContext(store, f.shrine_id);
     const occ = occByFestival.get(f.id);
 
-    // Occurrence dates take priority over festival defaults
-    const startDate = occ?.start_date ?? f.start_date;
-    const endDate = occ ? occ.end_date : f.end_date;
+    const { start_date: startDate, end_date: endDate, is_fallback } = resolveCalendarDates(occ, f, year);
     const effectiveEnd = endDate ?? startDate; // single-day event: end = start
 
-    if (startDate && effectiveEnd) {
+    if (!is_fallback && startDate && effectiveEnd) {
       if (startDate <= end && effectiveEnd >= start) {
         entries.push({
           festival_id: f.id,
