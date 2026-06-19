@@ -1,4 +1,4 @@
-import type { ShrineDetail } from "@/lib/types";
+import type { ShrineDetail, Store, EditCatalogs } from "@/lib/types";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 
 /**
@@ -47,5 +47,25 @@ export function shrineDetailToInput(detail: ShrineDetail): ShrineInput {
       occurrences: [],
     })),
     sources: detail.sources.map((s) => ({ url: s.url, title: s.title })),
+  };
+}
+
+/**
+ * Build the catalog option lists the in-place editor's dropdowns offer. Pure
+ * derivation from the already-loaded {@link Store}; called only for admins so
+ * these lists never ship to the public bundle.
+ */
+export function buildEditCatalogs(store: Store): EditCatalogs {
+  const regionById = new Map(store.regions.map((r) => [r.id, r.name_en]));
+  return {
+    ranks: [...store.ranks]
+      .sort((a, b) => a.rank_order - b.rank_order)
+      .map((r) => r.name_en),
+    prayerCategories: [...store.prayer_categories]
+      .sort((a, b) => a.group_label.localeCompare(b.group_label) || a.name_en.localeCompare(b.name_en))
+      .map((c) => c.name_en),
+    prefectures: [...store.prefectures]
+      .sort((a, b) => a.name_en.localeCompare(b.name_en))
+      .map((p) => ({ name_en: p.name_en, region: regionById.get(p.region_id) ?? "" })),
   };
 }

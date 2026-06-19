@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
+import type { EditCatalogs } from "@/lib/types";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import { ToastProvider } from "@/components/ui/Toast";
 import { useShrineSave } from "@/components/admin/useShrineSave";
@@ -31,6 +32,7 @@ function setAtPath<T>(root: T, path: string, value: unknown): T {
 
 interface Props {
   initialData: ShrineInput;
+  catalogs: EditCatalogs;
   onCancel: () => void;
   onSaved: (slug: string) => void;
   children: React.ReactNode;
@@ -45,7 +47,7 @@ export default function ShrineEditProvider(props: Props) {
   );
 }
 
-function EditFrame({ initialData, onCancel, onSaved, children }: Props) {
+function EditFrame({ initialData, catalogs, onCancel, onSaved, children }: Props) {
   const [draft, setDraft] = useState<ShrineInput>(initialData);
   const { save, saving, error } = useShrineSave({ mode: "update", onSaved });
 
@@ -58,9 +60,13 @@ function EditFrame({ initialData, onCancel, onSaved, children }: Props) {
       },
       // Empty input → null, matching the structured form's normalization.
       setField: (path, value) => setDraft((prev) => setAtPath(prev, path, value === "" ? null : value)),
+      getValue: (path) => getAtPath(draft, path),
+      // Raw set — no coercion, so arrays and the prefecture/region strings pass through verbatim.
+      setValue: (path, value) => setDraft((prev) => setAtPath(prev, path, value)),
       findDeityIndex: (nameJa) => draft.deities.findIndex((d) => d.name_ja === nameJa),
+      catalogs,
     }),
-    [draft],
+    [draft, catalogs],
   );
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
+import type { EditCatalogs } from "@/lib/types";
 
 /**
  * In-place edit API shared between {@link ShrineEditProvider} (admin-only, lazy)
@@ -16,8 +17,14 @@ export interface ShrineEditApi {
   editing: boolean;
   getField: (path: string) => string;
   setField: (path: string, value: string) => void;
+  /** Raw draft value at a path (no string coercion) — for array/collection fields. */
+  getValue: (path: string) => unknown;
+  /** Raw draft set at a path (no `"" → null` coercion) — for arrays and the prefecture/region strings. */
+  setValue: (path: string, value: unknown) => void;
   /** Index of a deity in the draft by its kanji name (the unique dedup key); -1 if absent. */
   findDeityIndex: (nameJa: string) => number;
+  /** Catalog option lists for the bounded dropdowns (ranks, categories, prefectures). */
+  catalogs: EditCatalogs;
 }
 
 export const ShrineEditContext = createContext<ShrineEditApi | null>(null);
@@ -79,15 +86,22 @@ export function EditableProse({
 }) {
   const api = useShrineEdit();
   if (!api?.editing) return <>{children}</>;
+  // Leaf segment of the dotted path = the DB column name (e.g. "details.history" → "history").
+  const fieldName = path.split(".").pop() ?? path;
   return (
-    <textarea
-      aria-label={ariaLabel}
-      value={api.getField(path)}
-      onChange={(e) => api.setField(path, e.target.value)}
-      rows={rows}
-      placeholder={placeholder}
-      className={`${editClassName ?? className ?? ""} ${editBase} block w-full border border-dashed border-torii/30 focus:border-torii p-2 resize-y`}
-    />
+    <span className="block">
+      <span className="mb-0.5 block text-[9px] font-mono uppercase tracking-wider text-stone/40">
+        {fieldName}
+      </span>
+      <textarea
+        aria-label={ariaLabel}
+        value={api.getField(path)}
+        onChange={(e) => api.setField(path, e.target.value)}
+        rows={rows}
+        placeholder={placeholder}
+        className={`${editClassName ?? className ?? ""} ${editBase} block w-full border border-dashed border-torii/30 focus:border-torii p-2 resize-y`}
+      />
+    </span>
   );
 }
 

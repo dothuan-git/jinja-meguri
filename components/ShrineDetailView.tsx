@@ -18,7 +18,7 @@ import {
   Pencil,
   Sparkles,
 } from "lucide-react";
-import type { ShrineDetail } from "@/lib/types";
+import type { ShrineDetail, EditCatalogs } from "@/lib/types";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
@@ -28,6 +28,7 @@ import {
   EditableProse,
   EditableSelect,
 } from "@/components/shrineEdit/context";
+import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
 
 // Admin-only in-place editor; lazily loaded so its draft/toast/save chunk ships
 // only when an admin actually enters edit mode, keeping the public bundle lean.
@@ -37,6 +38,7 @@ const ShrineEditProvider = dynamic(() => import("@/components/shrineEdit/ShrineE
 
 export interface ShrineDetailEditor {
   initialData: ShrineInput;
+  catalogs: EditCatalogs;
 }
 import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
 import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
@@ -186,6 +188,7 @@ export default function ShrineDetailView({
     return (
       <ShrineEditProvider
         initialData={editor.initialData}
+        catalogs={editor.catalogs}
         onCancel={() => setEditing(false)}
         onSaved={(savedSlug) => {
           setEditing(false);
@@ -384,15 +387,17 @@ function PageBody({
         {/* Fast Facts Row (Subtle layout with typography blocks, no frames) */}
         <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
           <div className="flex-1 space-y-2 max-w-2xl">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
-              {shrine.ranks.map((rank, i) => (
-                <span key={rank} className="inline-flex items-center gap-1">
-                  {i > 0 && <span className="opacity-30">|</span>}
-                  {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                  <span>{rank}</span>
-                </span>
-              ))}
-            </div>
+            <EditableChips kind="ranks">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+                {shrine.ranks.map((rank, i) => (
+                  <span key={rank} className="inline-flex items-center gap-1">
+                    {i > 0 && <span className="opacity-30">|</span>}
+                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                    <span>{rank}</span>
+                  </span>
+                ))}
+              </div>
+            </EditableChips>
 
             <h2 className="text-xl md:text-2xl font-serif font-black text-stone select-text">
               <EditableText
@@ -413,7 +418,26 @@ function PageBody({
                       aria-label="City"
                       className="inline-block w-28 bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
                     />
-                    {shrine.prefecture ? `, ${shrine.prefecture}` : ""})
+                    {", "}
+                    <select
+                      value={edit!.getField("prefecture")}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        // Keep region consistent: each prefecture belongs to one region.
+                        const pref = edit!.catalogs.prefectures.find((p) => p.name_en === v);
+                        edit!.setValue("prefecture", v);
+                        edit!.setValue("region", pref?.region ?? "");
+                      }}
+                      aria-label="Prefecture"
+                      className="inline-block bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
+                    >
+                      {edit!.catalogs.prefectures.map((p) => (
+                        <option key={p.name_en} value={p.name_en}>
+                          {p.name_en}
+                        </option>
+                      ))}
+                    </select>
+                    )
                   </>
                 ) : (
                   `(${[shrine.location, shrine.prefecture].filter(Boolean).join(", ") || "Japan"})`
@@ -424,7 +448,7 @@ function PageBody({
             {(editing || shrine.quote) && (
               <EditableProse
                 path="details.quote"
-                rows={2}
+                rows={4}
                 ariaLabel="Quote"
                 placeholder="Short evocative quote…"
                 editClassName="w-full text-base font-quote italic text-stone/85"
@@ -527,18 +551,20 @@ function PageBody({
                 </h3>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 pt-1 select-none">
-                {shrine.prayerFocus.map((focus) => (
-                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                    {focus}
-                  </span>
-                ))}
-              </div>
+              <EditableChips kind="prayerCategories">
+                <div className="flex flex-wrap gap-1.5 pt-1 select-none">
+                  {shrine.prayerFocus.map((focus) => (
+                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                      {focus}
+                    </span>
+                  ))}
+                </div>
+              </EditableChips>
 
               {/* Editorial styled highlight content text */}
               <EditableProse
                 path="details.prayer_focus"
-                rows={2}
+                rows={4}
                 ariaLabel="Prayer focus"
                 placeholder="What this shrine is prayed to for…"
                 editClassName="w-full text-base font-quote italic text-stone/85"
@@ -551,7 +577,7 @@ function PageBody({
               <p className={`${typo.prose} select-text`}>
                 <EditableProse
                   path="details.description"
-                  rows={4}
+                  rows={7}
                   ariaLabel="Description"
                   placeholder="Why visit — the shrine's draw and atmosphere…"
                   editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
@@ -632,7 +658,7 @@ function PageBody({
                       <span className={`${typo.fieldLabel} block select-none`}>Regional Lore & Sacred Origins</span>
                       <EditableProse
                         path={`deities.${primaryDeityIndex}.regional_lore`}
-                        rows={3}
+                        rows={5}
                         ariaLabel="Primary deity regional lore"
                         placeholder="Regional lore & sacred origins for this deity here…"
                         editClassName="w-full text-xs md:text-sm font-quote italic text-stone/75"
@@ -706,7 +732,7 @@ function PageBody({
                                 <textarea
                                   value={edit!.getField(`deities.${di}.regional_lore`)}
                                   onChange={(e) => edit!.setField(`deities.${di}.regional_lore`, e.target.value)}
-                                  rows={2}
+                                  rows={4}
                                   placeholder="Regional lore for this companion deity…"
                                   aria-label={`Regional lore for ${d.name}`}
                                   className="block w-full bg-torii/[0.03] outline-none border border-dashed border-torii/30 focus:border-torii rounded-md p-2 resize-y text-xs md:text-sm font-quote italic text-stone/75"
@@ -758,7 +784,7 @@ function PageBody({
               <div className="space-y-4 select-text">
                 <EditableProse
                   path="details.history"
-                  rows={6}
+                  rows={10}
                   ariaLabel="History"
                   placeholder="Historical background of the shrine…"
                   editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
@@ -770,17 +796,19 @@ function PageBody({
               </div>
 
               {/* References citations segment */}
-              {shrine.sources && shrine.sources.length > 0 && (
+              {(editing || (shrine.sources && shrine.sources.length > 0)) && (
                 <div className="pt-4 border-t border-stone/10 select-none">
                   <span className={`${typo.fieldLabel} block mb-1.5`}>HISTORICAL REFERENCES</span>
-                  <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
-                    {shrine.sources.map(source => (
-                      <div key={source} className="flex items-center gap-1.5">
-                        <FileText size={11} className="text-torii/40 shrink-0" />
-                        <span>{source}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <EditableSources>
+                    <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
+                      {shrine.sources.map(source => (
+                        <div key={source} className="flex items-center gap-1.5">
+                          <FileText size={11} className="text-torii/40 shrink-0" />
+                          <span>{source}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </EditableSources>
                 </div>
               )}
             </div>
@@ -864,7 +892,7 @@ function PageBody({
                     {/* Main Narrative — flows beautifully as professional typography */}
                     <EditableProse
                       path={`festivals.${idx}.meaning`}
-                      rows={5}
+                      rows={8}
                       ariaLabel="Festival meaning"
                       placeholder="What the festival means / its significance…"
                       editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
@@ -887,7 +915,7 @@ function PageBody({
                         </h5>
                         <EditableProse
                           path={`festivals.${idx}.ritual`}
-                          rows={3}
+                          rows={5}
                           ariaLabel="Festival ritual"
                           placeholder="Ceremonies & rituals…"
                           editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
@@ -906,7 +934,7 @@ function PageBody({
                           </h5>
                           <EditableProse
                             path={`festivals.${idx}.prayer`}
-                            rows={3}
+                            rows={5}
                             ariaLabel="Festival prayer"
                             placeholder="Prayers & intentions…"
                             editClassName="w-full text-xs md:text-sm font-quote italic text-stone/75"
@@ -922,13 +950,13 @@ function PageBody({
                     {/* Pilgrim Advisory - minimalist subtle card to separate it clearly as an instruction */}
                     <div className="bg-stone/5 px-4 py-3 border border-stone/10 rounded-sm flex items-start gap-2.5">
                       <Compass size={14} className="text-torii-dark/70 mt-0.5 shrink-0" />
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <span className={`${typo.fieldLabel} block mb-1 select-none`}>
                           Visitor Tips & Etiquette
                         </span>
                         <EditableProse
                           path={`festivals.${idx}.visitor_notes`}
-                          rows={2}
+                          rows={4}
                           ariaLabel="Festival visitor notes"
                           placeholder="Visitor tips & etiquette…"
                           editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
@@ -1077,7 +1105,7 @@ function PageBody({
                   <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
                   <EditableProse
                     path="details.best_time"
-                    rows={2}
+                    rows={4}
                     ariaLabel="Best time to visit"
                     placeholder="Best season / time of day to visit…"
                     editClassName="w-full text-xs md:text-sm font-sans text-stone/80"

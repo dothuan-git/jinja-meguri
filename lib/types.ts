@@ -116,6 +116,14 @@ export interface Store {
   festival_occurrences: FestivalOccurrenceRow[];
 }
 
+// Catalog option lists fed to the admin in-place editor so its dropdowns
+// (ranks, prayer categories, prefectures) can offer every valid catalog value.
+export interface EditCatalogs {
+  ranks: string[]; // all rank name_en, ordered by rank_order
+  prayerCategories: string[]; // all category name_en
+  prefectures: { name_en: string; region: string }[]; // all 47 + their region name_en
+}
+
 // --- View models (what the UI consumes) ---
 export interface RankView {
   name_en: string;
