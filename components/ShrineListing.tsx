@@ -12,7 +12,9 @@ import {
   ArrowUpDown,
   Compass,
   Filter,
+  Plus,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
@@ -44,7 +46,7 @@ const PARAM_KEY: Record<Exclude<keyof Filters, "searchQuery">, string> = {
   deity: "deity",
 };
 
-export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; facets: FacetCatalogs }) {
+export default function ShrineListing({ cards, facets, isAdmin }: { cards: ShrineCard[]; facets: FacetCatalogs; isAdmin?: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -752,6 +754,25 @@ export default function ShrineListing({ cards, facets }: { cards: ShrineCard[]; 
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Admin Controls — floating pill mirroring the shrine detail page bar */}
+      {isAdmin && (
+        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+              Admin Controls
+            </span>
+            <span className="text-stone/25 font-mono select-none text-xs">|</span>
+            <Link
+              href="/shrines/new"
+              className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
+            >
+              <Plus size={12} className="transition-transform group-hover:rotate-90" />
+              <span>Add shrine</span>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

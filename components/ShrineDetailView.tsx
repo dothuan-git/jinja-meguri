@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import {
   ArrowLeft,
@@ -11,37 +13,45 @@ import {
   Crown,
   ExternalLink,
   FileText,
+  Lock,
   Map,
   MapPin,
+  Pencil,
   Sparkles,
+  Trash2,
 } from "lucide-react";
-import type { ShrineDetail } from "@/lib/types";
+import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
+import { buildEmbedUrl } from "@/lib/maps";
+import type { ShrineInput } from "@/lib/admin/shrineContract";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import {
+  useShrineEdit,
+  EditableText,
+  EditableProse,
+} from "@/components/shrineEdit/context";
+import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
+import LocationEditPopup from "@/components/shrineEdit/LocationEditPopup";
+import DeleteShrinePopup from "@/components/shrineEdit/DeleteShrinePopup";
+
+// Admin-only in-place editor; lazily loaded so its draft/toast/save chunk ships
+// only when an admin actually enters edit mode, keeping the public bundle lean.
+const ShrineEditProvider = dynamic(() => import("@/components/shrineEdit/ShrineEditProvider"), {
+  ssr: false,
+});
+
+export interface ShrineDetailEditor {
+  initialData: ShrineInput;
+  catalogs: EditCatalogs;
+  /** "create" mounts the editor immediately on an empty draft; default "update". */
+  mode?: "create" | "update";
+}
 import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
 import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
-
-// Canonical compact chip style shared with the shrine listing (table + cards)
-// so category and rank tags read identically across every view. Color classes
-// come from lib/facetColors.
-const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
-
-// One canonical class string per text role. Used by both PageBody and
-// ModalBody so the same content reads identically in page and modal.
-// Role split: serif = headings/quotes/lore · sans = informational prose
-// · mono = labels/meta. Layout utilities (spacing, whitespace, select-*)
-// stay inline at the call site, composed via template strings.
-const typo = {
-  eyebrow: "text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-moss-light",
-  sectionTitle: "text-2xl font-serif font-black text-stone",
-  subheading: "text-xl md:text-xl font-serif font-black text-stone leading-tight",
-  subheadingSm: "text-sm md:text-base font-serif font-black text-stone leading-tight",
-  fieldLabel: "text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50",
-  prose: "text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify",
-  quote: "text-base font-quote italic text-stone/85 leading-relaxed border-l-2 border-torii/30 pl-4",
-  lore: "text-xs md:text-sm font-quote italic text-stone/75 leading-relaxed border-l border-moss/20 pl-3.5",
-  meta: "text-xs font-mono text-stone/50 tracking-wide",
-} as const;
+import { CHIP, typo } from "@/components/shrineEdit/detailStyles";
+import DeityCreateEditor from "@/components/shrineEdit/DeityCreateEditor";
+import FestivalCreateEditor from "@/components/shrineEdit/FestivalCreateEditor";
+import FestivalBlock from "@/components/shrineEdit/FestivalBlock";
 
 function primaryOf(shrine: ShrineDetail) {
   return shrine.deities.find((d) => d.is_primary) ?? shrine.deities[0] ?? null;
@@ -86,7 +96,9 @@ function toView(shrine: ShrineDetail) {
     festivals: shrine.festivals.map((f) => ({
       id: f.id,
       name: f.name_en,
+      name_ja: f.name_ja ?? "",
       time: f.time_prose ?? "",
+      origin: f.origin ?? "",
       meaning: f.meaning ?? "",
       ritual: f.ritual ?? "",
       prayer: f.prayer ?? "",
@@ -96,6 +108,8 @@ function toView(shrine: ShrineDetail) {
       },
     })),
     sources: shrine.sources.map((s) => s.title ?? s.url),
+    coordinates: shrine.coordinates,
+    address: shrine.address,
   };
 }
 
@@ -151,20 +165,89 @@ function CollapsibleLore({
 export default function ShrineDetailView({
   shrine,
   variant,
+  editor,
 }: {
   shrine: ShrineDetail;
   variant: "modal" | "page";
+  editor?: ShrineDetailEditor;
 }) {
+  const [editing, setEditing] = useState(false);
+  const router = useRouter();
+  const creating = editor?.mode === "create";
+
   if (variant === "modal") return <ModalBody view={toView(shrine)} />;
-  return <PageBody view={toView(shrine)} />;
+
+  // Create flow: mount the editor immediately on an empty draft (no read view).
+  if (creating && editor) {
+    return (
+      <ShrineEditProvider
+        initialData={editor.initialData}
+        catalogs={editor.catalogs}
+        mode="create"
+        onCancel={() => router.push("/shrines")}
+        onSaved={(savedSlug) => router.push(`/shrines/${savedSlug}`)}
+      >
+        <PageBody view={toView(shrine)} />
+      </ShrineEditProvider>
+    );
+  }
+
+  if (editing && editor) {
+    return (
+      <ShrineEditProvider
+        initialData={editor.initialData}
+        catalogs={editor.catalogs}
+        mode="update"
+        onCancel={() => setEditing(false)}
+        onSaved={(savedSlug) => {
+          setEditing(false);
+          // Slug isn't editable in place; refresh re-runs the force-dynamic server
+          // component to pull freshly-saved data into the read view.
+          if (savedSlug !== shrine.slug) router.push(`/shrines/${savedSlug}`);
+          else router.refresh();
+        }}
+      >
+        <PageBody view={toView(shrine)} />
+      </ShrineEditProvider>
+    );
+  }
+
+  return (
+    <PageBody
+      view={toView(shrine)}
+      canEdit={Boolean(editor)}
+      onEdit={() => setEditing(true)}
+    />
+  );
 }
 
 /* ===================================================================== */
 /* PAGE VARIANT — 6-section editorial page (source: ShrineDetailPage)    */
 /* ===================================================================== */
 
-function PageBody({ view: shrine }: { view: View }) {
+function PageBody({
+  view: shrine,
+  canEdit,
+  onEdit,
+}: {
+  view: View;
+  canEdit?: boolean;
+  onEdit?: () => void;
+}) {
   const [activeSection, setActiveSection] = useState("overview");
+
+  // In-place edit API (null on the public/read path → every primitive is inert).
+  const edit = useShrineEdit();
+  const editing = Boolean(edit?.editing);
+  const creating = edit?.mode === "create";
+  const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.japaneseName) : -1;
+
+  const [locationPopupOpen, setLocationPopupOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  // In edit mode, derive map coordinates from the live draft so Apply reflects immediately.
+  const mapCoordinates = editing
+    ? (edit?.getValue("coordinates") as Coordinates | null)
+    : shrine.coordinates;
 
   // Goshuin Stamp local interactive state
   const [stampReceived, setStampReceived] = useState<string | null>(null);
@@ -288,9 +371,16 @@ function PageBody({ view: shrine }: { view: View }) {
           {/* Elegant overlay vertical seal */}
           <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 text-white z-10 pointer-events-none">
             <span className="text-[10px] uppercase font-mono tracking-[0.25em] opacity-80 block mb-1">{shrine.prefecture} PREFECTURE</span>
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none text-white drop-shadow-xs select-text">
-              {shrine.name}
-            </h1>
+            <EditableText
+              path="name_en"
+              ariaLabel="Shrine name (English)"
+              placeholder="Shrine name (English)"
+              editClassName="w-full max-w-2xl text-2xl md:text-4xl font-serif font-black tracking-tight leading-none text-white bg-stone/60 backdrop-blur-sm pointer-events-auto"
+            >
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none text-white drop-shadow-xs select-text">
+                {shrine.name}
+              </h1>
+            </EditableText>
           </div>
 
           <div
@@ -304,27 +394,107 @@ function PageBody({ view: shrine }: { view: View }) {
         {/* Fast Facts Row (Subtle layout with typography blocks, no frames) */}
         <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
           <div className="flex-1 space-y-2 max-w-2xl">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
-              {shrine.ranks.map((rank, i) => (
-                <span key={rank} className="inline-flex items-center gap-1">
-                  {i > 0 && <span className="opacity-30">|</span>}
-                  {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                  <span>{rank}</span>
-                </span>
-              ))}
-            </div>
+            <EditableChips kind="ranks" label="Ranks">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+                {shrine.ranks.map((rank, i) => (
+                  <span key={rank} className="inline-flex items-center gap-1">
+                    {i > 0 && <span className="opacity-30">|</span>}
+                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                    <span>{rank}</span>
+                  </span>
+                ))}
+              </div>
+            </EditableChips>
 
             <h2 className="text-xl md:text-2xl font-serif font-black text-stone select-text">
-              {shrine.japaneseName}{" "}
+              <EditableText
+                path="name_ja"
+                ariaLabel="Shrine name (Japanese)"
+                placeholder="社名（漢字）"
+                editClassName="w-64 max-w-full text-xl md:text-2xl font-serif font-black text-stone"
+              >
+                <>{shrine.japaneseName}</>
+              </EditableText>{" "}
               <span className="text-xs font-sans tracking-widest font-normal text-stone/40 ml-1.5">
-                ({[shrine.location, shrine.prefecture].filter(Boolean).join(", ") || "Japan"})
+                {editing ? (
+                  <>
+                    (
+                    <input
+                      value={edit!.getField("city")}
+                      onChange={(e) => edit!.setField("city", e.target.value)}
+                      placeholder="City"
+                      aria-label="City"
+                      className="inline-block w-28 bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
+                    />
+                    {", "}
+                    <select
+                      value={edit!.getField("prefecture")}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        // Keep region consistent: each prefecture belongs to one region.
+                        const pref = edit!.catalogs.prefectures.find((p) => p.name_en === v);
+                        edit!.setValue("prefecture", v);
+                        edit!.setValue("region", pref?.region ?? "");
+                      }}
+                      aria-label="Prefecture"
+                      className="inline-block bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
+                    >
+                      {creating && (
+                        <option value="" disabled>
+                          — prefecture —
+                        </option>
+                      )}
+                      {edit!.catalogs.prefectures.map((p) => (
+                        <option key={p.name_en} value={p.name_en}>
+                          {p.name_en}
+                        </option>
+                      ))}
+                    </select>
+                    )
+                  </>
+                ) : (
+                  `(${[shrine.location, shrine.prefecture].filter(Boolean).join(", ") || "Japan"})`
+                )}
               </span>
             </h2>
 
-            {shrine.quote && (
-              <p className={typo.quote}>
-                “{shrine.quote}”
-              </p>
+            {editing && !creating && (
+              <div className="flex items-center gap-1.5 select-none pointer-events-none">
+                <Lock size={11} className="text-stone/35 shrink-0" />
+                <span className="text-[10px] font-mono text-stone/40 tracking-wide">
+                  URL slug: <span className="text-stone/60 font-semibold">{edit!.getValue("slug") as string}</span>
+                </span>
+              </div>
+            )}
+
+            {creating && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono text-stone/40 tracking-wide select-none">URL slug:</span>
+                <input
+                  value={edit!.getField("slug")}
+                  onChange={(e) =>
+                    // Slugs are lowercase letters, digits and hyphens only (contract regex).
+                    edit!.setValue("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
+                  }
+                  placeholder="my-shrine-name"
+                  aria-label="URL slug"
+                  className="w-56 max-w-full bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-[11px] font-mono text-stone/70"
+                />
+              </div>
+            )}
+
+            {(editing || shrine.quote) && (
+              <EditableProse
+                path="details.quote"
+                rows={4}
+                ariaLabel="Quote"
+                placeholder="Short evocative quote…"
+                editClassName="w-full text-base font-quote italic text-stone/85"
+              >
+                <p className={typo.quote}>
+                  “{shrine.quote}”
+                </p>
+              </EditableProse>
             )}
           </div>
         </div>
@@ -348,7 +518,7 @@ function PageBody({ view: shrine }: { view: View }) {
               { id: "festivals", label: "Sacred Festivals", kanji: "祭" },
               { id: "pilgrimage", label: "Sacred Stamp", kanji: "印" },
               { id: "location", label: "Transit & Geography", kanji: "地" },
-            ].map(sec => {
+            ].filter((sec) => !creating || sec.id !== "pilgrimage").map(sec => {
               const isActive = activeSection === sec.id;
               return (
                 <li key={sec.id}>
@@ -419,21 +589,39 @@ function PageBody({ view: shrine }: { view: View }) {
                 </h3>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 pt-1 select-none">
-                {shrine.prayerFocus.map((focus) => (
-                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                    {focus}
-                  </span>
-                ))}
-              </div>
+              <EditableChips kind="prayerCategories" label="Prayer categories">
+                <div className="flex flex-wrap gap-1.5 pt-1 select-none">
+                  {shrine.prayerFocus.map((focus) => (
+                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                      {focus}
+                    </span>
+                  ))}
+                </div>
+              </EditableChips>
 
               {/* Editorial styled highlight content text */}
-              <div className={`${typo.quote} py-4 select-text`}>
-                “{shrine.prayerFocusText}”
-              </div>
+              <EditableProse
+                path="details.prayer_focus"
+                rows={4}
+                ariaLabel="Prayer focus"
+                placeholder="What this shrine is prayed to for…"
+                editClassName="w-full text-base font-quote italic text-stone/85"
+              >
+                <div className={`${typo.quote} py-4 select-text`}>
+                  “{shrine.prayerFocusText}”
+                </div>
+              </EditableProse>
 
               <p className={`${typo.prose} select-text`}>
-                {shrine.description} Each pilgrimage to {shrine.name} reinforces the spiritual tie (en) between humanity and the subtle forces of nature, aligning ancestral customs with personal mindfulness.
+                <EditableProse
+                  path="details.description"
+                  rows={7}
+                  ariaLabel="Description"
+                  placeholder="Why visit — the shrine's draw and atmosphere…"
+                  editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
+                >
+                  <>{shrine.description}</>
+                </EditableProse>{" "}
               </p>
             </div>
           </section>
@@ -459,6 +647,10 @@ function PageBody({ view: shrine }: { view: View }) {
 
               <div className="space-y-6">
 
+                {creating ? (
+                  <DeityCreateEditor />
+                ) : (
+                <>
                 {/* Primary Deity (Matches ShrineDetailModal beautiful card layout) */}
                 <div className="bg-washi/70 hover:bg-washi transition-colors duration-300 rounded-2xl p-6 md:p-8 border border-moss/8 shadow-3xs space-y-5">
                   <div>
@@ -503,12 +695,20 @@ function PageBody({ view: shrine }: { view: View }) {
                   </div>
 
                   {/* Regional origins lore notes */}
-                  {shrine.primaryDeity.regionalLore && (
+                  {(editing ? primaryDeityIndex >= 0 : Boolean(shrine.primaryDeity.regionalLore)) && (
                     <div className="pt-3 border-t border-dashed border-moss/10 space-y-1">
                       <span className={`${typo.fieldLabel} block select-none`}>Regional Lore & Sacred Origins</span>
-                      <p className={`${typo.lore} text-justify whitespace-pre-line`}>
-                        {shrine.primaryDeity.regionalLore}
-                      </p>
+                      <EditableProse
+                        path={`deities.${primaryDeityIndex}.regional_lore`}
+                        rows={5}
+                        ariaLabel="Primary deity regional lore"
+                        placeholder="Regional lore & sacred origins for this deity here…"
+                        editClassName="w-full text-xs md:text-sm font-quote italic text-stone/75"
+                      >
+                        <p className={`${typo.lore} text-justify whitespace-pre-line`}>
+                          {shrine.primaryDeity.regionalLore}
+                        </p>
+                      </EditableProse>
                     </div>
                   )}
                 </div>
@@ -560,18 +760,45 @@ function PageBody({ view: shrine }: { view: View }) {
                       </div>
 
                       {/* Unified Single Lore for all Companion Deities */}
-                      {shrine.secondaryDeities.some(d => d.regionalLore) && (
-                        <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
+                      {editing ? (
+                        <div className="pt-4 border-t border-dashed border-stone/10 space-y-3">
                           <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
-                          <div className={`${typo.lore} text-justify space-y-2`}>
-                            {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
-                              <p key={lIdx} className="whitespace-pre-line">{lore}</p>
-                            ))}
-                          </div>
+                          {shrine.secondaryDeities.map((d) => {
+                            const di = edit!.findDeityIndex(d.japaneseName);
+                            if (di < 0) return null;
+                            return (
+                              <div key={d.japaneseName} className="space-y-1">
+                                <span className="text-[10px] font-serif text-stone/60 block">
+                                  {d.name}{d.japaneseName ? ` (${d.japaneseName})` : ""}
+                                </span>
+                                <textarea
+                                  value={edit!.getField(`deities.${di}.regional_lore`)}
+                                  onChange={(e) => edit!.setField(`deities.${di}.regional_lore`, e.target.value)}
+                                  rows={4}
+                                  placeholder="Regional lore for this companion deity…"
+                                  aria-label={`Regional lore for ${d.name}`}
+                                  className="block w-full bg-torii/[0.03] outline-none border border-dashed border-torii/30 focus:border-torii rounded-md p-2 resize-y text-xs md:text-sm font-quote italic text-stone/75"
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
+                      ) : (
+                        shrine.secondaryDeities.some(d => d.regionalLore) && (
+                          <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
+                            <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
+                            <div className={`${typo.lore} text-justify space-y-2`}>
+                              {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
+                                <p key={lIdx} className="whitespace-pre-line">{lore}</p>
+                              ))}
+                            </div>
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
+                )}
+                </>
                 )}
 
               </div>
@@ -599,26 +826,33 @@ function PageBody({ view: shrine }: { view: View }) {
 
               {/* Dynamic Drop Cap stylings like a real book, letting text flow without boxes */}
               <div className="space-y-4 select-text">
-                <p className={`${typo.prose} first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1`}>
-                  {shrine.about}
-                </p>
-                <p className={`${typo.prose} pt-1`}>
-                  The physical wood architecture itself reflects standard Jinja styling, resisting weather patterns through continuous Shikinen Sengu reconstructions or traditional conservation methods, preserving early structural wisdom for visitors to observe.
-                </p>
+                <EditableProse
+                  path="details.history"
+                  rows={10}
+                  ariaLabel="History"
+                  placeholder="Historical background of the shrine…"
+                  editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
+                >
+                  <p className={`${typo.prose} first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1`}>
+                    {shrine.about}
+                  </p>
+                </EditableProse>
               </div>
 
               {/* References citations segment */}
-              {shrine.sources && shrine.sources.length > 0 && (
+              {(editing || (shrine.sources && shrine.sources.length > 0)) && (
                 <div className="pt-4 border-t border-stone/10 select-none">
                   <span className={`${typo.fieldLabel} block mb-1.5`}>HISTORICAL REFERENCES</span>
-                  <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
-                    {shrine.sources.map(source => (
-                      <div key={source} className="flex items-center gap-1.5">
-                        <FileText size={11} className="text-torii/40 shrink-0" />
-                        <span>{source}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <EditableSources>
+                    <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
+                      {shrine.sources.map(source => (
+                        <div key={source} className="flex items-center gap-1.5">
+                          <FileText size={11} className="text-torii/40 shrink-0" />
+                          <span>{source}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </EditableSources>
                 </div>
               )}
             </div>
@@ -645,91 +879,19 @@ function PageBody({ view: shrine }: { view: View }) {
 
               {/* Festival listings - elegant box-free editorial design */}
               <div className="space-y-16">
-                {shrine.festivals.map((fest, idx) => (
-                  <div
-                    key={fest.id}
-                    className="group relative space-y-6 pt-8 border-t border-stone/10 first:border-t-0 first:pt-0 transition-all"
-                  >
-                    {/* Editorial Header */}
-                    <div className="space-y-3">
-                      <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2 border-b border-stone/5 pb-2">
-                        <div className="flex items-baseline gap-2.5 flex-wrap">
-                          <span className="font-mono text-xs text-torii-dark font-bold tracking-widest select-none">
-                            0{idx + 1} //
-                          </span>
-                          <h4 className={`${typo.subheading} tracking-wide select-text`}>
-                            {fest.name}
-                          </h4>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest font-bold text-stone/50 uppercase select-none shrink-0">
-                          <Calendar size={13} className="text-stone/40" />
-                          <span>{fest.time}</span>
-                        </div>
-                      </div>
-
-                      {/* Accent Metadata line */}
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest uppercase font-bold text-stone/40 select-none">
-                        <span>Ritual Type //</span>
-                        <span className="text-torii-dark bg-torii/5 border border-torii/10 px-1.5 py-0.5 rounded-sm">
-                          {FESTIVAL_TYPE_LABEL[fest.type.category] ?? fest.type.category}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Main Narrative — flows beautifully as professional typography */}
-                    <div className="space-y-4 text-justify select-text">
-                      {fest.meaning.split('\n\n').map((paragraph, pIdx) => (
-                        <p key={pIdx} className={typo.prose}>
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-
-                    {/* Ritual Sequence & Pilgrim Aspirations - Clean columns with accent left lines rather than cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
-                      <div className="space-y-2">
-                        <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-moss-light/40"></span>
-                          Ceremonies & Rituals
-                        </h5>
-                        <p className={`${typo.prose} pl-3.5 border-l border-stone/15 select-text`}>
-                          {fest.ritual}
-                        </p>
-                      </div>
-
-                      {fest.prayer && (
-                        <div className="space-y-2">
-                          <h5 className={`${typo.eyebrow} flex items-center gap-2 select-none`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-torii"></span>
-                            Prayers & Intentions
-                          </h5>
-                          <p className={`${typo.lore} text-justify select-text`}>
-                            {fest.prayer}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Pilgrim Advisory - minimalist subtle card to separate it clearly as an instruction */}
-                    <div className="bg-stone/5 px-4 py-3 border border-stone/10 rounded-sm flex items-start gap-2.5">
-                      <Compass size={14} className="text-torii-dark/70 mt-0.5 shrink-0" />
-                      <div>
-                        <span className={`${typo.fieldLabel} block mb-1 select-none`}>
-                          Visitor Tips & Etiquette
-                        </span>
-                        <p className={`${typo.prose} select-text`}>
-                          {fest.type.notes}
-                        </p>
-                      </div>
-                    </div>
-
-                  </div>
-                ))}
+                {creating ? (
+                  <FestivalCreateEditor />
+                ) : (
+                  shrine.festivals.map((fest, idx) => (
+                    <FestivalBlock key={fest.id} fest={fest} idx={idx} />
+                  ))
+                )}
               </div>
             </div>
           </section>
 
-          {/* SECTION 5: PILGRIM SEALS (ONLY THE INTERACTIVE GOSHUIN STAMP) */}
+          {/* SECTION 5: PILGRIM SEALS (ONLY THE INTERACTIVE GOSHUIN STAMP) — n/a for an unsaved new shrine */}
+          {!creating && (
           <section
             id="pilgrimage"
             ref={sectionRefs.pilgrimage}
@@ -828,6 +990,7 @@ function PageBody({ view: shrine }: { view: View }) {
 
             </div>
           </section>
+          )}
 
           {/* SECTION 6: GEOGRAPHY MAP */}
           <section
@@ -848,30 +1011,59 @@ function PageBody({ view: shrine }: { view: View }) {
                 </h3>
               </div>
 
-              <div className="space-y-2 select-text">
-                <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
-                <p className={typo.prose}>
-                  Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
-                </p>
-              </div>
-
-              {shrine.bestTime && (
+              {!creating && (
                 <div className="space-y-2 select-text">
-                  <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
+                  <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
                   <p className={typo.prose}>
-                    {shrine.bestTime}
+                    Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
                   </p>
                 </div>
               )}
 
-              {/* Seamless map window, border eliminated */}
-              <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-2xs bg-stone/5 border border-stone/10 group select-none">
-                <iframe
-                  className="w-full h-full border-0 absolute inset-0 transition-opacity filter saturate-75 hover:saturate-100"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(shrine.name + " " + shrine.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                  title={`Geography chart of ${shrine.name}`}
-                  loading="lazy"
-                />
+              {(editing || shrine.bestTime) && (
+                <div className="space-y-2 select-text">
+                  <span className={`${typo.fieldLabel} block select-none`}>Best Time to Visit</span>
+                  <EditableProse
+                    path="details.best_time"
+                    rows={4}
+                    ariaLabel="Best time to visit"
+                    placeholder="Best season / time of day to visit…"
+                    editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
+                  >
+                    <p className={typo.prose}>
+                      {shrine.bestTime}
+                    </p>
+                  </EditableProse>
+                </div>
+              )}
+
+              {/* Seamless map window — outer wrapper lets popup escape overflow:hidden */}
+              <div className="relative">
+                <div className="relative w-full h-72 rounded-xl overflow-hidden shadow-2xs bg-stone/5 border border-stone/10 group select-none">
+                  <iframe
+                    className="w-full h-full border-0 absolute inset-0 transition-opacity filter saturate-75 hover:saturate-100"
+                    src={buildEmbedUrl({ coordinates: mapCoordinates, name: shrine.name, city: shrine.location || null })}
+                    title={`Geography chart of ${shrine.name}`}
+                    loading="lazy"
+                  />
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={() => setLocationPopupOpen(true)}
+                      aria-label="Edit address and coordinates"
+                      className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-lg border border-torii/40 bg-sand/90 backdrop-blur-sm px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-torii shadow-sm hover:bg-torii hover:text-white transition-colors pointer-events-auto"
+                    >
+                      <MapPin size={11} />
+                      <span>Location</span>
+                    </button>
+                  )}
+                </div>
+                {editing && (
+                  <LocationEditPopup
+                    open={locationPopupOpen}
+                    onClose={() => setLocationPopupOpen(false)}
+                  />
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2 select-none">
@@ -892,6 +1084,39 @@ function PageBody({ view: shrine }: { view: View }) {
         </div>
 
       </div>
+
+      {canEdit && (
+        <>
+          <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+                Admin Controls
+              </span>
+              <span className="text-stone/25 font-mono select-none text-xs">|</span>
+              <button
+                onClick={onEdit}
+                className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
+              >
+                <Pencil size={12} className="transition-transform group-hover:rotate-12" />
+                <span>Edit</span>
+              </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="group flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-300 hover:bg-red-50"
+              >
+                <Trash2 size={12} className="transition-transform group-hover:scale-110" />
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+          <DeleteShrinePopup
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            slug={shrine.slug}
+            shrineName={shrine.name}
+          />
+        </>
+      )}
 
     </div>
   );
@@ -1081,7 +1306,14 @@ function ModalBody({ view: shrine }: { view: View }) {
                   {group.festivals.map((fest, fIdx) => (
                     <div key={fest.id} className={`space-y-2.5 ${fIdx > 0 ? "pt-5 border-t border-dashed border-moss/10" : ""}`}>
                       <div className="flex items-center justify-between gap-2.5 flex-wrap">
-                        <h5 className={typo.subheadingSm}>{fest.name}</h5>
+                        <h5 className={typo.subheadingSm}>
+                          {fest.name}
+                          {fest.name_ja && (
+                            <span className="text-xs font-serif font-medium text-moss/70 ml-1.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                              ({fest.name_ja})
+                            </span>
+                          )}
+                        </h5>
                         <span className="px-3 py-1 bg-torii/5 text-torii text-[10px] font-mono font-black tracking-widest rounded-lg border border-torii/15 inline-block text-center select-none shrink-0">
                           {fest.time}
                         </span>

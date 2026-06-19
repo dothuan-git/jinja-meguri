@@ -138,7 +138,9 @@ CREATE TABLE festivals (
     ritual        text,
     prayer        text,
     festival_type text CHECK (festival_type IN ('spectacle','pilgrimage')),
-    visitor_notes text
+    visitor_notes text,
+    UNIQUE (shrine_id, name_en)  -- stable identity: re-importing a shrine upserts festivals by name
+                                 -- (preserves festival_occurrences instead of cascade-deleting them)
 );
 
 CREATE INDEX idx_festivals_shrine ON festivals(shrine_id);

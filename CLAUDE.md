@@ -92,19 +92,50 @@ Pages are server components that hand pre-built data to client components:
 
 ### Admin section (dynamic, authenticated)
 
-`app/admin/*` is a private content-management area, not linked from the public site and
-excluded from indexing (`app/admin/layout.tsx` sets `robots: noindex`).
+Content management is **entirely in-place on the public surfaces** — admins see editing
+affordances on `/shrines`, `/shrines/[slug]`, `/deities`, and the create pages
+`/shrines/new` + `/deities/new`. There is no longer a dedicated `/admin/*` UI: the old
+dashboard, structured-form / JSON-import pages (shrines, deities, festival occurrences), and
+the sign-in pages were removed in favor of inline editing. **Sign-in is being re-implemented
+from scratch** — only the auth backend remains (see below); there is currently no login page.
 
-- **Auth:** Neon Auth (`@neondatabase/auth`) owns sign-in/sessions; the auth API handler is
+- **Auth:** Neon Auth (`@neondatabase/auth`) owns sessions; the auth API handler is
   `app/api/auth/[...path]/route.ts`. Authorization is a second layer — the signed-in email
   must appear in the `app_admin` allowlist table. Guards live in `lib/auth/server.ts`
-  (`requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions).
-- **Writes:** server actions in `app/admin/actions.ts` validate pasted JSON with Zod
-  (`lib/admin/shrineContract.ts`, `lib/admin/deityContract.ts`), then call runtime mutations
-  in `lib/db/mutations.ts` (transactional upsert/delete, deity dedup on `name_ja`,
-  catalog code→id resolution).
-- **Authoring aids:** `lib/admin/keyCompleteness.ts` checks a pasted object carries every
-  expected key; AI research prompts and example JSON live in `docs/ai-research/`.
+  (`requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions;
+  `getAdminEmail` gates the inline editing affordances on public pages). `middleware.ts`
+  refreshes the session cookie, but its matcher still targets `/admin/*` and needs revisiting
+  when sign-in is rebuilt.
+- **Writes:** server actions in `app/admin/actions.ts` (the directory now holds only this file)
+  validate a JSON envelope with Zod (`lib/admin/shrineContract.ts`, `lib/admin/deityContract.ts`),
+  then call runtime mutations in `lib/db/mutations.ts` (transactional upsert/delete, deity dedup
+  on `name_ja`, catalog code→id resolution). The inline editors serialize their draft
+  `ShrineInput`/`DeityInput` into that envelope.
+- **Authoring aids:** AI research prompts and example content live in `docs/ai-research/`.
+- **Shrines — in-place edit + create:** admins see an "Admin Controls" bar on the shrine detail
+  page (Edit/Delete) and on the listing (`/shrines`, "Add shrine"). Both reuse `ShrineDetailView`
+  + the lazy `components/shrineEdit/ShrineEditProvider` over a draft `ShrineInput`. The provider's
+  `mode` ("update" | "create") gates create-only behavior: `app/shrines/new/page.tsx`
+  (admin-guarded) mounts the editor immediately on `emptyShrineInput()`, with
+  `DeityCreateEditor`/`FestivalCreateEditor` adding draft-driven add/remove + a deity
+  link-or-create picker and an editable slug. `app/@modal/(.)shrines/new` returns null so the
+  listing→`/shrines/new` soft-nav isn't captured as a `slug=new` modal. Both edit and create save
+  through the same `useShrineSave` → `saveShrineAction` → `upsertShrine` pipeline.
+- **Deities — in-place edit + create on the `/deities` carousel.** Deities have no separate detail
+  route — the `/deities` carousel (`components/DeityListing.tsx`) is the deity surface. Admins get an
+  "Admin Controls" bar (Edit / Delete / + New deity) on the active card. Edit wraps the card's
+  `components/DeityCardBody` in the lazy `components/deityEdit/DeityEditProvider` over a draft
+  `DeityInput` (flat `draft`/`update` context — `components/deityEdit/context.tsx`), swapping the
+  canonical fields (name_en, name_ja, deity_type, titles, canonical_lore) to inputs in place; the
+  enshrined-sites zone stays read-only. `/deities/new` (admin-guarded, `DeityCreateView`) mounts the
+  same card on `emptyDeityInput()` in create mode. Both save through `useDeitySave` → `saveDeityAction`
+  → `upsertDeity`/`updateDeity`; delete uses `DeleteDeityPopup` → `deleteDeityAction`. Deep-links:
+  `/deities?deity=<id|name_ja>` focuses a deity, `&edit=1` opens it in edit mode. The floating
+  Save/Cancel bar is portaled to `<body>` so the carousel's Framer-Motion transform doesn't capture
+  `position: fixed`.
+- **Festival occurrences:** the yearly-date importer UI (`/admin/occurrences/new`) was removed;
+  the data layer (`upsertOccurrences` in `lib/db/mutations.ts`, `lib/admin/occurrenceContract.ts`)
+  is retained for a future re-implementation. Festival dates are otherwise seeded via the DB scripts.
 
 ### Maps
 
@@ -122,17 +153,22 @@ Vitest covers `lib/` only (pure logic). The `server-only` package is stubbed in 
 
 ### Adding / updating shrine & deity data
 
-Use the admin UI (`/admin`): paste contract-shaped JSON (see `docs/ai-research/` for the
-research prompts and examples) into the shrine or deity import form. Zod validation +
-the key-completeness check run before the data is upserted to Neon via `lib/db/mutations.ts`.
-The schema is in `docs/schema.sql`; catalogs are seeded by `docs/seed.sql`. There is no
-separate ingest script and no `data/` directory.
+**Shrines:** edit/create in place on the shrine detail layout — Edit/Delete on `/shrines/[slug]`,
+"Add shrine" on the listing, full create flow at `/shrines/new`. **Deities:** edit/create in place on
+the `/deities` carousel (Edit / + New deity) or `/deities/new`. There are no JSON-import or
+structured-form pages anymore; the research prompts in `docs/ai-research/` are still useful for
+gathering the canonical content you then enter in the fields. Zod validation runs before the data is
+upserted to Neon via `lib/db/mutations.ts`. The schema is in `docs/schema.sql`; catalogs are seeded by
+`docs/seed.sql`. There is no separate ingest script and no `data/` directory.
 
 **Authoring order & deferred fields** (see `docs/DATA_MODEL.md` §10 for detail):
 - **Deities are created first**, with `canonical_lore`. Then shrines link them by `name_ja`; the shrine's
   embedded `deities[].canonical` block is identity-only (no `canonical_lore`), so the shrine research
   flow never re-gathers deity lore.
-- **Festival `start_date`/`end_date` are deferred** — left null at shrine-research time (no date fields in
-  the shrine form/prompt). Yearly dates are uploaded later into `festival_occurrences`.
+- **Festival `start_date`/`end_date` are deferred in the shrine-research flow** — left null at
+  shrine-research time (no date fields in the prompt). Yearly dates land in `festival_occurrences`. The
+  **in-place create page** (`/shrines/new`) does collect them as default, year-agnostic month-day values
+  (stored `YYYY-MM-DD` with the current year as a placeholder). See `docs/DATA_MODEL.md` §10 for the
+  calendar read-path caveat.
 - The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
   on import; they are just not gathered by the shrine flow. Don't strip them.

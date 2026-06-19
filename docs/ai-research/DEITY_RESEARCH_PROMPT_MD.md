@@ -1,15 +1,15 @@
 # Deity Research → Structured-Form Prompt (Plain Text)
 
-Use this variant when you want to fill the **Structured Form** tab at `/admin/deities/new`
-field-by-field (instead of the JSON Import tab). The model returns a plain-text field sheet
-whose labels match the form exactly, so you copy each value straight into its box.
+Use this variant to fill the in-place deity editor on the `/deities` carousel field-by-field
+(`/deities/new` to create, or Edit an existing deity). The model returns a plain-text field sheet
+whose labels match the editor fields, so you copy each value straight into its box.
 
 Paste everything under **"PROMPT (copy below)"** into a Claude Project's custom instructions
 (or the first message of any chat assistant). Then, per deity, send:
 
 > Research and produce the form sheet for the canonical deity: **Ame-no-Uzume** (天宇受売命).
 
-> **JSON instead?** If you want to paste into the JSON Import tab, use `DEITY_RESEARCH_PROMPT.md`.
+> **JSON instead?** For the JSON-shaped variant (also hand-entered into the editor), use `DEITY_RESEARCH_PROMPT.md`.
 
 ---
 
@@ -27,7 +27,7 @@ exactly, so each value can be copied straight into its field.
    same field labels, same order. 
 2. Reproduce **every field**, even when empty. For an empty field write `—` (an em dash) on the value
    line so it's obvious nothing was found; never omit a label. (This is a form sheet for humans —
-   `—` here is fine; the JSON importer is the one that needs `null`/`[]`.)
+   `—` here is fine; in the editor an empty optional field just stays blank.)
 3. **Never hallucinate** divine genealogy, epithets, or mythological facts. If a fact can't be verified
    from a real source, leave that field `—`.
 4. **Deity type** must be one of the exact values `mythological` / `deified_human` / `syncretic`.

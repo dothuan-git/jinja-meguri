@@ -1,28 +1,76 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "motion/react";
 import {
   Search,
   Sparkles,
-  MapPin,
   X,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
-  ArrowUpRight
+  ArrowUpRight,
+  Pencil,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import type { DeityListItem } from "@/lib/types";
 import { fold } from "@/lib/search";
-import { DEITY_TYPE_LABEL } from "@/lib/labels";
-import { getDeityTypeTextColor } from "@/lib/facetColors";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import DeityCardBody, { type DeityCardData } from "@/components/DeityCardBody";
+import DeityEditProvider from "@/components/deityEdit/DeityEditProvider";
+import DeleteDeityPopup from "@/components/deityEdit/DeleteDeityPopup";
+import { deityListItemToInput } from "@/lib/admin/deityInput";
 
-export default function DeityListing({ deities }: { deities: DeityListItem[] }) {
+type Portfolio = DeityCardData & { id: string };
+
+export default function DeityListing({
+  deities,
+  isAdmin = false,
+}: {
+  deities: DeityListItem[];
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // 1. Map the pre-sorted DeityListItem[] into the portfolio shape the JSX consumes.
+  // Index correspondence with `deities` is preserved (plain .map), so currentIndex
+  // also indexes the original list for edit pre-fill / id / delete.
+  const deitiesList = useMemo<Portfolio[]>(
+    () =>
+      deities.map((d) => ({
+        id: d.id,
+        name: d.name_en,
+        japaneseName: d.name_ja ?? "",
+        deityType: d.deity_type,
+        titles: d.titles,
+        canonicalLore: d.canonical_lore ?? "",
+        shrines: d.shrines.map((s) => ({
+          id: s.slug,
+          name: s.name_en,
+          location: s.city ?? "",
+          prefecture: s.prefecture,
+          region: s.region,
+          slug: s.slug,
+          isPrimary: s.is_primary,
+          regionalLore: s.regional_lore ?? "",
+        })),
+      })),
+    [deities],
+  );
+
+  // Deep-link: ?deity=<id> focuses a deity, ?edit=1 (admin) opens it in edit mode.
+  const focusId = searchParams.get("deity");
+  const focusIndex = focusId
+    ? deities.findIndex((d) => d.id === focusId || d.name_ja === focusId)
+    : -1;
+
+  const [currentIndex, setCurrentIndex] = useState(() => (focusIndex >= 0 ? focusIndex : 0));
+  const [editing, setEditing] = useState(
+    () => isAdmin && focusIndex >= 0 && searchParams.get("edit") === "1",
+  );
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -31,48 +79,18 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
 
-  // 1. Map the pre-sorted DeityListItem[] into the portfolio shape the JSX consumes
-  const deitiesList = useMemo(
-    () =>
-      deities.map((d) => ({
-        name: d.name_en,
-        japaneseName: d.name_ja ?? "",
-        deityType: d.deity_type,
-        titles: d.titles,
-        canonicalLore: d.canonical_lore ?? "",
-        shrines: d.shrines.map((s) => ({
-          shrine: {
-            id: s.slug,
-            name: s.name_en,
-            location: s.city ?? "",
-            prefecture: s.prefecture,
-            region: s.region,
-            slug: s.slug,
-          },
-          isPrimary: s.is_primary,
-          regionalLore: s.regional_lore ?? "",
-        })),
-      })),
-    [deities],
-  );
-
-  // 2. Keyboard listeners for comfortable carousel navigation
+  // 2. Keyboard listeners for carousel navigation (disabled while editing).
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is currently typing in search input
+      if (editing) return;
       if (document.activeElement === searchInputRef.current) return;
-
-      if (e.key === "ArrowLeft") {
-        handlePrev();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      }
+      if (e.key === "ArrowLeft") handlePrev();
+      else if (e.key === "ArrowRight") handleNext();
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, deitiesList]);
+  }, [currentIndex, deitiesList, editing]);
 
   // Click outside listener for the search selector autocomplete dropdown
   useEffect(() => {
@@ -92,11 +110,13 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
 
   // 3. Carousel Navigation Callbacks
   const handleNext = () => {
+    if (editing) return;
     setSlideDirection("right");
     setCurrentIndex((prev) => (prev + 1) % deitiesList.length);
   };
 
   const handlePrev = () => {
+    if (editing) return;
     setSlideDirection("left");
     setCurrentIndex((prev) => (prev - 1 + deitiesList.length) % deitiesList.length);
   };
@@ -107,8 +127,6 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
     setCurrentIndex(targetIndex);
     setSearchQuery("");
     setIsSearchFocused(false);
-
-    // Smoothly scroll portfolio view into focus on mobile if needed
     window.scrollTo({ top: 120, behavior: "smooth" });
   };
 
@@ -121,7 +139,7 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
       .filter(({ deity }) =>
         fold(deity.name).includes(query) ||
         deity.japaneseName.includes(query) ||
-        deity.titles.some(t => fold(t).includes(query)) ||
+        deity.titles.some((t) => fold(t).includes(query)) ||
         fold(deity.canonicalLore).includes(query)
       );
   }, [searchQuery, deitiesList]);
@@ -270,263 +288,164 @@ export default function DeityListing({ deities }: { deities: DeityListItem[] }) 
       </div>
 
       {/* Decorative prompt for keyboard usage */}
-      <div className="mb-5 text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center hidden md:block select-none">
-        Tip: Press left ← or right → arrow key to cycle deities
-      </div>
+      {!editing && (
+        <div className="mb-5 text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center hidden md:block select-none">
+          Tip: Press left ← or right → arrow key to cycle deities
+        </div>
+      )}
 
       {/* THE MAIN IMMERSIVE PORTFOLIO CAROUSEL CONTAINER */}
       <div data-reveal="rise" className="relative w-full md:w-[calc(100%+4rem)] md:-mx-8 select-text z-10">
 
         {/* Floating Left Controller Button */}
-        <button
-          onClick={handlePrev}
-          aria-label="Previous Deity Portfolio"
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
-          style={{ minWidth: "44px", minHeight: "44px" }}
-        >
-          <ChevronLeft size={18} />
-        </button>
+        {!editing && (
+          <button
+            onClick={handlePrev}
+            aria-label="Previous Deity Portfolio"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            style={{ minWidth: "44px", minHeight: "44px" }}
+          >
+            <ChevronLeft size={18} />
+          </button>
+        )}
 
         {/* Dynamic Card Display */}
         <div className="w-full overflow-visible min-h-[500px]">
-          <AnimatePresence mode="wait" custom={slideDirection}>
-            {activeDeity && (
-              <motion.div
-                key={activeDeity.name}
-                custom={slideDirection}
-                variants={slideVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="w-full bg-washi rounded-2xl md:rounded-3xl border border-moss/10 shadow-3xs p-6 md:p-10 relative flex flex-col justify-between overflow-visible"
+          {editing && isAdmin && activeDeity ? (
+            // Static (non-animated) edit card: no transformed ancestor, so the edit
+            // bar and toasts position against the viewport correctly.
+            <div className="w-full bg-washi rounded-2xl md:rounded-3xl border border-moss/10 shadow-3xs p-6 md:p-10 relative">
+              <div className="absolute inset-2 border border-dashed border-moss/5 pointer-events-none rounded-xl md:rounded-2xl" />
+              <DeityEditProvider
+                initialData={deityListItemToInput(deities[currentIndex])}
+                deityId={activeDeity.id}
+                mode="update"
+                onCancel={() => setEditing(false)}
+                onSaved={() => {
+                  setEditing(false);
+                  router.refresh();
+                }}
               >
-                {/* Visual Accent Inner Dashed Border (Tradional craftsmanship) */}
-                <div className="absolute inset-2 border border-dashed border-moss/5 pointer-events-none rounded-xl md:rounded-2xl" />
+                <DeityCardBody deity={activeDeity} />
+              </DeityEditProvider>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait" custom={slideDirection}>
+              {activeDeity && (
+                <motion.div
+                  key={activeDeity.id}
+                  custom={slideDirection}
+                  variants={slideVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="w-full bg-washi rounded-2xl md:rounded-3xl border border-moss/10 shadow-3xs p-6 md:p-10 relative flex flex-col justify-between overflow-visible"
+                >
+                  {/* Visual Accent Inner Dashed Border (Tradional craftsmanship) */}
+                  <div className="absolute inset-2 border border-dashed border-moss/5 pointer-events-none rounded-xl md:rounded-2xl" />
 
-                {/* Stacked zones: Identity band · Chronicle · Enshrined Sites */}
-                <div className="relative z-10">
+                  <DeityCardBody
+                    deity={activeDeity}
+                    onShrineClick={(slug) => router.push(`/shrines/${slug}`)}
+                  />
 
-                  {/* ZONE 1 — Identity band */}
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-
-                      {/* Top Row: Meta Indicator and Stamp Seal */}
-                      <div className="flex items-start justify-between">
-                        <span className="text-[9px] font-mono tracking-[0.15em] text-[#5e7f5a] font-bold bg-[#f3f6f1] border border-bamboo/15 px-2.5 py-1 rounded-sm select-none scale-95 origin-left uppercase">
-                          Kami Chronicle Archive
-                        </span>
-
-                        {/* Traditional Vermillion Square Hanko Stamp */}
-                        <div className="w-12 h-12 border border-torii/80 text-torii font-bold font-display text-[10px] leading-tight tracking-wider flex items-center justify-center p-1.5 rotate-[-2.5deg] shadow-[inset_0_0_2px_rgba(201,75,50,0.25)] select-none shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                          <div className="text-center font-black select-none">
-                            {activeDeity.japaneseName.slice(0, 2)}
-                            <br />
-                            之神
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Display Divine Names */}
-                      <div className="space-y-1">
-                        <h3 className="text-3xl md:text-4xl font-display font-black text-stone tracking-tight leading-tight select-all">
-                          {activeDeity.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                            {activeDeity.japaneseName}
-                          </span>
-                          <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(activeDeity.deityType)}`}>
-                            {DEITY_TYPE_LABEL[activeDeity.deityType] ?? activeDeity.deityType}
-                          </span>
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* Epithets (chips) + quick stats, side by side */}
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-6 pt-6 border-t border-moss/10">
-                      {activeDeity.titles && activeDeity.titles.length > 0 && (
-                        <div className="flex-1 space-y-2 select-text">
-                          <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-                            Divine Powers & Epithets
-                          </span>
-                          <div className="flex flex-wrap gap-1.5 text-xs text-stone/75 font-sans font-medium">
-                            {activeDeity.titles.map((title, tIdx) => (
-                              <span key={tIdx} className="inline-flex items-center gap-1.5 leading-snug bg-white/40 px-2.5 py-1 rounded-lg border border-stone/[0.03] shadow-3xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-torii shrink-0" />
-                                {title}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Quick Stats */}
-                      <div className="grid grid-cols-2 gap-3 lg:w-72 shrink-0 select-none">
-                        <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
-                          <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Enshrined Sites</span>
-                          <span className="text-xs font-serif font-bold text-torii leading-none mt-1 block">{activeDeity.shrines.length} Sanctuaries</span>
-                        </div>
-                        <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
-                          <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Mythic Sphere</span>
-                          <span className="text-xs font-serif font-bold text-moss-light leading-none mt-1 block">
-                            {activeDeity.name.includes("Inari") ? "Agriculture & Commerce" :
-                             activeDeity.name.includes("Amaterasu") ? "Solar & Imperial" :
-                             activeDeity.name.includes("Susanoo") ? "Storm & Gion" : "Natural Forces"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* ZONE 2 — Canonical Chronicle (full-width, multi-column) */}
-                  <div className="space-y-3 pt-8 mt-8 border-t border-moss/10">
-                    <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-                      Canonical Chronicle
+                  {/* Lower Card Control bar for Mobile navigation */}
+                  <div className="mt-8 pt-4 border-t border-stone/10 flex items-center justify-between text-xs font-mono select-none">
+                    <span className="text-stone/40 font-bold">
+                      Kami {currentIndex + 1} of {deitiesList.length}
                     </span>
-                    <p className="text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify select-text whitespace-pre-line lg:columns-2 lg:gap-10 lg:[column-rule:1px_solid_rgba(0,0,0,0.05)]">
-                      {activeDeity.canonicalLore}
-                    </p>
-                  </div>
 
-                  {/* ZONE 3 — Enshrined Sites (horizontal gallery) */}
-                  <div className="space-y-4 pt-8 mt-8 border-t border-moss/10">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[9px] font-bold tracking-widest text-[#782c1a] uppercase block select-none">
-                        Enshrined Sites & Regional Lore
-                      </span>
-                      {activeDeity.shrines.length > 0 && (
-                        <span className="text-[10px] font-mono text-stone/35 select-none hidden sm:block">
-                          Scroll for more →
-                        </span>
-                      )}
+                    <div className="flex items-center gap-1">
+                      {deitiesList.map((_, dotIdx) => (
+                        <button
+                          key={"dot-" + dotIdx}
+                          onClick={() => handleSelectPortfolio(dotIdx)}
+                          className={`h-1.5 rounded-full transition-all duration-300 focus:outline-hidden cursor-pointer ${
+                            dotIdx === currentIndex ? "w-4 bg-torii" : "w-1.5 bg-stone/20 hover:bg-stone/40"
+                          }`}
+                          title={`Navigate to ${deitiesList[dotIdx].name}`}
+                        />
+                      ))}
                     </div>
 
-                    {activeDeity.shrines.length === 0 ? (
-                      <div className="p-6 rounded-xl border border-dashed border-stone/15 bg-stone/[0.015] text-center flex flex-col items-center gap-2">
-                        <MapPin size={16} className="text-stone/25" />
-                        <p className="text-xs font-serif text-stone/45 italic">
-                          No shrine linked yet
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x select-none">
-                        {activeDeity.shrines.map(({ shrine, isPrimary, regionalLore }) => (
-                          <div
-                            key={shrine.id}
-                            onClick={() => router.push(`/shrines/${shrine.slug}`)}
-                            className={`snap-start shrink-0 w-[380px] md:w-[560px] p-5 rounded-xl border transition-all text-left group cursor-pointer hover:bg-stone/[0.015] ${
-                              isPrimary
-                                ? "bg-white border-torii/15 hover:border-torii shadow-3xs"
-                                : "bg-stone/[0.01] border-stone/10 hover:border-moss shadow-4xs"
-                            }`}
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                              {/* Shrine Header */}
-                              <div className="flex items-start gap-2.5">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
-                                  isPrimary ? "bg-torii/10 text-torii border-torii/10" : "bg-stone/10 text-stone/60 border-stone/5"
-                                }`}>
-                                  <MapPin size={11} className={isPrimary ? "animate-pulse" : ""} />
-                                </div>
-                                <div className="space-y-0.5">
-                                  <h4 className="text-xs font-serif font-black text-stone leading-tight flex items-center gap-1.5">
-                                    {shrine.name}
-                                  </h4>
-                                  <span className="text-[9px] font-sans text-stone/40 block mt-0.5">
-                                    {shrine.location} • {shrine.prefecture} Prefecture ({shrine.region} Region)
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Interactive Actions link */}
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0 scale-95 font-bold ${
-                                  isPrimary ? "text-torii bg-torii/5" : "text-stone/40 bg-stone/5"
-                                }`}>
-                                  {isPrimary ? "Primary Enshrined" : "Companion Spirit"}
-                                </span>
-                                <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0 pl-1.5 border-l border-stone/10">
-                                  File
-                                  <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Regional lore — full quote-box style, as before */}
-                            {regionalLore && (
-                              <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-quote italic text-xs md:text-sm text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-text flex gap-2">
-                                <span className="text-torii text-base leading-none font-sans font-black select-none">“</span>
-                                <div className="flex-1 text-justify whitespace-pre-line">
-                                  {regionalLore}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
-                {/* Lower Card Control bar for Mobile navigation */}
-                <div className="mt-8 pt-4 border-t border-stone/10 flex items-center justify-between text-xs font-mono select-none">
-
-                  {/* Text index indicator */}
-                  <span className="text-stone/40 font-bold">
-                    Kami {currentIndex + 1} of {deitiesList.length}
-                  </span>
-
-                  {/* Dot sliders to visualize location index */}
-                  <div className="flex items-center gap-1">
-                    {deitiesList.map((_, dotIdx) => (
+                    <div className="flex items-center gap-1.5 md:hidden">
                       <button
-                        key={"dot-" + dotIdx}
-                        onClick={() => handleSelectPortfolio(dotIdx)}
-                        className={`h-1.5 rounded-full transition-all duration-300 focus:outline-hidden cursor-pointer ${
-                          dotIdx === currentIndex ? "w-4 bg-torii" : "w-1.5 bg-stone/20 hover:bg-stone/40"
-                        }`}
-                        title={`Navigate to ${deitiesList[dotIdx].name}`}
-                      />
-                    ))}
+                        onClick={handlePrev}
+                        className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <button
+                        onClick={handleNext}
+                        className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Mini controller row for quick switches */}
-                  <div className="flex items-center gap-1.5 md:hidden">
-                    <button
-                      onClick={handlePrev}
-                      className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-
-                </div>
-
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Floating Right Controller Button */}
-        <button
-          onClick={handleNext}
-          aria-label="Next Deity Portfolio"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
-          style={{ minWidth: "44px", minHeight: "44px" }}
-        >
-          <ChevronRight size={18} />
-        </button>
+        {!editing && (
+          <button
+            onClick={handleNext}
+            aria-label="Next Deity Portfolio"
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            style={{ minWidth: "44px", minHeight: "44px" }}
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
 
       </div>
+
+      {/* Admin Controls — rendered outside the transformed motion.div so `fixed` works. */}
+      {isAdmin && !editing && activeDeity && (
+        <>
+          <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+                Admin Controls
+              </span>
+              <span className="text-stone/25 font-mono select-none text-xs">|</span>
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-stone/70 transition-colors hover:border-stone/40 hover:text-stone"
+              >
+                <Pencil size={12} />
+                <span>Edit</span>
+              </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="flex items-center gap-1.5 rounded-full border border-red-300 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:bg-red-50"
+              >
+                <Trash2 size={12} />
+                <span>Delete</span>
+              </button>
+              <button
+                onClick={() => router.push("/deities/new")}
+                className="flex items-center gap-1.5 rounded-full bg-moss px-3 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-moss/90"
+              >
+                <Plus size={12} />
+                <span>New deity</span>
+              </button>
+            </div>
+          </div>
+
+          <DeleteDeityPopup
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            deityId={activeDeity.id}
+            deityName={activeDeity.name}
+            linkedShrineCount={activeDeity.shrines.length}
+          />
+        </>
+      )}
 
     </div>
   );

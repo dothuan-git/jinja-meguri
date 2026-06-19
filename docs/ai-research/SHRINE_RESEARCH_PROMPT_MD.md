@@ -1,15 +1,15 @@
 # Shrine Research → Structured-Form Prompt (Plain Text)
 
-Use this variant when you want to fill the **Structured Form** tab at `/admin/shrines/new`
-field-by-field (instead of the JSON Import tab). The model returns a plain-text field sheet
-whose labels match the form exactly, so you copy each value straight into its box.
+Use this variant to fill the in-place shrine create editor at `/shrines/new` field-by-field
+(sign in as an admin first). The model returns a plain-text field sheet whose labels match the
+editor's fields, so you copy each value straight into its box.
 
 Paste everything under **"PROMPT (copy below)"** into a Claude Project's custom instructions
 (or the first message of any chat assistant). Then, per shrine, send:
 
 > Research and produce the form sheet for: **Kasuga Taisha** (Nara). Official site: https://www.kasugataisha.or.jp/
 
-> **JSON instead?** If you want to paste into the JSON Import tab, use `SHRINE_RESEARCH_PROMPT.md`.
+> **JSON instead?** For the JSON-shaped worksheet variant (also hand-entered into the editor), use `SHRINE_RESEARCH_PROMPT.md`.
 
 --- 
 

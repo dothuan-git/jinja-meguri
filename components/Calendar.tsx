@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Flame,
+  Scroll,
   Waves,
   Sun,
   BookOpen,
@@ -69,6 +70,7 @@ type LinkedFestival = {
   id: string;
   name: string;            // "<en> (<ja>)" or just en
   time: string;
+  origin: string;
   meaning: string;
   ritual: string;
   prayer: string;
@@ -100,6 +102,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
     id: f.festival_id,
     name: f.festival_name_ja ? `${f.festival_name_en} (${f.festival_name_ja})` : f.festival_name_en,
     time: f.time_prose ?? "",
+    origin: f.origin ?? "",
     meaning: f.meaning ?? "",
     ritual: f.ritual ?? "",
     prayer: f.prayer ?? "",
@@ -576,6 +579,19 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
 
                                       {/* Expanded event description entire card */}
                                       <div className="space-y-6">
+
+                                        {/* Festival Origins */}
+                                        {fest.origin && (
+                                          <div>
+                                            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
+                                              <Scroll size={11} className="text-torii/70" />
+                                              Origins & Lore
+                                            </span>
+                                            <p className="text-[11.5px] leading-relaxed text-[#2c3e32] tracking-wide font-sans pl-3.5 border-l border-[#5e7f5a]/30 select-text">
+                                              {fest.origin}
+                                            </p>
+                                          </div>
+                                        )}
 
                                         {/* Liturgical Procession */}
                                         {fest.ritual && (

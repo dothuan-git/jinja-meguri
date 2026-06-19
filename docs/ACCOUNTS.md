@@ -32,6 +32,10 @@ Three steps. The same email must be used throughout.
    "first time / forgot password" link, receive a one-time link by email (it expires shortly),
    set a password, and can then sign in.
 
+> **Note:** the sign-in / password-reset UI was removed and is being re-implemented from scratch.
+> The auth backend (Neon Auth + the `app_admin` allowlist) is unchanged; until the new sign-in UI
+> lands, the password flow above has no in-app entry point.
+
 Adding, removing, or changing a role needs no code change or redeploy — it is a database update only.
 
 > In production, the deployed domain must be registered as a trusted origin with the auth

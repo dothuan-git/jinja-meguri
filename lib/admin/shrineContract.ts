@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const OccurrenceSchema = z.object({
+export const OccurrenceSchema = z.object({
   year: z.number().int().min(2020).max(2100),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD").nullable().optional(),
