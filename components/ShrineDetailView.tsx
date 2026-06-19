@@ -18,6 +18,7 @@ import {
   MapPin,
   Pencil,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
 import { buildEmbedUrl } from "@/lib/maps";
@@ -32,6 +33,7 @@ import {
 } from "@/components/shrineEdit/context";
 import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
 import LocationEditPopup from "@/components/shrineEdit/LocationEditPopup";
+import DeleteShrinePopup from "@/components/shrineEdit/DeleteShrinePopup";
 
 // Admin-only in-place editor; lazily loaded so its draft/toast/save chunk ships
 // only when an admin actually enters edit mode, keeping the public bundle lean.
@@ -240,6 +242,7 @@ function PageBody({
   const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.japaneseName) : -1;
 
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   // In edit mode, derive map coordinates from the live draft so Apply reflects immediately.
   const mapCoordinates = editing
     ? (edit?.getValue("coordinates") as Coordinates | null)
@@ -352,21 +355,10 @@ function PageBody({
             <span>Return to Sanctuary List</span>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-3 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-semibold">
-              <span>Sovereign Shrine Archives</span>
-              <span className="w-1 h-1 rounded-full bg-torii/30" />
-              <span>{shrine.region} Territories</span>
-            </div>
-            {canEdit && (
-              <button
-                onClick={onEdit}
-                className="group flex items-center gap-1.5 py-1 px-3 rounded-full border border-torii/30 text-torii hover:bg-torii/5 text-xs tracking-widest uppercase font-bold font-sans transition-colors"
-              >
-                <Pencil size={12} className="group-hover:rotate-12 transition-transform" />
-                <span>Edit</span>
-              </button>
-            )}
+          <div className="hidden sm:flex items-center gap-3 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-semibold">
+            <span>Sovereign Shrine Archives</span>
+            <span className="w-1 h-1 rounded-full bg-torii/30" />
+            <span>{shrine.region} Territories</span>
           </div>
         </div>
 
@@ -1212,6 +1204,39 @@ function PageBody({
         </div>
 
       </div>
+
+      {canEdit && (
+        <>
+          <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+                Admin Controls
+              </span>
+              <span className="text-stone/25 font-mono select-none text-xs">|</span>
+              <button
+                onClick={onEdit}
+                className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
+              >
+                <Pencil size={12} className="transition-transform group-hover:rotate-12" />
+                <span>Edit</span>
+              </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="group flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-300 hover:bg-red-50"
+              >
+                <Trash2 size={12} className="transition-transform group-hover:scale-110" />
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+          <DeleteShrinePopup
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            slug={shrine.slug}
+            shrineName={shrine.name}
+          />
+        </>
+      )}
 
     </div>
   );

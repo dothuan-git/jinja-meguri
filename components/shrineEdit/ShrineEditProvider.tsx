@@ -81,10 +81,11 @@ function EditFrame({ initialData, catalogs, onCancel, onSaved, children }: Props
 
       {/* Floating action bar */}
       <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-sand/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii">
             Editing
           </span>
+          <span className="text-stone/25 font-mono select-none text-xs">|</span>
           {error && (
             <span className="max-w-xs truncate text-xs text-red-600" title={error}>
               {error}
@@ -101,7 +102,7 @@ function EditFrame({ initialData, catalogs, onCancel, onSaved, children }: Props
           <button
             onClick={() => save({ ...draft, slug: initialData.slug })}
             disabled={saving}
-            className="flex items-center gap-1.5 rounded-full bg-torii px-4 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-torii-dark disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-full bg-moss px-4 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-moss/90 disabled:opacity-60"
           >
             <Check size={13} />
             <span>{saving ? "Saving…" : "Save"}</span>
