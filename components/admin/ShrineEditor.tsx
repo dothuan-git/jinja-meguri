@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveShrineAction } from "@/app/admin/actions";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import type { Region, Prefecture, Rank, PrayerCategory, Deity } from "@/lib/types";
 import ShrineJsonImport from "@/components/admin/ShrineJsonImport";
 import ShrineForm from "@/components/admin/ShrineForm";
-import { useToast } from "@/components/ui/Toast";
+import { useShrineSave } from "@/components/admin/useShrineSave";
 
 interface Props {
   initialData?: ShrineInput;
@@ -18,33 +17,23 @@ interface Props {
     prayerCategories: PrayerCategory[];
   };
   existingDeities: Deity[];
+  /**
+   * Override the post-save behavior. When provided, it is called with the saved
+   * slug instead of redirecting to /admin — used by the inline-on-detail-page editor.
+   */
+  onSaved?: (slug: string) => void;
 }
 
-export default function ShrineEditor({ initialData, catalogs, existingDeities }: Props) {
+export default function ShrineEditor({ initialData, catalogs, existingDeities, onSaved }: Props) {
   const [tab, setTab] = useState<"form" | "json">("form");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const toast = useToast();
+  const { save, saving: isPending, error } = useShrineSave({
+    mode: initialData ? "update" : "create",
+    onSaved: (slug) => (onSaved ? onSaved(slug) : router.push("/admin")),
+  });
 
   function handleSave(data: ShrineInput) {
-    const formData = new FormData();
-    formData.set("json", JSON.stringify(data));
-    setError(null);
-    startTransition(async () => {
-      const result = await saveShrineAction(null, formData);
-      if (result?.success && result.slug) {
-        toast.success(
-          initialData
-            ? `Shrine “${data.name_en}” updated.`
-            : `Shrine “${data.name_en}” added.`,
-        );
-        router.push("/admin");
-      } else if (result?.error) {
-        setError(result.error);
-        toast.error(`Couldn't save shrine “${data.name_en}”. Please fix the errors shown.`);
-      }
-    });
+    save(data);
   }
 
   return (

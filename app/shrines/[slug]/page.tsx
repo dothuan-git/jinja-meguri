@@ -1,13 +1,23 @@
 import { notFound } from "next/navigation";
 import { loadStore } from "@/lib/db/store";
 import { getShrineDetail } from "@/lib/db/repo";
-import ShrineDetailView from "@/components/ShrineDetailView";
+import ShrineDetailView, { type ShrineDetailEditor } from "@/components/ShrineDetailView";
+import { getAdminEmail } from "@/lib/auth/server";
+import { shrineDetailToInput } from "@/lib/admin/shrineInput";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const detail = getShrineDetail(await loadStore(), slug);
+  const store = await loadStore();
+  const detail = getShrineDetail(store, slug);
   if (!detail) notFound();
-  return <ShrineDetailView shrine={detail} variant="page" />;
+
+  // Admins get the in-place edit draft seed; everyone else gets nothing extra.
+  const isAdmin = Boolean(await getAdminEmail());
+  const editor: ShrineDetailEditor | undefined = isAdmin
+    ? { initialData: shrineDetailToInput(detail) }
+    : undefined;
+
+  return <ShrineDetailView shrine={detail} variant="page" editor={editor} />;
 }

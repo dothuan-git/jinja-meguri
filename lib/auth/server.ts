@@ -20,7 +20,7 @@ async function isAllowedAdmin(email: string | null | undefined): Promise<boolean
 }
 
 /** Returns the signed-in admin email, or null if not authenticated / not on the allowlist. */
-async function getAdminEmail(): Promise<string | null> {
+export async function getAdminEmail(): Promise<string | null> {
   const { data } = await auth.getSession();
   const email = data?.user?.email;
   if (!email) return null;
