@@ -8,10 +8,12 @@ Planned work not yet implemented. Ask Claude to "implement <feature> from docs/R
 
 Implemented. Details in `DATA_MODEL.md` (§ `festivals` / `festival_occurrences` and §10). Summary:
 
-- **Importer** at `/admin/occurrences/new` (JSON paste + structured form). Contract
-  `lib/admin/occurrenceContract.ts`, mutation `upsertOccurrences` (`lib/db/mutations.ts`, upsert on
-  `(festival_id, year)`), action `saveOccurrencesAction`, example
-  `docs/ai-research/example-festival-occurrences.json`.
+- **Importer** (was at `/admin/occurrences/new`, JSON paste + structured form) — **the UI and its
+  `saveOccurrencesAction` were since removed in the admin-route cleanup.** The data layer is retained:
+  contract `lib/admin/occurrenceContract.ts`, mutation `upsertOccurrences` (`lib/db/mutations.ts`, upsert
+  on `(festival_id, year)`), example `docs/ai-research/example-festival-occurrences.json`. A replacement
+  uploader is now a deferred item (occurrences are seeded via the DB scripts / a direct `upsertOccurrences`
+  call in the meantime).
 - **Stable festival identity:** festivals are UNIQUE on `(shrine_id, name_en)` and `upsertShrine` upserts
   them by name instead of delete+reinsert, so occurrences survive shrine re-imports/inline edits.
 - **Date resolution** (`resolveCalendarDates` in `lib/calendar.ts`, calendar only): current-year

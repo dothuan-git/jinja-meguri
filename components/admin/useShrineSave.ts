@@ -6,8 +6,8 @@ import type { ShrineInput } from "@/lib/admin/shrineContract";
 import { useToast } from "@/components/ui/Toast";
 
 /**
- * Shared save flow for the shrine write pipeline, used by both the structured
- * admin form ({@link ShrineEditor}) and the in-place detail-page editor. Builds
+ * Shared save flow for the shrine write pipeline, used by the in-place
+ * detail-page editor and the `/shrines/new` create page. Builds
  * the `FormData{ json }` envelope, runs `saveShrineAction` in a transition,
  * raises a toast, and surfaces the server's validation error. Must be called
  * inside a `ToastProvider`.

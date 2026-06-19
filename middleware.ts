@@ -15,8 +15,13 @@ const SESSION_TOKEN_COOKIE = "__Secure-neon-auth.session_token";
  * the (now fresh) cache.
  *
  * This intentionally does NOT protect routes — authorization stays in
- * `requireAdmin()` (404s unauthorized visitors) so the admin area's existence is
- * not revealed, and the public login form at `/admin` remains reachable.
+ * `requireAdmin()` (404s unauthorized visitors) so the admin surfaces' existence
+ * is not revealed.
+ *
+ * NOTE: the sign-in UI was removed pending a from-scratch re-implementation, and
+ * the inline admin surfaces now live on `/shrines` and `/deities` (not under
+ * `/admin`). The matcher below therefore no longer covers the routes that read
+ * the session — revisit it when sign-in is rebuilt.
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();

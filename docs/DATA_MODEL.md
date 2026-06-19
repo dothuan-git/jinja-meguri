@@ -256,12 +256,13 @@ Concrete dated instances for festivals that can't be computed (lunar, Nth-weekda
 
 UNIQUE `(festival_id, year)`. Indexes `idx_festival_occurrences_festival`, `idx_festival_occurrences_year`.
 
-Uploaded via the **bulk occurrences importer** at `/admin/occurrences/new` (JSON paste or structured
-form): each target is `{ shrine_slug, festival_name_en, occurrences: [{ year, start_date, end_date?, notes? }] }`
+Loaded through the data layer: each target is `{ shrine_slug, festival_name_en, occurrences: [{ year, start_date, end_date?, notes? }] }`
 (a single object or an array). The festival is resolved by `(shrine_slug, festival_name_en)` — unique via
 the festivals constraint above — and rows upsert on `(festival_id, year)`. Contract: `lib/admin/occurrenceContract.ts`;
-mutation: `upsertOccurrences` in `lib/db/mutations.ts`; action: `saveOccurrencesAction`. Example JSON:
-`docs/ai-research/example-festival-occurrences.json`.
+mutation: `upsertOccurrences` in `lib/db/mutations.ts`. Example JSON:
+`docs/ai-research/example-festival-occurrences.json`. **The importer UI (`/admin/occurrences/new`) and
+its `saveOccurrencesAction` were removed**; the contract + mutation are retained for a future uploader, so
+occurrences are currently seeded via the DB scripts or a direct `upsertOccurrences` call.
 
 ### `sources` (provenance)
 
@@ -289,7 +290,8 @@ Authorization layer (a second gate after Neon Auth sign-in). Standalone; no FKs.
 
 > `role` ∈ `admin` | `editor`.
 
-A signed-in email must appear here to access `/admin`. See [`ACCOUNTS.md`](./ACCOUNTS.md).
+A signed-in email must appear here to unlock the in-place editing affordances and pass the
+`requireAdmin`/`assertAdmin` guards. See [`ACCOUNTS.md`](./ACCOUNTS.md).
 
 ---
 
@@ -344,12 +346,12 @@ Key derivations done in `repo.ts`, not in SQL:
 
 ## 10. Write path (where the data comes from)
 
-Content is authored as **contract-shaped JSON** and imported through the admin UI — there is no
-ingest script or `data/` directory.
+Content is authored **in place** on the public surfaces (`/shrines`, `/shrines/new`, `/deities`,
+`/deities/new`) — there is no ingest script, no `data/` directory, and no `/admin` JSON-import UI.
+The in-place editors serialize their draft to the contract shape (`ShrineInput` / `DeityInput`).
 
 ```
-Research (JA-first) → contract JSON → admin import form
-  → key-completeness check (lib/admin/keyCompleteness.ts)
+Research (JA-first) → in-place editor draft (ShrineInput / DeityInput)
   → Zod validation (lib/admin/shrineContract.ts, deityContract.ts)
   → transactional upsert (lib/db/mutations.ts) → Neon
 ```
@@ -360,20 +362,19 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
 
 ### Authoring order & deferred fields
 
-1. **Deities first.** A canonical deity — including its `canonical_lore` — is created on its own via the
-   deity importer/form (`/admin/deities/new`, `DEITY_RESEARCH_PROMPT.md`). `canonical_lore` is gathered
-   **only** here.
+1. **Deities first.** A canonical deity — including its `canonical_lore` — is created on its own in place
+   on the `/deities` carousel ("+ New deity" → `/deities/new`; existing deities via the Edit control or
+   `/deities?deity=<id>&edit=1`). `DEITY_RESEARCH_PROMPT.md` helps gather the content you enter in the
+   fields. `canonical_lore` is gathered **only** here.
 2. **Shrines next.** A shrine import links the already-existing deity by `name_ja`. Its embedded
    `deities[].canonical` block carries identity only (`name_en`, `name_ja`, `deity_type`, `titles`) and
    **no `canonical_lore`** — the deity already has it, so `SHRINE_RESEARCH_PROMPT.md` never re-gathers it.
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
    left null until edited on the deity record.)
 3. **Festival dates are deferred (at research time).** `festivals.start_date` / `end_date` are left
-   `null` by the JSON-import shrine flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
-   yearly dates are uploaded later into `festival_occurrences`: via the **bulk occurrences importer**
-   (`/admin/occurrences/new`, JSON or form — see the `festival_occurrences` table above), the admin
-   **structured form** (`ShrineForm`) per-festival occurrences, or `festivals[].occurrences` in a shrine
-   JSON import.
+   `null` by the shrine-research flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
+   yearly dates land in `festival_occurrences` (see the table above), loaded via `upsertOccurrences` /
+   the DB scripts — the importer UI was removed.
    - The **in-place create page** (`/shrines/new`, `FestivalBlock`'s `DefaultDateField`) *does* collect a
      festival's own `start_date`/`end_date` as **default, year-agnostic month-day** values (month + day
      selects). They are stored as `YYYY-MM-DD` with the **current year as a placeholder** (the column is a

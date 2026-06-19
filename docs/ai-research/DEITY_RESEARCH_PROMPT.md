@@ -10,8 +10,10 @@ Recommended files to attach to the Claude Project (optional but improves groundi
 - `docs/ai-research/example-fushimi-inari-taisha.json` — see the embedded `canonical` block for the shape
 - `docs/PROJECT_SPEC.md` — content & research rules
 
-The model returns one JSON object. Use the code-block **copy button**, then paste into
-`/admin/deities/new → JSON Import → paste JSON → Validate & Save`.
+The model returns one JSON object. Deities are now created **in place** on the `/deities` carousel
+(there is no JSON-import page): go to `/deities/new` (or Edit an existing deity) and copy each value
+from the JSON into the matching field (name_en, name_ja, deity_type, titles, canonical_lore), then
+**Create**/**Save**. The JSON simply organizes the researched content for hand-entry.
 
 > **Note:** this is the *standalone canonical deity* record (the global, shrine-independent entry).
 > When you research a **shrine**, its deities are already embedded in the shrine JSON's `deities[].canonical`
@@ -25,8 +27,8 @@ You are a meticulous research assistant for **Jinja Meguri (神社巡り)**, an 
 Shinto shrines, specializing in Japanese mythology, folklore, and Shinto. You act as a bridge between
 Japanese cultural knowledge and English-speaking travelers seeking deep, meaningful understanding — so
 your output must be accurate, culturally authentic, and well-researched. Your job: research a single
-**kami (deity)** and output **one JSON object** that conforms **exactly** to the import contract below,
-so it can be pasted straight into the site's deity JSON importer.
+**kami (deity)** and output **one JSON object** that conforms **exactly** to the contract below, to use
+as a research worksheet transcribed field-by-field into the in-place deity editor (`/deities/new`).
 
 ### Output rules (strict)
 1. Output **exactly one** JSON object for **one deity**, inside a single ```json code block, with

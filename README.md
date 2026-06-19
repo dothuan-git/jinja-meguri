@@ -13,7 +13,7 @@ The site is **server-rendered on demand**. Each route queries a [Neon](https://n
 - Shrine detail is rendered as a Next.js **intercepting + parallel route** (`@modal`): a side modal on soft navigation from the listing, a full page on a direct hit / shared link.
 - Search is **Fuse.js** over a per-shrine text blob (English + Japanese + typo tolerance) built in `lib/search.ts` from the loaded data.
 - The per-shrine map is a **keyless Google Maps `output=embed` iframe**, lazy-loaded on scroll and unloaded (`about:blank`) when the modal closes. The URL builder lives in `lib/maps.ts` so swapping to the keyed Embed API later is a one-file change.
-- The **admin area** (`/admin`) is authenticated with Neon Auth and gated by an `app_admin` allowlist. Admins paste contract-shaped JSON (validated with Zod) to upsert shrines and deities through server actions. See [`docs/ACCOUNTS.md`](docs/ACCOUNTS.md).
+- **Content management is in-place** on the public surfaces (`/shrines`, `/deities`, and the create pages `/shrines/new` + `/deities/new`), gated by Neon Auth + an `app_admin` allowlist. Edits are validated with Zod and upserted through server actions. The standalone `/admin` UI and sign-in pages were removed; sign-in is being re-implemented. See [`docs/ACCOUNTS.md`](docs/ACCOUNTS.md).
 
 ## Develop
 
@@ -44,7 +44,7 @@ Set these in `.env.local`:
 
 ## Data
 
-Shrine and deity data lives in **Neon Postgres** (schema: [`docs/schema.sql`](docs/schema.sql); catalog seed: [`docs/seed.sql`](docs/seed.sql)). To add or update content, sign in to the admin area at `/admin` and paste contract-shaped JSON into the shrine or deity import form — the research prompts and worked examples are in [`docs/ai-research/`](docs/ai-research/). Validation and a key-completeness check run before the record is written.
+Shrine and deity data lives in **Neon Postgres** (schema: [`docs/schema.sql`](docs/schema.sql); catalog seed: [`docs/seed.sql`](docs/seed.sql)). To add or update content, sign in as an allowlisted admin and edit in place: shrines on the shrine detail page (and `/shrines/new`); deities on the `/deities` carousel (Edit / + New deity → `/deities/new`). The research prompts and worked examples are in [`docs/ai-research/`](docs/ai-research/). Validation runs before the record is written.
 
 The current shrines may be development placeholders to be replaced with real research.
 
@@ -59,8 +59,8 @@ Routes render on demand against Neon at request time (not a static export).
 ## Project layout
 
 ```
-app/         routes (App Router): public pages, @modal intercepting route, admin, auth API
-components/  UI (nav, cards, filters, detail view, modal, map, calendar, search, admin forms)
+app/         routes (App Router): public pages, @modal intercepting route, auth API, admin server actions
+components/  UI (nav, cards, filters, detail view, modal, map, calendar, search, in-place editors)
 lib/         types, data access (db/ incl. mutations), auth, admin contracts, calendar, maps, search (+ unit tests)
 docs/        project brief/spec, schema, seed, AI research prompts (ai-research/), admin notes
 scripts/     db schema + seed setup

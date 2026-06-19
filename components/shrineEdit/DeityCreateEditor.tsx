@@ -25,8 +25,7 @@ const areaBase =
  * Draft-driven deity editor for the create-on-detail-page flow. Always one Primary
  * deity slot; companions are optional. Each deity either links an existing DB deity
  * (the dropdown — shows its canonical lore read-only) or starts a brand-new deity
- * (reveals identity inputs). Mirrors the proven picker logic in
- * {@link ../admin/ShrineForm} but rendered in the detail-page card style.
+ * (reveals identity inputs), rendered in the detail-page card style.
  */
 export default function DeityCreateEditor() {
   const api = useShrineEdit();
