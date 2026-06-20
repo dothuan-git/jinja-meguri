@@ -27,7 +27,7 @@ export default function SignInForm() {
         setError(error.message ?? "Could not sign in. Check your credentials.");
         return;
       }
-      const target = params.get("redirect") || "/";
+      const target = params.get("redirect") || "/shrines";
       router.push(target);
       router.refresh();
     } catch {

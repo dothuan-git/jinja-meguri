@@ -21,7 +21,12 @@ export default function SignUpForm() {
     setPending(true);
     setError(null);
     try {
-      const { error } = await authClient.signUp.email({ email, password, name });
+      const { error } = await authClient.signUp.email({
+        email,
+        password,
+        name,
+        callbackURL: "/shrines", // where the email-verification link lands after confirming
+      });
       if (error) {
         setError(error.message ?? "Could not create your account.");
         return;
