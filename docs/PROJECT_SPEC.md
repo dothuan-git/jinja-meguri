@@ -43,7 +43,7 @@ Booking/ticketing/e-commerce · user accounts/social · real-time data (crowds, 
 | Database | **Neon** — serverless PostgreSQL | Free tier (0.5 GB) is ample at this scale. No PostGIS / pg_trgm. |
 | Maps | **Google Maps keyless embed iframe** | No API key, no Cloud project. Detail page only. See §8. |
 | Search | **Fuse.js** over a per-shrine text blob | Built client-side in `lib/search.ts` from the loaded data (EN + JA + typo tolerance). No DB full-text index. |
-| Auth | **Neon Auth** (`@neondatabase/auth`) + `app_admin` allowlist | Powers the admin sign-in; see §7 and `ACCOUNTS.md`. |
+| Auth | **Neon Auth** (`@neondatabase/auth`); admin = Neon Auth user role | Self-register as a normal user; admin granted by setting the account's role. See §7 and `ACCOUNTS.md`. |
 | Validation | **Zod** | Admin JSON contracts (`lib/admin/*Contract.ts`). |
 | UI / motion | **Tailwind v4**, `motion` (Framer Motion), `gsap`, `lucide-react`, ambient audio (`lib/audioSynthesizer.ts`) | |
 | i18n | **English UI + Japanese terms inline** | No language toggle. |
@@ -56,7 +56,7 @@ Booking/ticketing/e-commerce · user accounts/social · real-time data (crowds, 
 
 PostgreSQL (Neon). Full DDL in `schema.sql` — **schema v3, 13 base tables, no views, no materialized view, no PostGIS** (catalogs seeded by `seed.sql`). **Naming rule:** catalog = bare plural noun (`ranks`, `deities`); junction = `shrine_` + that noun.
 
-**Tables:** `regions`, `prefectures`, `ranks`, `prayer_categories` (controlled vocab); `deities`, `shrines` (core); `shrine_deities`, `shrine_ranks`, `shrine_prayer_categories` (junctions); `shrine_details` (1:1 prose); `festivals`, `festival_occurrences` (calendar); `sources` (provenance). An `app_admin` allowlist table (email → admin) is created out of band, not in `schema.sql` (see §7 / `ACCOUNTS.md`).
+**Tables:** `regions`, `prefectures`, `ranks`, `prayer_categories` (controlled vocab); `deities`, `shrines` (core); `shrine_deities`, `shrine_ranks`, `shrine_prayer_categories` (junctions); `shrine_details` (1:1 prose); `festivals`, `festival_occurrences` (calendar); `sources` (provenance). Admin authorization uses the **Neon Auth user role** (`neon_auth.user.role === 'admin'`), not an application table (see §7 / `ACCOUNTS.md`).
 
 > Changes from the original v1 model:
 > - `events` → **`festivals`**; `event_occurrences` → **`festival_occurrences`** (now carries an explicit `year`, `UNIQUE (festival_id, year)`). The festival's own `start_date`/`end_date` are nullable structured dates on the definition; `festival_occurrences` holds dated rows per year.
@@ -109,7 +109,7 @@ Research (JA-first) → in-place editor draft (ShrineInput / DeityInput) → Zod
 
 - The **contract** is a JSON shape (one per shrine, one per deity) carrying explicit `ranks[]`, `prayer_categories[]`, `deities[]` (with `regional_lore` and an optional canonical block), `festivals[]` + `occurrences[]`, and `sources[]` so structured data is never buried in prose. It is defined by the **Zod schemas** in `lib/admin/shrineContract.ts` and `lib/admin/deityContract.ts`. The **AI research prompts and worked examples** live in `docs/ai-research/` (`SHRINE_RESEARCH_PROMPT.md`, `DEITY_RESEARCH_PROMPT.md`, `*_MD` variants, and example JSON).
 - **Authoring flow:** everything is **in place** — shrines edit/create on the shrine detail layout (`/shrines/[slug]`, `/shrines/new`); deities edit/create on the `/deities` carousel (`/deities/new`). There are no JSON-import or structured-form pages. The editors serialize their draft to the contract shape, Zod validates → `lib/db/mutations.ts` upserts transactionally, owning deity dedup (upsert on `name_ja`), catalog code→id resolution (ranks, categories, region, prefecture), and idempotent re-save by `slug`.
-- **Auth & authorization:** Neon Auth owns sessions; the email must also be present in the `app_admin` allowlist table. Guards: `requireAdmin` (404s unauthorized page visitors), `assertAdmin` (throws in server actions), and `getAdminEmail` (toggles the in-place editing affordances), all in `lib/auth/server.ts`. The sign-in UI was removed and is being re-implemented from scratch; the auth backend (`app/api/auth/[...path]/route.ts`) remains. Onboarding/offboarding admins is described in `docs/ACCOUNTS.md`.
+- **Auth & authorization:** Neon Auth owns sessions; admin is the Neon Auth user role (`neon_auth.user.role === 'admin'`, the Better Auth admin-plugin field), read off the session — there is no application allowlist table. Guards: `requireAdmin` (404s unauthorized page visitors), `assertAdmin` (throws in server actions), and `getAdminEmail` (toggles the in-place editing affordances), all in `lib/auth/server.ts`. Anyone can self-register at `/sign-up` (always role `user`) and sign in at `/sign-in`; the auth API is `app/api/auth/[...path]/route.ts`. Onboarding/offboarding admins (promote/demote the role) is described in `docs/ACCOUNTS.md`.
 - **Annual manual task:** each January, concrete `festival_occurrences` dates (with `year`) are needed for lunar / "Nth-weekday" festivals (these cannot be computed). The importer UI was removed; for now these are loaded via the DB scripts / `upsertOccurrences` pending a re-implemented uploader. Fixed-Gregorian dates can ship in the festival definition directly.
 
 ---
@@ -162,7 +162,7 @@ Detail pages are real routed pages shown as a **side modal when opened from the 
 
 1. **Data layer** — ✅ Neon provisioned; schema v3 + catalog seed applied; read layer (`lib/db/store.ts` → `repo.ts`) queries Neon at request time.
 2. **Frontend** — ✅ Next.js app built: landing, shrine listing/detail, deity browse, calendar, search.
-3. **Admin** — ✅ `app_admin` allowlist + `getAdminEmail`/`requireAdmin` guards; shrine & deity create/edit/delete entirely in place. Sign-in UI removed pending a from-scratch rebuild (auth backend retained).
+3. **Admin** — ✅ admin = Neon Auth user role (`role === 'admin'`) + `getAdminEmail`/`requireAdmin` guards; shrine & deity create/edit/delete entirely in place. Public sign-in/up + owner-only profile rebuilt (`/sign-in`, `/sign-up`, `/users/[id]`).
 
 ---
 
@@ -187,6 +187,6 @@ The shrine/deity JSON contracts are defined in code (`lib/admin/shrineContract.t
 - **Neon scale-to-zero** — first request after idle pays a brief cold-start (pages query at request time); warm thereafter.
 - **Undocumented Google embed endpoint** — isolated in one module (`lib/maps.ts`); keyed Embed API is the fallback.
 - **Manual touchpoints** — annual `festival_occurrences` dates and image sourcing are owner tasks; image URLs are entered in the in-place shrine editor, while the occurrences uploader is pending re-implementation (currently seeded via the DB scripts). Keep them low-friction.
-- **Admin surface** — the admin area runs runtime DB writes; access is gated by Neon Auth **and** the `app_admin` allowlist, and the routes 404 for unauthorized visitors.
+- **Admin surface** — the admin area runs runtime DB writes; access is gated by the Neon Auth user role (`role === 'admin'`), and the routes 404 for unauthorized visitors.
 - **Cultural accuracy and respect** — this is living religious practice. Never strip the Japanese; never hallucinate facts; cite sources.
 - **Solo builder** — keep operations low-maintenance.

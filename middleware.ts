@@ -18,10 +18,9 @@ const SESSION_TOKEN_COOKIE = "__Secure-neon-auth.session_token";
  * `requireAdmin()` (404s unauthorized visitors) so the admin surfaces' existence
  * is not revealed.
  *
- * NOTE: the sign-in UI was removed pending a from-scratch re-implementation, and
- * the inline admin surfaces now live on `/shrines` and `/deities` (not under
- * `/admin`). The matcher below therefore no longer covers the routes that read
- * the session — revisit it when sign-in is rebuilt.
+ * The matcher covers all page routes (excluding `/api`, `/_next`, and static
+ * assets) because the root layout and pages now read the session at render time
+ * via `getCurrentUser()` — that read must hit an already-fresh cache.
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -45,5 +44,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|map)$).*)",
+  ],
 };

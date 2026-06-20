@@ -13,30 +13,38 @@ Two independent layers:
 
 1. **Authentication** — a managed, hosted auth service owns the sign-in form, the session
    cookie, and the user records.
-2. **Authorization** — signing in is not enough. The account must also appear on an internal
-   admin allowlist. Authenticated accounts that are not allow-listed are treated as if the
-   admin area does not exist.
+2. **Authorization** — signing in is not enough. The account's **role** (stored on the user
+   record in the hosted auth service) must be `admin`. Accounts with any other role see the
+   regular site and are treated as if the admin area does not exist.
 
 Route and action guards live in the application code (see
 [`lib/auth/server.ts`](../lib/auth/server.ts)).
 
 ## Onboarding a new admin
 
-Three steps. The same email must be used throughout.
+Admins are **promoted from an ordinary account** — there is no separate admin sign-up, and
+no allowlist to maintain.
 
-1. **Create the person's auth account** in the hosting console. No password is set here.
-2. **Add their email to the admin allowlist** (a database entry). Each entry carries a `role`
-   — either `admin` (full access, the default) or `editor` (content authoring only, restrictions
-   to be defined). Omitting the role defaults to `admin`.
-3. **They set their own password.** From the admin sign-in page they use the
-   "first time / forgot password" link, receive a one-time link by email (it expires shortly),
-   set a password, and can then sign in.
+1. **They self-register** at the public Sign up page and set their own password.
+2. **You promote them** by setting that account's role to `admin` on the user record in the
+   hosted auth service (a one-line database update, or the service's set-role admin action).
 
-> **Note:** the sign-in / password-reset UI was removed and is being re-implemented from scratch.
-> The auth backend (Neon Auth + the `app_admin` allowlist) is unchanged; until the new sign-in UI
-> lands, the password flow above has no in-app entry point.
+Both steps need no code change or redeploy. Demotion is the reverse — set the role back to the
+normal-user value. Users can never promote themselves: sign-up always creates a normal-user role.
 
-Adding, removing, or changing a role needs no code change or redeploy — it is a database update only.
+## User accounts
+
+Anyone can self-register from the public **Sign up** page. A self-registered account is a **normal
+user** — it is created in the hosted auth service with the normal-user role (not `admin`), so it
+sees the regular site (and a placeholder "User Controls" surface) but none of the admin editing
+affordances. Promotion to admin happens only when a manager sets the account's role to `admin`
+(the onboarding step above) — users cannot self-promote.
+
+- **Sign up / Sign in** are linked from the site nav (a profile icon replaces them once signed in).
+- **Email verification is required**: after signing up, the user must click the link emailed to them
+  before they can sign in. The hosted auth service must have email verification enabled and a
+  reachable sender configured.
+- Each user has a private profile page (owner-only; others get a 404) reachable from the profile icon.
 
 > In production, the deployed domain must be registered as a trusted origin with the auth
 > service, or the emailed link is rejected. Use a real, reachable inbox — the link is only
@@ -44,12 +52,49 @@ Adding, removing, or changing a role needs no code change or redeploy — it is 
 
 ## Removing or demoting an admin
 
-- Remove their entry from the admin allowlist to revoke access entirely (their auth login can remain).
-- To change their role, update the `role` value on their allowlist entry.
-- To remove them entirely, also delete the account in the hosting console.
+- Set the account's role back to the normal-user value to revoke admin access (their login
+  remains, now as a normal user).
+- To remove them entirely, delete the account in the hosting console.
 
 ## Configuration
 
 The app reads its database connection and auth-service settings from environment variables,
 set locally and in the deployment platform. Secrets are never committed; see `.env.example`
 for the (non-secret) template.
+
+### Auth emails (Resend)
+
+Auth emails (verification links, sign-in codes, password resets) are delivered via
+[Resend](https://resend.com) through a Neon Auth webhook. When Neon Auth needs to send an
+email it POSTs a signed event to `/api/webhooks/neon-auth`; the handler verifies the
+signature, renders a branded HTML template, and sends it via Resend.
+
+**Required env vars** (add to `.env.local` and your deployment platform):
+
+```
+RESEND_API_KEY=re_...
+MAIL_FROM="Jinja Meguri <onboarding@resend.dev>"
+```
+
+> **Test sender:** `onboarding@resend.dev` (Resend's shared address) only delivers to the
+> email address registered on your Resend account. To send to arbitrary users, verify your
+> own domain in the Resend dashboard and update `MAIL_FROM` accordingly.
+
+**Register the webhook with Neon** (run once per branch after deploying):
+
+```bash
+curl -X PUT "https://console.neon.tech/api/v2/projects/{project_id}/branches/{branch_id}/auth/webhooks" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEON_API_KEY" \
+  -d '{
+    "enabled": true,
+    "webhook_url": "https://<your-deployed-host>/api/webhooks/neon-auth",
+    "enabled_events": ["send.otp", "send.magic_link"],
+    "timeout_seconds": 5
+  }'
+```
+
+Find your `project_id` and `branch_id` in the Neon Console URL or via `neonctl projects list`.
+
+> **HTTPS only:** Neon Auth rejects localhost, raw IPs, and private addresses. For local
+> testing, expose the dev server through an ngrok HTTPS tunnel and register that URL.
