@@ -103,6 +103,11 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
   (`components/SiteChrome.tsx`) shows Sign in / Sign up when logged out and a profile icon →
   `/users/[id]` (owner-only profile, with Sign out) when logged in. `app/layout.tsx` reads
   `getCurrentUser()` once and hands the `user` to `SiteChrome`.
+- **Auth emails:** Neon Auth email delivery (verification links, sign-in codes, password resets)
+  is intercepted by `app/api/webhooks/neon-auth/route.ts`, which verifies the Ed25519 webhook
+  signature (`lib/auth/verifyWebhook.ts`), renders on-brand HTML (`lib/auth/emailTemplates.ts`),
+  and sends via Resend (`RESEND_API_KEY` + `MAIL_FROM` env vars). See `docs/ACCOUNTS.md` for the
+  Neon webhook registration curl and the test-sender caveat.
 - **Auth:** Neon Auth (`@neondatabase/auth`, built on better-auth) owns sessions; the auth API
   handler is `app/api/auth/[...path]/route.ts`. Authorization is a second layer — admin is the
   **Neon Auth user role** (`neon_auth.user.role === "admin"`, the Better Auth **admin plugin**

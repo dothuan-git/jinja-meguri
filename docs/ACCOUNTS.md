@@ -61,3 +61,40 @@ affordances. Promotion to admin happens only when a manager sets the account's r
 The app reads its database connection and auth-service settings from environment variables,
 set locally and in the deployment platform. Secrets are never committed; see `.env.example`
 for the (non-secret) template.
+
+### Auth emails (Resend)
+
+Auth emails (verification links, sign-in codes, password resets) are delivered via
+[Resend](https://resend.com) through a Neon Auth webhook. When Neon Auth needs to send an
+email it POSTs a signed event to `/api/webhooks/neon-auth`; the handler verifies the
+signature, renders a branded HTML template, and sends it via Resend.
+
+**Required env vars** (add to `.env.local` and your deployment platform):
+
+```
+RESEND_API_KEY=re_...
+MAIL_FROM="Jinja Meguri <onboarding@resend.dev>"
+```
+
+> **Test sender:** `onboarding@resend.dev` (Resend's shared address) only delivers to the
+> email address registered on your Resend account. To send to arbitrary users, verify your
+> own domain in the Resend dashboard and update `MAIL_FROM` accordingly.
+
+**Register the webhook with Neon** (run once per branch after deploying):
+
+```bash
+curl -X PUT "https://console.neon.tech/api/v2/projects/{project_id}/branches/{branch_id}/auth/webhooks" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEON_API_KEY" \
+  -d '{
+    "enabled": true,
+    "webhook_url": "https://<your-deployed-host>/api/webhooks/neon-auth",
+    "enabled_events": ["send.otp", "send.magic_link"],
+    "timeout_seconds": 5
+  }'
+```
+
+Find your `project_id` and `branch_id` in the Neon Console URL or via `neonctl projects list`.
+
+> **HTTPS only:** Neon Auth rejects localhost, raw IPs, and private addresses. For local
+> testing, expose the dev server through an ngrok HTTPS tunnel and register that URL.
