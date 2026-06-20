@@ -73,20 +73,12 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
             <User size={16} />
           </Link>
         ) : (
-          <div className="hidden items-center gap-6 select-none md:flex">
             <Link
-              href="/sign-in"
-              className="text-xs tracking-widest uppercase py-1 font-bold text-moss-light transition-colors hover:text-torii"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
-              className="rounded-full border border-torii/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-torii transition-colors hover:bg-torii hover:text-washi"
-            >
-              Sign up
-            </Link>
-          </div>
+            href="/sign-in"
+            className="text-xs tracking-widest uppercase py-1 font-mono font-bold text-moss-light transition-colors hover:text-torii"
+          >
+            Sign in
+          </Link>
         )}
       </motion.header>
 

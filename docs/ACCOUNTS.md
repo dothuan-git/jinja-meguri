@@ -41,6 +41,12 @@ affordances. Promotion to admin happens only when a manager sets the account's r
 (the onboarding step above) — users cannot self-promote.
 
 - **Sign up / Sign in** are linked from the site nav (a profile icon replaces them once signed in).
+- **Social sign-in** (e.g. *Continue with Google*) is offered on both the Sign up and Sign in pages —
+  OAuth is one flow for both. A first-time social sign-in creates a normal-user account (same role rules
+  as email sign-up; no self-promotion). Each provider must be **enabled in the hosted auth service's
+  console** with an OAuth client id/secret (registered in that provider's developer console) and the
+  app's callback URL — there is no provider config in application code, and the button errors until the
+  provider is enabled.
 - **Email verification is required**: after signing up, the user must click the link emailed to them
   before they can sign in. The hosted auth service must have email verification enabled and a
   reachable sender configured.

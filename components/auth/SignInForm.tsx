@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import SocialAuthButtons from "./SocialAuthButtons";
 
 const INPUT =
   "w-full rounded-xl border border-moss/20 bg-washi/60 px-4 py-2.5 text-sm text-stone outline-none transition-colors placeholder:text-moss-light/60 focus:border-torii";
@@ -27,7 +28,6 @@ export default function SignInForm() {
         setError(error.message ?? "Could not sign in. Check your credentials.");
         return;
       }
-      const target = params.get("redirect") || "/shrines";
       router.push(target);
       router.refresh();
     } catch {
@@ -37,8 +37,12 @@ export default function SignInForm() {
     }
   }
 
+  const target = params.get("redirect") || "/shrines";
+
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <div className="space-y-5">
+      <SocialAuthButtons callbackURL={target} />
+      <form onSubmit={onSubmit} className="space-y-5">
       {error && (
         <p className="rounded-xl border border-torii/30 bg-torii/5 px-4 py-2.5 text-sm text-torii">
           {error}
@@ -83,6 +87,7 @@ export default function SignInForm() {
           Create an account
         </Link>
       </p>
-    </form>
+      </form>
+    </div>
   );
 }

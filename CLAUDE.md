@@ -99,7 +99,10 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
 
 - **Accounts & roles:** anyone can self-register at `/sign-up` and sign in at `/sign-in`
   (custom forms in `components/auth/`, in the `app/(auth)` route group, using the `authClient`
-  from `lib/auth/client.ts`). Sign-up creates a **normal user** (Neon Auth role `user`). The nav
+  from `lib/auth/client.ts`). Both forms also render `components/auth/SocialAuthButtons.tsx`
+  (e.g. *Continue with Google* via `authClient.signIn.social`); OAuth is one flow for sign-up and
+  sign-in, and each provider must be enabled in the Neon Auth console (no provider config in code).
+  Sign-up creates a **normal user** (Neon Auth role `user`). The nav
   (`components/SiteChrome.tsx`) shows Sign in / Sign up when logged out and a profile icon →
   `/users/[id]` (owner-only profile, with Sign out) when logged in. `app/layout.tsx` reads
   `getCurrentUser()` once and hands the `user` to `SiteChrome`.

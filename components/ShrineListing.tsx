@@ -230,7 +230,7 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
           <span>神社一覧</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
           Sacred Sanctuaries
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">

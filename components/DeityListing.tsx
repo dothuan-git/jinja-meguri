@@ -194,7 +194,7 @@ export default function DeityListing({
           <span>八百万の神々</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
           Deity Chronicles
         </h2>
 
@@ -404,8 +404,10 @@ export default function DeityListing({
 
       </div>
 
-      {/* Admin Controls — rendered outside the transformed motion.div so `fixed` works. */}
-      {isAdmin && !editing && activeDeity && (
+      {/* Admin Controls — rendered outside the transformed motion.div so `fixed` works.
+          Shown even with an empty list so the first deity can be added; Edit/Delete
+          are only offered when there is an active deity to act on. */}
+      {isAdmin && !editing && (
         <>
           <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
             <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
@@ -413,20 +415,24 @@ export default function DeityListing({
                 Admin Controls
               </span>
               <span className="text-stone/25 font-mono select-none text-xs">|</span>
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-stone/70 transition-colors hover:border-stone/40 hover:text-stone"
-              >
-                <Pencil size={12} />
-                <span>Edit</span>
-              </button>
-              <button
-                onClick={() => setDeleteOpen(true)}
-                className="flex items-center gap-1.5 rounded-full border border-red-300 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:bg-red-50"
-              >
-                <Trash2 size={12} />
-                <span>Delete</span>
-              </button>
+              {activeDeity && (
+                <>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-stone/70 transition-colors hover:border-stone/40 hover:text-stone"
+                  >
+                    <Pencil size={12} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => setDeleteOpen(true)}
+                    className="flex items-center gap-1.5 rounded-full border border-red-300 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:bg-red-50"
+                  >
+                    <Trash2 size={12} />
+                    <span>Delete</span>
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => router.push("/deities/new")}
                 className="flex items-center gap-1.5 rounded-full bg-moss px-3 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-moss/90"
@@ -437,13 +443,15 @@ export default function DeityListing({
             </div>
           </div>
 
-          <DeleteDeityPopup
-            open={deleteOpen}
-            onClose={() => setDeleteOpen(false)}
-            deityId={activeDeity.id}
-            deityName={activeDeity.name}
-            linkedShrineCount={activeDeity.shrines.length}
-          />
+          {activeDeity && (
+            <DeleteDeityPopup
+              open={deleteOpen}
+              onClose={() => setDeleteOpen(false)}
+              deityId={activeDeity.id}
+              deityName={activeDeity.name}
+              linkedShrineCount={activeDeity.shrines.length}
+            />
+          )}
         </>
       )}
 
