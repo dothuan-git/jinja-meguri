@@ -127,8 +127,14 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
   Guards live in `lib/auth/server.ts` (`getCurrentUser` returns `{ id, email, name, isAdmin } | null`;
   `requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions;
   `getAdminEmail` gates the inline editing affordances on public pages). `middleware.ts`
-  refreshes the session cookie on a cache miss; its matcher now covers all page routes (excluding
-  `/api`, `/_next`, and static assets) because the layout/pages read the session at render time.
+  refreshes the session cookie on a cache miss **and completes the OAuth handshake**: social login
+  returns to the app with a one-time `neon_auth_session_verifier` query param, which the middleware
+  forwards to `/api/auth/get-session` (redeeming it + the `session_challange` cookie for the real
+  session cookie) and then redirects to the verifier-stripped URL — without this step OAuth users
+  land signed-out. Its matcher covers all page routes (excluding `/api`, `/_next`, and static
+  assets) because the layout/pages read the session at render time. Note the Neon Auth session
+  cookies are `__Secure-` prefixed, so they only persist over HTTPS (auth won't stick on plain
+  `http://localhost`).
 - **Role-aware controls:** admins see the existing "Admin Controls" bars; signed-in normal users
   see a scaffold `components/UserControls.tsx` (features TBD), currently mounted only on the
   `/shrines` listing via an `isUser` prop alongside `isAdmin`.
