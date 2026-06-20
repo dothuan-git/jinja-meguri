@@ -21,6 +21,7 @@ import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import { getCategoryColor } from "@/lib/facetColors";
 import RankTag from "@/components/RankTag";
+import UserControls from "@/components/UserControls";
 
 // Canonical compact chip style shared by category + rank tags across the
 // table, cards, and the shrine detail/modal views. Color comes from facetColors.
@@ -46,7 +47,7 @@ const PARAM_KEY: Record<Exclude<keyof Filters, "searchQuery">, string> = {
   deity: "deity",
 };
 
-export default function ShrineListing({ cards, facets, isAdmin }: { cards: ShrineCard[]; facets: FacetCatalogs; isAdmin?: boolean }) {
+export default function ShrineListing({ cards, facets, isAdmin, isUser }: { cards: ShrineCard[]; facets: FacetCatalogs; isAdmin?: boolean; isUser?: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -754,6 +755,9 @@ export default function ShrineListing({ cards, facets, isAdmin }: { cards: Shrin
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* User Controls — scaffold shown to signed-in non-admin users */}
+      {isUser && !isAdmin && <UserControls />}
 
       {/* Admin Controls — floating pill mirroring the shrine detail page bar */}
       {isAdmin && (

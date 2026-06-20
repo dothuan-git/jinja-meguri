@@ -174,11 +174,8 @@ CREATE INDEX idx_festival_occurrences_festival ON festival_occurrences(festival_
 CREATE INDEX idx_festival_occurrences_year     ON festival_occurrences(year);
 
 -- ------------------------------------------------------------
--- ADMIN ALLOWLIST
+-- AUTHORIZATION
 -- ------------------------------------------------------------
-CREATE TABLE app_admin (
-    email      text PRIMARY KEY,
-    role       text NOT NULL DEFAULT 'admin'
-                   CHECK (role IN ('admin', 'editor')),
-    created_at timestamptz NOT NULL DEFAULT now()
-);
+-- There is no application-level auth table. Admin authorization is the Neon Auth
+-- user role: neon_auth.user.role === 'admin' (the Better Auth admin plugin field),
+-- read off the session. See DATA_MODEL.md §7 and ACCOUNTS.md.

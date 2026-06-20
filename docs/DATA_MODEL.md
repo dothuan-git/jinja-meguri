@@ -21,7 +21,7 @@ The model separates three concerns:
 - **Core entities** — `shrines`, `deities`.
 - **Relationships & detail** — junctions, 1:1 prose, festivals, occurrences, sources.
 
-Plus a standalone `app_admin` allowlist table for authorization.
+Authorization uses the Neon Auth user role, not an application table (see §7).
 
 **Naming conventions**
 
@@ -63,7 +63,7 @@ erDiagram
     festivals ||--o{ festival_occurrences : ""
 ```
 
-`app_admin` stands alone (no FKs into the content graph).
+The content graph above has no auth tables — authorization is the Neon Auth user role (§7).
 
 ---
 
@@ -277,21 +277,21 @@ Index `idx_sources_shrine`. Rendered as visible footnotes on the detail page.
 
 ---
 
-## 7. Admin allowlist
+## 7. Authorization (Neon Auth role)
 
-### `app_admin`
-Authorization layer (a second gate after Neon Auth sign-in). Standalone; no FKs.
+Authorization is a second gate after Neon Auth sign-in. **Admin is the Neon Auth user role**,
+not a local table: `neon_auth.user.role === "admin"` (the `role`/`banned` columns come from the
+Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `getCurrentUser()` and
+`getAdminEmail()` read `role` straight off the session, and `requireAdmin`/`assertAdmin` gate on it.
 
-| Column       | Type          | Nullable | Constraints       | Description                                      |
-| ------------ | ------------- | -------- | ----------------- | ------------------------------------------------ |
-| `email`      | `text`        | No       | PK                | Admin's email (matches the Neon Auth identity).  |
-| `role`       | `text`        | No       | DEFAULT `admin`, CHECK (enum) | Authorization role.                  |
-| `created_at` | `timestamptz` | No       | DEFAULT `now()`   | Row creation timestamp.                          |
+> **Role model.** There is no application users table — Neon Auth owns the account records,
+> including the role. Any signed-in account whose role is not `admin` is a "normal user"
+> (`getCurrentUser().isAdmin === false`). Self-sign-up always creates a normal-user role, so new
+> accounts are never admins until promoted: `UPDATE neon_auth."user" SET role='admin' WHERE
+> lower(email)=lower('…')` (or the `admin/set-role` endpoint). See [`ACCOUNTS.md`](./ACCOUNTS.md).
 
-> `role` ∈ `admin` | `editor`.
-
-A signed-in email must appear here to unlock the in-place editing affordances and pass the
-`requireAdmin`/`assertAdmin` guards. See [`ACCOUNTS.md`](./ACCOUNTS.md).
+> **Removed: `app_admin`.** An earlier model used a `public.app_admin` email allowlist. It has been
+> dropped from the database and `schema.sql`; authorization is now entirely the Neon Auth user role.
 
 ---
 

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Compass, Calendar as CalendarIcon, Home, Sparkles } from "lucide-react";
+import { Compass, Calendar as CalendarIcon, Home, Sparkles, User, LogIn } from "lucide-react";
+import type { CurrentUser } from "@/lib/auth/server";
 
 const NAV = [
   { href: "/shrines", label: "Sanctuaries", match: ["/shrines"] },
@@ -15,7 +16,7 @@ function isActive(pathname: string, match: string[]) {
   return match.some((m) => pathname === m || pathname.startsWith(m + "/"));
 }
 
-export default function SiteChrome() {
+export default function SiteChrome({ user }: { user: CurrentUser | null }) {
   const pathname = usePathname();
   if (pathname === "/") return null; // home is full-bleed, no chrome
 
@@ -58,9 +59,35 @@ export default function SiteChrome() {
           ))}
         </nav>
 
-        <div className="text-[10px] font-mono tracking-widest uppercase text-moss-light/90 hidden lg:block select-none font-bold">
-          Quiet Dawn Rituals
-        </div>
+        {user ? (
+          <Link
+            href={`/users/${user.id}`}
+            aria-label={user.name || "Profile"}
+            title={user.name || "Profile"}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+              pathname.startsWith("/users/")
+                ? "border-torii text-torii"
+                : "border-moss/20 text-moss-light hover:border-torii hover:text-torii"
+            }`}
+          >
+            <User size={16} />
+          </Link>
+        ) : (
+          <div className="hidden items-center gap-6 select-none md:flex">
+            <Link
+              href="/sign-in"
+              className="text-xs tracking-widest uppercase py-1 font-bold text-moss-light transition-colors hover:text-torii"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="rounded-full border border-torii/40 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-torii transition-colors hover:bg-torii hover:text-washi"
+            >
+              Sign up
+            </Link>
+          </div>
+        )}
       </motion.header>
 
       {/* Mobile top banner */}
@@ -95,6 +122,17 @@ export default function SiteChrome() {
             <CalendarIcon size={18} className={isActive(pathname, ["/calendar"]) ? "text-torii scale-110" : "text-moss-light"} />
             <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/calendar"]) ? "text-torii" : "text-moss-light"}`}>Festivals</span>
           </Link>
+          {user ? (
+            <Link href={`/users/${user.id}`} className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
+              <User size={18} className={pathname.startsWith("/users/") ? "text-torii scale-110" : "text-moss-light"} />
+              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${pathname.startsWith("/users/") ? "text-torii" : "text-moss-light"}`}>Profile</span>
+            </Link>
+          ) : (
+            <Link href="/sign-in" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
+              <LogIn size={18} className={isActive(pathname, ["/sign-in", "/sign-up"]) ? "text-torii scale-110" : "text-moss-light"} />
+              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/sign-in", "/sign-up"]) ? "text-torii" : "text-moss-light"}`}>Sign in</span>
+            </Link>
+          )}
         </motion.div>
       </AnimatePresence>
     </>

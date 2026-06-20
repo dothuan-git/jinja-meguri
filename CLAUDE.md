@@ -95,17 +95,31 @@ Pages are server components that hand pre-built data to client components:
 Content management is **entirely in-place on the public surfaces** — admins see editing
 affordances on `/shrines`, `/shrines/[slug]`, `/deities`, and the create pages
 `/shrines/new` + `/deities/new`. There is no longer a dedicated `/admin/*` UI: the old
-dashboard, structured-form / JSON-import pages (shrines, deities, festival occurrences), and
-the sign-in pages were removed in favor of inline editing. **Sign-in is being re-implemented
-from scratch** — only the auth backend remains (see below); there is currently no login page.
+dashboard and structured-form / JSON-import pages were removed in favor of inline editing.
 
-- **Auth:** Neon Auth (`@neondatabase/auth`) owns sessions; the auth API handler is
-  `app/api/auth/[...path]/route.ts`. Authorization is a second layer — the signed-in email
-  must appear in the `app_admin` allowlist table. Guards live in `lib/auth/server.ts`
-  (`requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions;
+- **Accounts & roles:** anyone can self-register at `/sign-up` and sign in at `/sign-in`
+  (custom forms in `components/auth/`, in the `app/(auth)` route group, using the `authClient`
+  from `lib/auth/client.ts`). Sign-up creates a **normal user** (Neon Auth role `user`). The nav
+  (`components/SiteChrome.tsx`) shows Sign in / Sign up when logged out and a profile icon →
+  `/users/[id]` (owner-only profile, with Sign out) when logged in. `app/layout.tsx` reads
+  `getCurrentUser()` once and hands the `user` to `SiteChrome`.
+- **Auth:** Neon Auth (`@neondatabase/auth`, built on better-auth) owns sessions; the auth API
+  handler is `app/api/auth/[...path]/route.ts`. Authorization is a second layer — admin is the
+  **Neon Auth user role** (`neon_auth.user.role === "admin"`, the Better Auth **admin plugin**
+  field), read straight off the session; any signed-in account whose role is not `admin` is a
+  normal user. There is **no local allowlist table** — admin is granted by promoting an existing
+  account: `UPDATE neon_auth."user" SET role='admin' WHERE lower(email)=lower('…')` (or the
+  `admin/set-role` endpoint). Self-sign-up always lands at role `user`, so users cannot
+  self-promote. (The legacy `public.app_admin` table has been dropped — authorization is purely
+  the Neon Auth user role.)
+  Guards live in `lib/auth/server.ts` (`getCurrentUser` returns `{ id, email, name, isAdmin } | null`;
+  `requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions;
   `getAdminEmail` gates the inline editing affordances on public pages). `middleware.ts`
-  refreshes the session cookie, but its matcher still targets `/admin/*` and needs revisiting
-  when sign-in is rebuilt.
+  refreshes the session cookie on a cache miss; its matcher now covers all page routes (excluding
+  `/api`, `/_next`, and static assets) because the layout/pages read the session at render time.
+- **Role-aware controls:** admins see the existing "Admin Controls" bars; signed-in normal users
+  see a scaffold `components/UserControls.tsx` (features TBD), currently mounted only on the
+  `/shrines` listing via an `isUser` prop alongside `isAdmin`.
 - **Writes:** server actions in `app/admin/actions.ts` (the directory now holds only this file)
   validate a JSON envelope with Zod (`lib/admin/shrineContract.ts`, `lib/admin/deityContract.ts`),
   then call runtime mutations in `lib/db/mutations.ts` (transactional upsert/delete, deity dedup
