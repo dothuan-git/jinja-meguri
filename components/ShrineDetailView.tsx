@@ -272,48 +272,37 @@ function PageBody({
     const savedStamp = localStorage.getItem(`jinja-goshuin-${shrine.slug}`);
     setStampReceived(savedStamp);
 
-    // Dynamic reset scroll to top
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0;
-    }
+    window.scrollTo(0, 0);
     setActiveSection("overview");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shrine.slug]);
 
-  // Handle scroll to track progress & active tab
+  // Handle scroll to track active section tab — keyed off window scroll
   const handleScroll = () => {
-    const el = containerRef.current;
-    if (!el) return;
-
     let currentSection = "overview";
     const buffer = 150;
 
     for (const key of Object.keys(sectionRefs)) {
       const secEl = sectionRefs[key as keyof typeof sectionRefs]?.current;
-      if (secEl) {
-        const rect = secEl.getBoundingClientRect();
-        const containerRect = el.getBoundingClientRect();
-        const relativeTop = rect.top - containerRect.top;
-
-        if (relativeTop <= buffer) {
-          currentSection = key;
-        }
+      if (secEl && secEl.getBoundingClientRect().top <= buffer) {
+        currentSection = key;
       }
     }
     setActiveSection(currentSection);
   };
 
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const scrollToSection = (secId: string) => {
     const target = sectionRefs[secId as keyof typeof sectionRefs]?.current;
-    if (target && containerRef.current) {
-      const container = containerRef.current;
-      const targetRect = target.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      const relativeTop = targetRect.top - containerRect.top + container.scrollTop;
-
-      container.scrollTo({
-        top: relativeTop - 15,
-        behavior: "smooth"
+    if (target) {
+      window.scrollTo({
+        top: target.getBoundingClientRect().top + window.scrollY - 15,
+        behavior: "smooth",
       });
       setActiveSection(secId);
     }
@@ -340,8 +329,7 @@ function PageBody({
   return (
     <div
       ref={containerRef}
-      onScroll={handleScroll}
-      className="w-full flex-1 flex flex-col h-[calc(100vh-80px)] overflow-y-auto bg-transparent relative scroll-smooth pb-16"
+      className="w-full flex-1 flex flex-col bg-transparent relative pb-16"
     >
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
 
