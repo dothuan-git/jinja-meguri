@@ -1,5 +1,6 @@
 import { createNeonAuth } from "@neondatabase/auth/next/server";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 export const auth = createNeonAuth({
   baseUrl: process.env.NEON_AUTH_BASE_URL!,
@@ -7,6 +8,14 @@ export const auth = createNeonAuth({
     secret: process.env.NEON_AUTH_COOKIE_SECRET!,
   },
 });
+
+/**
+ * Per-request-memoized session read. The root layout and the page both resolve
+ * the current user during a single render; wrapping the read in React `cache()`
+ * collapses those into one `auth.getSession()` (one cookie decode / refresh) for
+ * the whole request instead of one per caller.
+ */
+const getSession = cache(() => auth.getSession());
 
 /**
  * True if the signed-in account carries the Better Auth admin role.
@@ -20,7 +29,7 @@ function isAdminUser(user: { role?: unknown } | null | undefined): boolean {
 
 /** Returns the signed-in admin email, or null if not authenticated / not an admin. */
 export async function getAdminEmail(): Promise<string | null> {
-  const { data } = await auth.getSession();
+  const { data } = await getSession();
   const user = data?.user;
   if (!user?.email) return null;
   return isAdminUser(user) ? user.email : null;
@@ -40,7 +49,7 @@ export type CurrentUser = {
  * admin plugin); any signed-in account whose role is not "admin" is a normal user.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const { data } = await auth.getSession();
+  const { data } = await getSession();
   const user = data?.user;
   if (!user?.email) return null;
   return {

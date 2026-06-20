@@ -192,12 +192,13 @@ export interface ShrineCard {
   prayer_focus: string | null;
   best_time: string | null;
   primary_deity_titles: string[];
-  image_url: string | null;
 }
 
 export interface ShrineDetail extends ShrineCard {
   address: string | null;
   coordinates: Coordinates | null;
+  // Kept (not displayed: ShrineImage is a procedural placeholder) because the
+  // inline editor round-trips it via shrineDetailToInput → upsertShrine.
   image_urls: string[] | null;
   deities: DeityView[];
   ranks: RankView[];

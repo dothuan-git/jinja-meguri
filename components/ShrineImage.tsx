@@ -3,7 +3,6 @@
 import { CSSProperties } from "react";
 
 interface ShrineImageProps {
-  src?: string;
   alt: string;
   className?: string; // Kept for compatibility with other components
   shrineId?: string;
@@ -80,7 +79,7 @@ const PLACEHOLDER_MAP: Record<string, PlaceholderConfig> = {
  *  ③ Sacred Torii Gate arch in structural vermilion.
  *  ④ Frosted washi-paper prefecture location tag in upper boundary.
  */
-export default function ShrineImage({ src, alt, className = "", shrineId, prefecture, nameJa, compact = false }: ShrineImageProps) {
+export default function ShrineImage({ alt, className = "", shrineId, prefecture, nameJa, compact = false }: ShrineImageProps) {
   // Extract custom configuration from shrineId, or match by alt keywords, or use default
   let config: PlaceholderConfig = {
     pha: "#bcc3bb",

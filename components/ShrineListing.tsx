@@ -552,7 +552,7 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
                       <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
                         {/* Beautiful curved top-header image with loader fallback built-in */}
                         <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
+                          <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
 
                           {/* Traditional paper/wood placard (Ofuda badge) */}
                           <div

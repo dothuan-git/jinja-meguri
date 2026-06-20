@@ -1,5 +1,14 @@
 import type {
   Store,
+  ShrineRow,
+  ShrineDeityRow,
+  ShrineRankRow,
+  ShrinePrayerCategoryRow,
+  ShrineDetailRow,
+  Region,
+  Rank,
+  PrayerCategory,
+  Deity,
   ShrineCard,
   ShrineDetail,
   RankView,
@@ -19,11 +28,51 @@ function index<T extends { id: string | number }>(rows: T[]): Map<T["id"], T> {
   return new Map(rows.map((r) => [r.id, r]));
 }
 
-function shrineRankViews(store: Store, shrineId: string): RankView[] {
-  const byId = index(store.ranks);
-  const ranks = store.shrine_ranks
-    .filter((sr) => sr.shrine_id === shrineId)
-    .map((sr) => byId.get(sr.rank_id)!)
+function groupBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
+  const map = new Map<K, T[]>();
+  for (const row of rows) {
+    const k = key(row);
+    const bucket = map.get(k);
+    if (bucket) bucket.push(row);
+    else map.set(k, [row]);
+  }
+  return map;
+}
+
+/**
+ * Lookup tables built once per assembly pass so the per-shrine helpers below do
+ * O(1) map lookups instead of re-scanning (and re-indexing) the full join tables
+ * for every shrine — which made `getShrineCards` quadratic in the shrine count.
+ */
+type StoreIndex = {
+  rankById: Map<number, Rank>;
+  catById: Map<number, PrayerCategory>;
+  deityById: Map<string, Deity>;
+  regionById: Map<number, Region>;
+  prefById: Map<number, Prefecture>;
+  ranksByShrine: Map<string, ShrineRankRow[]>;
+  catsByShrine: Map<string, ShrinePrayerCategoryRow[]>;
+  deitiesByShrine: Map<string, ShrineDeityRow[]>;
+  detailByShrine: Map<string, ShrineDetailRow>;
+};
+
+function buildIndex(store: Store): StoreIndex {
+  return {
+    rankById: index(store.ranks),
+    catById: index(store.prayer_categories),
+    deityById: index(store.deities),
+    regionById: index(store.regions),
+    prefById: index(store.prefectures),
+    ranksByShrine: groupBy(store.shrine_ranks, (sr) => sr.shrine_id),
+    catsByShrine: groupBy(store.shrine_prayer_categories, (spc) => spc.shrine_id),
+    deitiesByShrine: groupBy(store.shrine_deities, (sd) => sd.shrine_id),
+    detailByShrine: new Map(store.shrine_details.map((d) => [d.shrine_id, d])),
+  };
+}
+
+function shrineRankViews(idx: StoreIndex, shrineId: string): RankView[] {
+  const ranks = (idx.ranksByShrine.get(shrineId) ?? [])
+    .map((sr) => idx.rankById.get(sr.rank_id)!)
     .filter(Boolean);
   const highestId = pickHighestRankId(ranks);
   return ranks
@@ -37,21 +86,17 @@ function shrineRankViews(store: Store, shrineId: string): RankView[] {
     .sort((a, b) => a.rank_order - b.rank_order);
 }
 
-function shrineCategoryViews(store: Store, shrineId: string): CategoryView[] {
-  const byId = index(store.prayer_categories);
-  return store.shrine_prayer_categories
-    .filter((spc) => spc.shrine_id === shrineId)
-    .map((spc) => byId.get(spc.category_id)!)
+function shrineCategoryViews(idx: StoreIndex, shrineId: string): CategoryView[] {
+  return (idx.catsByShrine.get(shrineId) ?? [])
+    .map((spc) => idx.catById.get(spc.category_id)!)
     .filter(Boolean)
     .map((c) => ({ name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label }));
 }
 
-function shrineDeityViews(store: Store, shrineId: string): DeityView[] {
-  const byId = index(store.deities);
-  return store.shrine_deities
-    .filter((sd) => sd.shrine_id === shrineId)
+function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
+  return (idx.deitiesByShrine.get(shrineId) ?? [])
     .map((sd) => {
-      const d = byId.get(sd.deity_id)!;
+      const d = idx.deityById.get(sd.deity_id)!;
       return {
         id: d.id,
         name_en: d.name_en,
@@ -67,15 +112,14 @@ function shrineDeityViews(store: Store, shrineId: string): DeityView[] {
     .sort((a, b) => a.sort_order - b.sort_order);
 }
 
-function buildCard(store: Store, shrineId: string): ShrineCard {
-  const s = store.shrines.find((x) => x.id === shrineId)!;
-  const region = store.regions.find((r) => r.id === s.region_id);
-  const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
-  const ranks = shrineRankViews(store, shrineId);
-  const categories = shrineCategoryViews(store, shrineId);
-  const deities = shrineDeityViews(store, shrineId);
+function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
+  const region = idx.regionById.get(s.region_id);
+  const pref = idx.prefById.get(s.prefecture_id);
+  const ranks = shrineRankViews(idx, s.id);
+  const categories = shrineCategoryViews(idx, s.id);
+  const deities = shrineDeityViews(idx, s.id);
   const primary = deities.find((d) => d.is_primary) ?? null;
-  const detailRow = store.shrine_details.find((d) => d.shrine_id === shrineId) ?? null;
+  const detailRow = idx.detailByShrine.get(s.id) ?? null;
   return {
     slug: s.slug,
     name_en: s.name_en,
@@ -94,12 +138,12 @@ function buildCard(store: Store, shrineId: string): ShrineCard {
     prayer_focus: detailRow?.prayer_focus ?? null,
     best_time: detailRow?.best_time ?? null,
     primary_deity_titles: primary?.titles ?? [],
-    image_url: s.image_urls?.[0] ?? null,
   };
 }
 
 export function getShrineCards(store: Store): ShrineCard[] {
-  return store.shrines.map((s) => buildCard(store, s.id)).sort((a, b) => a.name_en.localeCompare(b.name_en));
+  const idx = buildIndex(store);
+  return store.shrines.map((s) => buildCard(idx, s)).sort((a, b) => a.name_en.localeCompare(b.name_en));
 }
 
 export function getAllSlugs(store: Store): string[] {
@@ -109,8 +153,9 @@ export function getAllSlugs(store: Store): string[] {
 export function getShrineDetail(store: Store, slug: string): ShrineDetail | null {
   const s = store.shrines.find((x) => x.slug === slug);
   if (!s) return null;
-  const card = buildCard(store, s.id);
-  const detailRow = store.shrine_details.find((d) => d.shrine_id === s.id) ?? null;
+  const idx = buildIndex(store);
+  const card = buildCard(idx, s);
+  const detailRow = idx.detailByShrine.get(s.id) ?? null;
   const festivals: FestivalView[] = store.festivals
     .filter((f) => f.shrine_id === s.id)
     .map((f) => ({
@@ -132,8 +177,8 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
     address: s.address,
     coordinates: s.coordinates,
     image_urls: s.image_urls,
-    deities: shrineDeityViews(store, s.id),
-    ranks: shrineRankViews(store, s.id),
+    deities: shrineDeityViews(idx, s.id),
+    ranks: shrineRankViews(idx, s.id),
     details: detailRow
       ? {
           history: detailRow.history,
@@ -149,13 +194,16 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
 }
 
 export function getFestivalYear(store: Store, year: number): CalendarFestival[] {
+  const shrineById = index(store.shrines);
+  const regionById = index(store.regions);
+  const prefById = index(store.prefectures);
   const occByFestival = new Map(
     store.festival_occurrences.filter((o) => o.year === year).map((o) => [o.festival_id, o]),
   );
   return store.festivals.map((f) => {
-    const s = store.shrines.find((x) => x.id === f.shrine_id)!;
-    const region = store.regions.find((r) => r.id === s.region_id);
-    const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
+    const s = shrineById.get(f.shrine_id)!;
+    const region = regionById.get(s.region_id);
+    const pref = prefById.get(s.prefecture_id);
     const occ = occByFestival.get(f.id);
     const { start_date: startDate, end_date: endDate, is_fallback } = resolveCalendarDates(occ, f, year);
     const month = startDate ? Number(startDate.slice(5, 7)) : null;
@@ -186,13 +234,15 @@ export function getFestivalYear(store: Store, year: number): CalendarFestival[] 
 
 export function getDeityList(store: Store): DeityListItem[] {
   const shrineById = index(store.shrines);
+  const regionById = index(store.regions);
+  const prefById = index(store.prefectures);
+  const linksByDeity = groupBy(store.shrine_deities, (sd) => sd.deity_id);
   const items: DeityListItem[] = store.deities.map((d) => {
-    const links: DeityShrineLink[] = store.shrine_deities
-      .filter((sd) => sd.deity_id === d.id)
+    const links: DeityShrineLink[] = (linksByDeity.get(d.id) ?? [])
       .map((sd) => {
         const s = shrineById.get(sd.shrine_id)!;
-        const region = store.regions.find((r) => r.id === s.region_id);
-        const pref = store.prefectures.find((p) => p.id === s.prefecture_id);
+        const region = regionById.get(s.region_id);
+        const pref = prefById.get(s.prefecture_id);
         return {
           slug: s.slug,
           name_en: s.name_en,
@@ -244,9 +294,10 @@ export function getFacetCatalogs(store: Store): FacetCatalogs {
     (prefecturesByRegion[p.region_id] ??= []).push(p);
   }
 
+  const deityById = index(store.deities);
   const deityJaInUse = new Map<string, { name_en: string; name_ja: string }>();
   for (const sd of store.shrine_deities) {
-    const d = store.deities.find((x) => x.id === sd.deity_id);
+    const d = deityById.get(sd.deity_id);
     if (d?.name_ja) deityJaInUse.set(d.name_ja, { name_en: d.name_en, name_ja: d.name_ja });
   }
 

@@ -49,15 +49,19 @@ route; the rest is read-only public content.
 
 ```
 Neon Postgres
-  └─ lib/db/store.ts (loadStore)   — fetches all 13 tables in parallel via a pg.Pool, wrapped in React cache()
+  └─ lib/db/store.ts (loadStore)   — fetches all 13 tables in parallel via a pg.Pool, cached in the Next Data Cache (+ React cache())
        └─ lib/db/repo.ts           — pure functions assembling typed view models from the Store
             └─ app/*/page.tsx      — server components call repo functions, pass results to client components
 ```
 
-`Store` (defined in `lib/types.ts`) holds every table as a typed array. `loadStore()` is
-wrapped in React `cache()`, so within a single request Neon is queried once; a fresh cache
-is created per request, so admin writes show up on the next page load. The shared
-`pg.Pool` is exported from `lib/db/store.ts` and reused by auth and mutations.
+`Store` (defined in `lib/types.ts`) holds every table as a typed array. The DB read is
+wrapped in **two** caches: `unstable_cache` (the Next Data Cache, keyed/tagged `STORE_TAG`)
+caches the assembled `Store` **across requests** so most page loads never touch Neon, and
+React `cache()` dedupes it **within** a request. The cache is held until an admin write calls
+`revalidateTag(STORE_TAG)` (wired into every server action in `app/admin/actions.ts`), so
+edits appear on the next render; a 1-hour `revalidate` is a safety net for out-of-band DB
+changes (e.g. `db:reset`). The shared `pg.Pool` is exported from `lib/db/store.ts` and reused
+by auth and mutations.
 
 ### View model layers (`lib/types.ts`)
 

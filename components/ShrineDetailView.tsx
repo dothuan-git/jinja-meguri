@@ -70,7 +70,6 @@ function toView(shrine: ShrineDetail) {
     location: shrine.city ?? "",
     prefecture: shrine.prefecture,
     region: shrine.region,
-    image: shrine.image_urls?.[0] ?? undefined,
     ranks: shrine.ranks.map((r) => r.name_en),
     prayerFocus: shrine.categories.map((c) => c.name_en),
     prayerFocusText: shrine.details?.prayer_focus ?? "",
@@ -353,7 +352,7 @@ function PageBody({
 
         {/* Cinematic Header Display (Borderless, natural merge) */}
         <div data-reveal="fade-up-blur" className="relative w-full rounded-2xl overflow-hidden shadow-xs aspect-[16/7] md:aspect-[21/7] bg-stone/5">
-          <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
+          <ShrineImage alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
           <div className="absolute inset-0 bg-gradient-to-t from-stone/60 via-stone/5 to-transparent pointer-events-none" />
 
           {/* Elegant overlay vertical seal */}
@@ -1131,7 +1130,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
       {/* Full-bleed cover image */}
       <div className="relative h-48 sm:h-60 md:h-72 w-full shrink-0 bg-stone/5 border-b border-moss/10 overflow-hidden select-none">
-        <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
+        <ShrineImage alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
       </div>
 
       <div className="px-6 md:px-10 py-7 space-y-9 pb-9">

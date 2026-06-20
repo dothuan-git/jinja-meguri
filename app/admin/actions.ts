@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { assertAdmin } from "@/lib/auth/server";
+import { STORE_TAG } from "@/lib/db/store";
 import { ShrineInputSchema } from "@/lib/admin/shrineContract";
 import { DeityInputSchema } from "@/lib/admin/deityContract";
 import { upsertShrine, deleteShrine, upsertDeity, updateDeity, deleteDeity } from "@/lib/db/mutations";
@@ -29,6 +31,7 @@ export async function saveShrineAction(
 
   try {
     const { slug } = await upsertShrine(result.data);
+    revalidateTag(STORE_TAG);
     return { success: true, slug };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Database error" };
@@ -62,9 +65,11 @@ export async function saveDeityAction(
   try {
     if (id) {
       await updateDeity(id, result.data);
+      revalidateTag(STORE_TAG);
       return { success: true, name_ja: result.data.name_ja };
     }
     const { name_ja } = await upsertDeity(result.data);
+    revalidateTag(STORE_TAG);
     return { success: true, name_ja };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Database error" };
@@ -75,6 +80,7 @@ export async function deleteDeityAction(id: string): Promise<{ error?: string }>
   await assertAdmin();
   try {
     await deleteDeity(id);
+    revalidateTag(STORE_TAG);
     return {};
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Database error" };
@@ -85,6 +91,7 @@ export async function deleteShrineAction(slug: string): Promise<{ error?: string
   await assertAdmin();
   try {
     await deleteShrine(slug);
+    revalidateTag(STORE_TAG);
     return {};
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Database error" };

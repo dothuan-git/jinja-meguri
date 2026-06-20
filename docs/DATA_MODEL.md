@@ -339,8 +339,11 @@ Key derivations done in `repo.ts`, not in SQL:
 - **Calendar date resolution** — occurrence date wins over the festival's own date;
   `is_fallback = true` when neither exists (display `time_prose` only).
 
-> `loadStore()` is wrapped in React `cache()`, so Neon is queried once per request; a fresh cache
-> per request means admin writes appear on the next page load. See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) §3.
+> The DB read is cached in the Next Data Cache via `unstable_cache` (tag `STORE_TAG`) so the
+> assembled `Store` is reused across requests without re-querying Neon, and additionally in
+> React `cache()` for per-request dedup. Admin server actions call `revalidateTag(STORE_TAG)`
+> after every write, so edits appear on the next render (1-hour `revalidate` safety net for
+> out-of-band changes). See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) §3.
 
 ---
 

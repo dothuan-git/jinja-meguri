@@ -16,6 +16,26 @@ async function resolveId(
   return res.rows[0].id as number;
 }
 
+// Fetch a small, static catalog's name_en → id map in one round-trip, so a shrine
+// with N ranks/categories resolves them all from memory instead of N SELECTs.
+async function catalogMap(client: PoolClient, table: string): Promise<Map<string, number>> {
+  const res = await client.query(`SELECT id, name_en FROM ${table}`);
+  return new Map(res.rows.map((r) => [r.name_en as string, r.id as number]));
+}
+
+// Insert all (shrine_id, <col>) junction rows in a single multi-row INSERT.
+async function insertJunction(
+  client: PoolClient,
+  table: string,
+  col: string,
+  shrineId: string,
+  ids: number[],
+): Promise<void> {
+  if (!ids.length) return;
+  const values = ids.map((_, i) => `($1,$${i + 2})`).join(",");
+  await client.query(`INSERT INTO ${table} (shrine_id,${col}) VALUES ${values}`, [shrineId, ...ids]);
+}
+
 // Upsert a deity by name_ja (the canonical dedup key).
 // Returns the deity's uuid id.
 async function resolveDeity(
@@ -96,16 +116,29 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       );
     }
 
-    // shrine_ranks
-    for (const rankName of input.ranks ?? []) {
-      const rankId = await resolveId(client, "ranks", rankName);
-      await client.query("INSERT INTO shrine_ranks (shrine_id,rank_id) VALUES ($1,$2)", [shrineId, rankId]);
+    // shrine_ranks + shrine_prayer_categories — resolve every catalog name from a
+    // single prefetch of each (tiny, static) table, then write all rows in one
+    // multi-row INSERT, instead of a SELECT + INSERT round-trip per name.
+    const rankNames = input.ranks ?? [];
+    if (rankNames.length) {
+      const rankIdByName = await catalogMap(client, "ranks");
+      const rankIds = rankNames.map((name) => {
+        const id = rankIdByName.get(name);
+        if (id == null) throw new Error(`Unknown ranks name: "${name}"`);
+        return id;
+      });
+      await insertJunction(client, "shrine_ranks", "rank_id", shrineId, rankIds);
     }
 
-    // shrine_prayer_categories
-    for (const catName of input.prayer_categories ?? []) {
-      const catId = await resolveId(client, "prayer_categories", catName);
-      await client.query("INSERT INTO shrine_prayer_categories (shrine_id,category_id) VALUES ($1,$2)", [shrineId, catId]);
+    const catNames = input.prayer_categories ?? [];
+    if (catNames.length) {
+      const catIdByName = await catalogMap(client, "prayer_categories");
+      const catIds = catNames.map((name) => {
+        const id = catIdByName.get(name);
+        if (id == null) throw new Error(`Unknown prayer_categories name: "${name}"`);
+        return id;
+      });
+      await insertJunction(client, "shrine_prayer_categories", "category_id", shrineId, catIds);
     }
 
     // deities + shrine_deities
@@ -155,9 +188,12 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       }
     }
 
-    // sources
-    for (const src of input.sources ?? []) {
-      await client.query("INSERT INTO sources (shrine_id,url,title) VALUES ($1,$2,$3)", [shrineId, src.url, src.title ?? null]);
+    // sources — one multi-row INSERT instead of a round-trip per source.
+    const sources = input.sources ?? [];
+    if (sources.length) {
+      const values = sources.map((_, i) => `($1,$${i * 2 + 2},$${i * 2 + 3})`).join(",");
+      const params = [shrineId, ...sources.flatMap((s) => [s.url, s.title ?? null])];
+      await client.query(`INSERT INTO sources (shrine_id,url,title) VALUES ${values}`, params);
     }
 
     await client.query("COMMIT");
