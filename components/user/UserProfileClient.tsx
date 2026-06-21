@@ -409,7 +409,7 @@ export default function UserProfileClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-12 md:py-16">
+    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl py-12 md:py-16">
       {/* =======================================================================
           PILGRIM SANCTUARY PASS (HEADER CARD)
           ======================================================================= */}
@@ -425,8 +425,8 @@ export default function UserProfileClient({
         <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-torii/30 pointer-events-none" />
         <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-torii/30 pointer-events-none" />
 
-        {/* Diagonal textured backing strip */}
-        <div className="absolute -right-16 -top-16 w-44 h-44 bg-torii/5 rotate-45 pointer-events-none border border-dashed border-torii/15" />
+        {/* Soft torii glow, top-right corner */}
+        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-torii/5 blur-2xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
           {/* Avatar Octagon Frame */}
@@ -434,7 +434,7 @@ export default function UserProfileClient({
             <motion.div
               whileHover={{ scale: 1.03, rotate: 1.5 }}
               transition={{ type: "spring", stiffness: 300, damping: 15 }}
-              className="w-28 h-28 md:w-32 md:h-32 bg-moss/5 flex items-center justify-center relative shadow-xs transition-all border border-moss/15 cursor-pointer hover:border-torii/40"
+              className="w-28 h-28 md:w-36 md:h-36 bg-moss/5 flex items-center justify-center relative shadow-xs transition-all border border-moss/15 cursor-pointer hover:border-torii/40"
               style={{
                 clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
               }}
@@ -454,7 +454,7 @@ export default function UserProfileClient({
                     clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                   }}
                 />
-                <div className="w-16 h-16 md:w-20 md:h-20 opacity-85 transition-transform group-hover:scale-105 group-hover:opacity-100 relative z-10">
+                <div className="w-16 h-16 md:w-24 md:h-24 opacity-85 transition-transform group-hover:scale-105 group-hover:opacity-100 relative z-10">
                   {activeCrest.render("w-full h-full")}
                 </div>
               </div>
@@ -474,7 +474,7 @@ export default function UserProfileClient({
           <div className="flex-1 w-full space-y-4">
             <div className="space-y-1">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-                <div className="flex flex-col md:flex-row items-center md:items-baseline gap-3 text-center md:text-left">
+                <div className="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
                   <h1 className="font-display text-3xl font-black tracking-wide text-stone">
                     {user.name || "Anonymous Pilgrim"}
                   </h1>
@@ -593,7 +593,7 @@ export default function UserProfileClient({
             >
               <span
                 className={`font-serif text-sm tracking-wider transition-colors ${
-                  activeTab === tab.id ? "text-torii font-bold" : "text-moss-light/80 hover:text-torii"
+                  activeTab === tab.id ? "text-torii font-semibold" : "text-moss-light/80 hover:text-torii"
                 }`}
                 style={{ fontFamily: "'Noto Serif JP', serif" }}
               >
@@ -804,9 +804,9 @@ export default function UserProfileClient({
               >
                 {/* Achievements List */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-6">
                     <Award size={18} className="text-torii" />
-                    <h3 className="font-display text-lg font-black text-stone">Sacred Milestones</h3>
+                    <h3 className="font-serif text-md font-black text-stone">Sacred Milestones</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -828,7 +828,7 @@ export default function UserProfileClient({
 
                           {/* Icon container */}
                           <div
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
+                            className={`w-12 min-h-12 rounded-xl flex items-center justify-center shrink-0 border ${
                               a.isUnlocked
                                 ? "border-bamboo/30 bg-bamboo-light text-bamboo"
                                 : "border-moss/15 bg-stone/5 text-stone/40"
@@ -867,11 +867,11 @@ export default function UserProfileClient({
                   </div>
                 </div>
 
-                {/* Pilgrimage Chronicle (巡礼の記録) */}
+                {/* Pilgrimage Chronicle */}
                 <div className="border-t border-moss/10 pt-8 mt-4">
                   <div className="flex items-center gap-2 mb-6">
                     <BookOpen size={18} className="text-torii" />
-                    <h3 className="font-display text-lg font-black text-stone">Pilgrimage Chronicle (巡礼の記録)</h3>
+                    <h3 className="font-serif text-md font-black text-stone">Pilgrimage Chronicle</h3>
                   </div>
 
                   {stamped.length === 0 ? (
@@ -932,55 +932,34 @@ export default function UserProfileClient({
                                   transition={{ duration: 0.25, ease: "easeInOut" }}
                                   className="overflow-hidden space-y-4 pl-2"
                                 >
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                                     {displayStamps.map((stamp) => (
-                                      <div
+                                      <Link
                                         key={stamp.slug}
-                                        className="wabi-sabi-card washi-paper rounded-xl p-4 flex flex-col justify-between shadow-3xs relative overflow-hidden group hover:border-torii/30 transition-all"
+                                        href={`/shrines/${stamp.slug}`}
+                                        className="wabi-sabi-card washi-paper rounded-lg px-3 py-2.5 flex items-center gap-2.5 shadow-3xs group hover:border-torii/30 transition-all"
                                       >
-                                        <div className="space-y-2">
-                                          <Link href={`/shrines/${stamp.slug}`} className="group-hover:text-torii transition-colors block">
-                                            <span className="font-serif text-sm font-bold text-stone truncate block group-hover:text-torii tracking-wide">
-                                              {stamp.name_en}
+                                        <div className="min-w-0 flex-1">
+                                          <span className="font-serif text-[13px] font-bold text-stone truncate block group-hover:text-torii tracking-wide leading-tight">
+                                            {stamp.name_en}
+                                          </span>
+                                          {stamp.name_ja && (
+                                            <span className="font-serif text-[10px] text-torii-dark/70 tracking-wider truncate block mt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                              {stamp.name_ja}
                                             </span>
-                                            {stamp.name_ja && (
-                                              <span
-                                                className="font-serif text-[11px] text-torii-dark/70 tracking-wider truncate block"
-                                                style={{ fontFamily: "'Noto Serif JP', serif" }}
-                                              >
-                                                {stamp.name_ja}
-                                              </span>
-                                            )}
-                                          </Link>
-
-                                          {stamp.primary_deity && (
-                                            <div className="pt-2 border-t border-moss/5 flex flex-col">
-                                              <span className="text-[8px] font-mono tracking-widest text-moss-light/80 uppercase font-bold">
-                                                Enshrined Kami
-                                              </span>
-                                              <span className="text-xs font-bold text-stone mt-0.5 flex items-center gap-1.5">
-                                                <Sparkles size={11} className="text-torii/75 shrink-0" />
-                                                {stamp.primary_deity.name_en}
-                                                {stamp.primary_deity.name_ja && (
-                                                  <span className="font-serif text-[10px] text-stone/50 font-normal">
-                                                    ({stamp.primary_deity.name_ja})
-                                                  </span>
-                                                )}
-                                              </span>
-                                            </div>
                                           )}
+                                          {stamp.primary_deity && (
+                                            <span className="flex items-center gap-0.5 mt-0.5 text-[10px] text-moss-light/80 truncate">
+                                              <Sparkles size={9} className="text-torii/70 shrink-0" />
+                                              {stamp.primary_deity.name_en}
+                                            </span>
+                                          )}
+                                          <span className="text-[8px] font-mono tracking-widest text-stone/45 uppercase mt-1 block">
+                                            {formatDate(stamp.stamped_at)}
+                                          </span>
                                         </div>
-
-                                        <div className="mt-4 pt-2.5 border-t border-moss/5 flex items-center justify-between text-[9px] font-mono tracking-widest text-stone/50 uppercase">
-                                          <span>Visited {formatDate(stamp.stamped_at)}</span>
-                                          <Link
-                                            href={`/shrines/${stamp.slug}`}
-                                            className="text-torii font-bold hover:underline inline-flex items-center gap-0.5"
-                                          >
-                                            VIEW <ChevronRight size={10} />
-                                          </Link>
-                                        </div>
-                                      </div>
+                                        <ChevronRight size={13} className="text-moss-light/40 group-hover:text-torii shrink-0 transition-colors" />
+                                      </Link>
                                     ))}
                                   </div>
 
