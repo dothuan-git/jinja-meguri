@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion, type Variants } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
-import SocialAuthButtons from "./SocialAuthButtons";
 import OmikujiAlert from "./OmikujiAlert";
 
 const INPUT =
@@ -32,10 +32,12 @@ const itemVariants: Variants = {
 };
 
 
-export default function SignUpForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export default function ResetPasswordForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,27 +45,55 @@ export default function SignUpForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) {
+      setError("Reset token is missing or invalid. Please check your email link.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setPending(true);
     setError(null);
     try {
-      const { error } = await authClient.signUp.email({
-        email,
-        password,
-        name,
-        callbackURL: "/shrines", // where the email-verification link lands after confirming
+      const { error } = await authClient.resetPassword({
+        newPassword: password,
+        token,
       });
       if (error) {
-        setError(error.message ?? "Could not create your account.");
+        setError(error.message ?? "Could not reset password. Your link may have expired.");
         return;
       }
-      // Email verification is required: don't sign in / redirect — confirm and
-      // send the user to verify their inbox before they can sign in.
       setDone(true);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setPending(false);
     }
+  }
+
+  if (!token) {
+    return (
+      <div className="space-y-4 text-center">
+        <OmikujiAlert
+          type="error"
+          message="Invalid or missing reset token. Please request a new password reset link."
+        />
+        <div className="pt-4">
+          <Link
+            href="/forgot-password"
+            className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
+          >
+            Request new link
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (done) {
@@ -75,25 +105,14 @@ export default function SignUpForm() {
       >
         <OmikujiAlert
           type="success"
-          message={`A verification link has been sent to ${email}. Please check your inbox to activate your account.`}
+          message="Your password has been reset successfully. You can now sign in with your new password."
         />
-        
-        <div className="pt-2 text-xs tracking-wide text-moss-light/80 leading-relaxed">
-          Didn&apos;t receive the email? Check your spam folder or{" "}
-          <Link
-            href={`/resend-verification?email=${encodeURIComponent(email)}`}
-            className="font-bold text-torii hover:underline"
-          >
-            resend the verification link
-          </Link>
-          .
-        </div>
 
         <Link
           href="/sign-in"
           className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
         >
-          Go to sign in
+          Sign in
         </Link>
       </motion.div>
     );
@@ -106,10 +125,6 @@ export default function SignUpForm() {
       animate="show"
       className="space-y-6"
     >
-      <motion.div variants={itemVariants}>
-        <SocialAuthButtons />
-      </motion.div>
-
       <motion.form
         onSubmit={onSubmit}
         variants={containerVariants}
@@ -122,40 +137,13 @@ export default function SignUpForm() {
         )}
 
         <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="name" className={LABEL}>Name</label>
-          <input
-            id="name"
-            type="text"
-            autoComplete="name"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={INPUT}
-            placeholder="Your name"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="email" className={LABEL}>Email</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={INPUT}
-            placeholder="you@example.com"
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="password" className={LABEL}>Password</label>
+          <label htmlFor="password" className={LABEL}>
+            New Password
+          </label>
           <div className="relative">
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
               required
               minLength={8}
               value={password}
@@ -174,6 +162,21 @@ export default function SignUpForm() {
           </div>
         </motion.div>
 
+        <motion.div variants={itemVariants} className="space-y-1.5">
+          <label htmlFor="confirmPassword" className={LABEL}>
+            Confirm New Password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={INPUT}
+            placeholder="Re-enter your password"
+          />
+        </motion.div>
+
         <motion.button
           type="submit"
           disabled={pending}
@@ -181,20 +184,9 @@ export default function SignUpForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Creating account…" : "Sign up"}
+          {pending ? "Resetting password…" : "Reset Password"}
         </motion.button>
-
-        <motion.p
-          variants={itemVariants}
-          className="text-center text-xs tracking-widest uppercase text-moss-light"
-        >
-          Already have an account?{" "}
-          <Link href="/sign-in" className="font-bold text-torii hover:underline">
-            Sign in
-          </Link>
-        </motion.p>
       </motion.form>
     </motion.div>
   );
 }
-
