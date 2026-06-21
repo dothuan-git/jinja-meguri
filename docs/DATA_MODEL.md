@@ -413,14 +413,14 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    **no `canonical_lore`** — the deity already has it, so `SHRINE_RESEARCH_PROMPT.md` never re-gathers it.
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
    left null until edited on the deity record.)
-3. **Festival dates are deferred (at research time).** `festivals.start_date` / `end_date` are left
-   `null` by the shrine-research flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
-   yearly dates land in `festival_occurrences` (see the table above), loaded via `upsertOccurrences` /
-   the DB scripts — the importer UI was removed.
-   - The **in-place create page** (`/shrines/new`, `FestivalBlock`'s `DefaultDateField`) *does* collect a
-     festival's own `start_date`/`end_date` as **default, year-agnostic month-day** values (month + day
-     selects). They are stored as `YYYY-MM-DD` with the **current year as a placeholder** (the column is a
-     full `date`); the year carries no meaning — these are intended as recurring defaults.
+3. **Festival default dates are now collected at research time.** `SHRINE_RESEARCH_PROMPT.md` asks for
+   `start_date` / `end_date` for festivals with **fixed Gregorian dates** (e.g. always on 15 May);
+   stored as `YYYY-MM-DD` with the current year as a placeholder — only month + day matter. Lunar,
+   Nth-weekday, and otherwise shifting festivals leave both fields `null` and rely on `festival_occurrences`
+   instead (see the table above). The in-place create page (`/shrines/new`) also collects these via the
+   `FestivalBlock`'s `DefaultDateField`.
+   - They are intended as **recurring year-agnostic defaults**; the year in the stored `date` carries no
+     meaning.
    - **Read path** (`resolveCalendarDates` in `lib/calendar.ts`, used by `getFestivalYear` and
      `entriesForMonth`) — **calendar only**: for the calendar's year, (1) an occurrence for **that exact
      year** wins and is used literally; (2) otherwise the festival's **default month-day is projected onto
@@ -430,8 +430,8 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
      is added. The **shrine detail page is unchanged** — it shows the festival's own stored dates and never
      reads occurrences.
 
-> The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
-> on import — they are simply not gathered by the shrine research flow. Don't remove them.
+> The `canonical_lore` column + Zod contract field still exists and accepts values on import — it is
+> simply not gathered by the shrine research flow. Don't remove it.
 
 ---
 

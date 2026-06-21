@@ -211,10 +211,9 @@ upserted to Neon via `lib/db/mutations.ts`. The schema is in `docs/schema.sql`; 
 - **Deities are created first**, with `canonical_lore`. Then shrines link them by `name_ja`; the shrine's
   embedded `deities[].canonical` block is identity-only (no `canonical_lore`), so the shrine research
   flow never re-gathers deity lore.
-- **Festival `start_date`/`end_date` are deferred in the shrine-research flow** — left null at
-  shrine-research time (no date fields in the prompt). Yearly dates land in `festival_occurrences`. The
-  **in-place create page** (`/shrines/new`) does collect them as default, year-agnostic month-day values
-  (stored `YYYY-MM-DD` with the current year as a placeholder). See `docs/DATA_MODEL.md` §10 for the
-  calendar read-path caveat.
-- The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
-  on import; they are just not gathered by the shrine flow. Don't strip them.
+- **Festival `start_date`/`end_date`** are now collected at shrine-research time for festivals with
+  fixed Gregorian dates (stored `YYYY-MM-DD` with the current year as a placeholder — only month + day
+  matter). Lunar / Nth-weekday festivals leave both null and land yearly dates in `festival_occurrences`
+  instead. See `docs/DATA_MODEL.md` §10 for the calendar read-path caveat.
+- The `canonical_lore` column + Zod contract field still exists and accepts values; it is just not
+  gathered by the shrine research flow. Don't strip it.
