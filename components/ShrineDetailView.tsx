@@ -13,6 +13,7 @@ import {
   Crown,
   ExternalLink,
   FileText,
+  Heart,
   Lock,
   Map,
   MapPin,
@@ -21,6 +22,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
+import { useShrineMarks } from "@/components/user/useShrineMark";
 import { buildEmbedUrl } from "@/lib/maps";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import ShrineImage from "@/components/ShrineImage";
@@ -45,6 +47,24 @@ export interface ShrineDetailEditor {
   catalogs: EditCatalogs;
   /** "create" mounts the editor immediately on an empty draft; default "update". */
   mode?: "create" | "update";
+}
+
+/** The signed-in viewer's collection state for this shrine (favorite + goshuin). */
+export interface ShrineMarkInfo {
+  saved: boolean;
+  stamped: boolean;
+  stampedAt: string | null;
+}
+
+function formatStampDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
 import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
@@ -165,16 +185,21 @@ export default function ShrineDetailView({
   shrine,
   variant,
   editor,
+  mark,
+  isSignedIn = false,
 }: {
   shrine: ShrineDetail;
   variant: "modal" | "page";
   editor?: ShrineDetailEditor;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const router = useRouter();
   const creating = editor?.mode === "create";
 
-  if (variant === "modal") return <ModalBody view={toView(shrine)} />;
+  if (variant === "modal")
+    return <ModalBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />;
 
   // Create flow: mount the editor immediately on an empty draft (no read view).
   if (creating && editor) {
@@ -186,7 +211,7 @@ export default function ShrineDetailView({
         onCancel={() => router.push("/shrines")}
         onSaved={(savedSlug) => router.push(`/shrines/${savedSlug}`)}
       >
-        <PageBody view={toView(shrine)} />
+        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
@@ -206,7 +231,7 @@ export default function ShrineDetailView({
           else router.refresh();
         }}
       >
-        <PageBody view={toView(shrine)} />
+        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
@@ -216,6 +241,8 @@ export default function ShrineDetailView({
       view={toView(shrine)}
       canEdit={Boolean(editor)}
       onEdit={() => setEditing(true)}
+      mark={mark}
+      isSignedIn={isSignedIn}
     />
   );
 }
@@ -228,10 +255,14 @@ function PageBody({
   view: shrine,
   canEdit,
   onEdit,
+  mark,
+  isSignedIn = false,
 }: {
   view: View;
   canEdit?: boolean;
   onEdit?: () => void;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
 }) {
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -248,8 +279,16 @@ function PageBody({
     ? (edit?.getValue("coordinates") as Coordinates | null)
     : shrine.coordinates;
 
-  // Goshuin Stamp local interactive state
-  const [stampReceived, setStampReceived] = useState<string | null>(null);
+  // Per-user collection state (favorite + goshuin), server-backed + optimistic.
+  const marks = useShrineMarks({
+    saved: mark?.saved ? [shrine.slug] : [],
+    stamped: mark?.stamped ? [shrine.slug] : [],
+  });
+  const isSaved = marks.isSaved(shrine.slug);
+  const isStamped = marks.isStamped(shrine.slug);
+  // Local display date for the stamp: seeded from the server, set client-side on a
+  // fresh stamp (the toggle action returns only booleans, not the timestamp).
+  const [stampDate, setStampDate] = useState<string | null>(mark?.stampedAt ?? null);
 
   // Scroll spy references
   const containerRef = useRef<HTMLDivElement>(null);
@@ -266,14 +305,10 @@ function PageBody({
     location: useRef<HTMLDivElement>(null),
   };
 
-  // Load stamp relative to this shrine slug
+  // Reset scroll/section when navigating between shrines.
   useEffect(() => {
-    const savedStamp = localStorage.getItem(`jinja-goshuin-${shrine.slug}`);
-    setStampReceived(savedStamp);
-
     window.scrollTo(0, 0);
     setActiveSection("overview");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shrine.slug]);
 
   // Handle scroll to track active section tab — keyed off window scroll
@@ -307,22 +342,15 @@ function PageBody({
     }
   };
 
-  // Stamp Actions
+  // Stamp Actions (server-backed via the optimistic marks hook)
   const handleReceiveStamp = () => {
-    const nowString = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-    localStorage.setItem(`jinja-goshuin-${shrine.slug}`, nowString);
-    setStampReceived(nowString);
+    marks.toggleStamp(shrine.slug, shrine.name);
+    setStampDate(new Date().toISOString());
   };
 
   const handleClearStamp = () => {
-    localStorage.removeItem(`jinja-goshuin-${shrine.slug}`);
-    setStampReceived(null);
+    marks.toggleStamp(shrine.slug, shrine.name);
+    setStampDate(null);
   };
 
   return (
@@ -484,6 +512,20 @@ function PageBody({
               </EditableProse>
             )}
           </div>
+          {isSignedIn && !creating && (
+            <button
+              onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
+              disabled={marks.pending}
+              aria-pressed={isSaved}
+              title={isSaved ? "Remove from saved" : "Save to your list"}
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
+                isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
+              }`}
+            >
+              <Heart size={11} className={isSaved ? "fill-torii" : ""} />
+              <span>{isSaved ? "Saved" : "Save"}</span>
+            </button>
+          )}
         </div>
 
       </div>
@@ -595,7 +637,7 @@ function PageBody({
                 editClassName="w-full text-base font-quote italic text-stone/85"
               >
                 <div className={`${typo.quote} py-4 select-text`}>
-                  “{shrine.prayerFocusText}”
+                  "{shrine.prayerFocusText}"
                 </div>
               </EditableProse>
 
@@ -910,7 +952,7 @@ function PageBody({
 
                     <div className="text-[9px] font-mono text-stone/30 uppercase tracking-widest block font-bold">奉拝 (Worshiped)</div>
 
-                    {stampReceived ? (
+                    {isStamped ? (
                       <motion.div
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -937,10 +979,12 @@ function PageBody({
                     )}
 
                     <div className="text-[8px] font-mono text-center text-stone/50 tracking-wide select-none">
-                      {stampReceived ? (
+                      {isStamped ? (
                         <>
                           <span className="text-torii font-bold block">Sacred Proof</span>
-                          <span className="block font-sans [font-size:7px] mt-0.5">{stampReceived}</span>
+                          {stampDate && (
+                            <span className="block font-sans [font-size:7px] mt-0.5">{formatStampDate(stampDate)}</span>
+                          )}
                         </>
                       ) : (
                         <span>Stamp is empty</span>
@@ -955,17 +999,26 @@ function PageBody({
                     </p>
 
                     <div className="flex flex-wrap gap-2 select-none">
-                      {!stampReceived ? (
+                      {!isSignedIn ? (
+                        <Link
+                          href="/sign-in"
+                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+                        >
+                          Sign in to collect your goshuin
+                        </Link>
+                      ) : !isStamped ? (
                         <button
                           onClick={handleReceiveStamp}
-                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+                          disabled={marks.pending}
+                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                         >
                           Affix Sacred Goshuin Seal
                         </button>
                       ) : (
                         <button
                           onClick={handleClearStamp}
-                          className="px-3 py-1.5 border border-stone/20 hover:border-torii text-stone/65 hover:text-torii rounded-lg text-[9px] font-mono tracking-widest uppercase hover:bg-stone/5 transition-all shrink-0 cursor-pointer"
+                          disabled={marks.pending}
+                          className="px-3 py-1.5 border border-stone/20 hover:border-torii text-stone/65 hover:text-torii rounded-lg text-[9px] font-mono tracking-widest uppercase hover:bg-stone/5 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                         >
                           Reset Ink Seal
                         </button>
@@ -1114,7 +1167,20 @@ function PageBody({
 /* the drawer shell + close header live in components/Modal.tsx          */
 /* ===================================================================== */
 
-function ModalBody({ view: shrine }: { view: View }) {
+function ModalBody({
+  view: shrine,
+  mark,
+  isSignedIn = false,
+}: {
+  view: View;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
+}) {
+  const marks = useShrineMarks({
+    saved: mark?.saved ? [shrine.slug] : [],
+    stamped: mark?.stamped ? [shrine.slug] : [],
+  });
+  const isSaved = marks.isSaved(shrine.slug);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(shrine.name + " " + shrine.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
 
   // Group festivals so each festival type renders as a single combined card.
@@ -1138,14 +1204,30 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* Identity block */}
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
-              {shrine.ranks.map((rank, i) => (
-                <span key={rank} className="inline-flex items-center gap-1">
-                  {i > 0 && <span className="opacity-30">|</span>}
-                  {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                  <span>{rank}</span>
-                </span>
-              ))}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+                {shrine.ranks.map((rank, i) => (
+                  <span key={rank} className="inline-flex items-center gap-1">
+                    {i > 0 && <span className="opacity-30">|</span>}
+                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                    <span>{rank}</span>
+                  </span>
+                ))}
+              </div>
+              {isSignedIn && (
+                <button
+                  onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
+                  disabled={marks.pending}
+                  aria-pressed={isSaved}
+                  title={isSaved ? "Remove from saved" : "Save to your list"}
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
+                    isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
+                  }`}
+                >
+                  <Heart size={11} className={isSaved ? "fill-torii" : ""} />
+                  <span>{isSaved ? "Saved" : "Save"}</span>
+                </button>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -1174,7 +1256,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
           {shrine.quote && (
             <p className={typo.quote}>
-              "{shrine.quote}"
+              “{shrine.quote}”
             </p>
           )}
         </div>

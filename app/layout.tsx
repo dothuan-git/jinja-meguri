@@ -3,6 +3,7 @@ import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
 import SiteFooter from "@/components/SiteFooter";
 import AmbientByRoute from "@/components/AmbientByRoute";
+import { ToastProvider } from "@/components/ui/Toast";
 import { getCurrentUser } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
@@ -36,12 +37,14 @@ export default async function RootLayout({
         {/* Reveal hidden [data-reveal] elements for visitors without JS */}
         <noscript><style>{`[data-reveal]{opacity:1}`}</style></noscript>
         <AmbientByRoute />
-        <div className="relative z-10 flex min-h-screen flex-col items-center">
-          <SiteChrome user={user} />
-          <div className="w-full flex-1">{children}</div>
-          <SiteFooter />
-        </div>
-        {modal}
+        <ToastProvider>
+          <div className="relative z-10 flex min-h-screen flex-col items-center">
+            <SiteChrome user={user} />
+            <div className="w-full flex-1">{children}</div>
+            <SiteFooter />
+          </div>
+          {modal}
+        </ToastProvider>
       </body>
     </html>
   );

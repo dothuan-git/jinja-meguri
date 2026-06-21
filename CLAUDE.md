@@ -135,9 +135,23 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
   assets) because the layout/pages read the session at render time. Note the Neon Auth session
   cookies are `__Secure-` prefixed, so they only persist over HTTPS (auth won't stick on plain
   `http://localhost`).
-- **Role-aware controls:** admins see the existing "Admin Controls" bars; signed-in normal users
-  see a scaffold `components/UserControls.tsx` (features TBD), currently mounted only on the
-  `/shrines` listing via an `isUser` prop alongside `isAdmin`.
+- **Role-aware controls:** admins see the existing "Admin Controls" bars. Signed-in **normal users**
+  get personal-collection affordances — a heart (favorite / "want to visit") on shrine cards and the
+  detail/modal header, the **goshuin stamp** on the detail page (now account-persistent, see below),
+  and a floating `components/UserControls.tsx` "My Collection" pill on `/shrines` that toggles the
+  URL-synced `saved` / `collected` filters. The affordances surface for any signed-in account, but the
+  `UserControls` pill is shown to non-admins only (admins have their own bottom pill). The profile page
+  `/users/[id]` is a dashboard listing the user's **御朱印帳** (stamp book) and saved shrines.
+- **User collections (favorites + goshuin):** a per-user `user_shrine_marks` table (one row per
+  `(user_id, shrine_id)`, columns `saved_at` / `stamped_at`) holds this data. It lives **outside the
+  cached `Store`** — read fresh per request via `lib/db/userRepo.ts` (`loadUserMarks`,
+  `getUserCollections`), written via `lib/db/userMutations.ts` (`setSaved`/`setStamped`). Server actions
+  in `app/users/actions.ts` (`toggleSaveAction`/`toggleStampAction`) are guarded by `assertUser`
+  (signed-in, no role check; `requireUser` is the page analog) and do **not** touch `STORE_TAG` — the
+  reading pages are `force-dynamic`. The client uses the optimistic `components/user/useShrineMark.ts`
+  hook (`useShrineMarks`), which needs a `ToastProvider` (now mounted globally in `app/layout.tsx`).
+  The goshuin stamp is **signed-in only**; the old localStorage (`jinja-goshuin-*`) path was removed.
+  See `docs/DATA_MODEL.md` §6.5.
 - **Writes:** server actions in `app/admin/actions.ts` (the directory now holds only this file)
   validate a JSON envelope with Zod (`lib/admin/shrineContract.ts`, `lib/admin/deityContract.ts`),
   then call runtime mutations in `lib/db/mutations.ts` (transactional upsert/delete, deity dedup

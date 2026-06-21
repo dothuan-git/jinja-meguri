@@ -14,12 +14,17 @@ Each table below lists every column with its **Type**, whether it is **Nullable*
 
 ## 1. Overview
 
-PostgreSQL on Neon. **13 base tables**, no views, no materialized views, no PostGIS.
+PostgreSQL on Neon. **13 base tables** in the cached content graph, plus one **per-user**
+table (`user_shrine_marks`, §6.5). No views, no materialized views, no PostGIS.
 The model separates three concerns:
 
 - **Controlled vocabulary** (catalogs) — `regions`, `prefectures`, `ranks`, `prayer_categories`.
 - **Core entities** — `shrines`, `deities`.
 - **Relationships & detail** — junctions, 1:1 prose, festivals, occurrences, sources.
+
+The 13 content tables make up the cached global `Store` (`loadStore()`). `user_shrine_marks`
+is **personal** data and lives outside the `Store` — read on a separate non-cached path
+(`lib/db/userRepo.ts`), keyed by the signed-in user (§6.5, §9).
 
 Authorization uses the Neon Auth user role, not an application table (see §7).
 
@@ -277,6 +282,33 @@ Index `idx_sources_shrine`. Rendered as visible footnotes on the detail page.
 
 ---
 
+## 6.5 Per-user collections (`user_shrine_marks`)
+
+Powers the **normal-user** features: favorites ("want to visit") and the **goshuin stamp book**
+(御朱印帳, "collected / visited"). One row per `(user_id, shrine_id)`; the two timestamp columns
+are independent flags. A row whose two timestamps are **both null** is meaningless and is deleted
+by the mutations.
+
+| Column       | Type          | Nullable | Constraints                            | Notes                                              |
+| ------------ | ------------- | -------- | -------------------------------------- | -------------------------------------------------- |
+| `user_id`    | `text`        | No       | PK                                     | Neon Auth user id (`neon_auth."user".id`).         |
+| `shrine_id`  | `uuid`        | No       | PK, → `shrines(id)` ON DELETE CASCADE  | The marked shrine.                                 |
+| `saved_at`   | `timestamptz` | Yes      | —                                      | Non-null ⇒ favorited ("want to visit").            |
+| `stamped_at` | `timestamptz` | Yes      | —                                      | Non-null ⇒ goshuin collected ("visited").          |
+
+Index: `idx_user_shrine_marks_user` on `(user_id)`.
+
+- **No FK to the Neon Auth user table.** `user_id` references `neon_auth."user".id` by value only —
+  Neon Auth owns that table (cross-schema), so there is no enforced FK; orphan rows for a deleted
+  account are harmless (and never read, since reads are scoped to the signed-in user).
+- **Outside the `Store` cache.** This is per-user data, so it is **not** loaded by `loadStore()` and
+  **not** invalidated by `STORE_TAG`. Reads go through `lib/db/userRepo.ts` (`loadUserMarks`, fresh
+  per request); writes through `lib/db/userMutations.ts` (`setSaved`/`setStamped`), invoked by the
+  server actions in `app/users/actions.ts` (guarded by `assertUser`). The pages that read it are
+  `force-dynamic`, so no revalidation is needed.
+
+---
+
 ## 7. Authorization (Neon Auth role)
 
 Authorization is a second gate after Neon Auth sign-in. **Admin is the Neon Auth user role**,
@@ -289,6 +321,10 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
 > (`getCurrentUser().isAdmin === false`). Self-sign-up always creates a normal-user role, so new
 > accounts are never admins until promoted: `UPDATE neon_auth."user" SET role='admin' WHERE
 > lower(email)=lower('…')` (or the `admin/set-role` endpoint). See [`ACCOUNTS.md`](./ACCOUNTS.md).
+
+> **User-scoped writes.** Any signed-in account (admins included) can own personal collection rows
+> in `user_shrine_marks` (§6.5). These are gated by `assertUser`/`requireUser` (in `lib/auth/server.ts`),
+> the user analog of `assertAdmin`/`requireAdmin` — signed-in, no role check.
 
 > **Removed: `app_admin`.** An earlier model used a `public.app_admin` email allowlist. It has been
 > dropped from the database and `schema.sql`; authorization is now entirely the Neon Auth user role.
@@ -305,6 +341,8 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
   so it is not deleted when a shrine is removed.
 - Catalog FKs (`region_id`, `prefecture_id`, `rank_id`, `category_id`) have no cascade —
   catalogs are stable reference data.
+- `user_shrine_marks.shrine_id` → `shrines(id)` is **`ON DELETE CASCADE`**: deleting a shrine
+  removes every user's marks for it. `user_id` has no FK (Neon Auth owns the account table).
 
 ---
 
@@ -330,6 +368,7 @@ Neon Postgres
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
 | `FacetCatalogs`   | `getFacetCatalogs`    | Filter options, restricted to values actually in use                    |
+| `UserCollections` | `getUserCollections`  | **Per-user** (non-cached, `userRepo.ts`): the signed-in user's stamped + saved `ShrineCard`s for the profile dashboard, joined from `user_shrine_marks` (§6.5) |
 
 Key derivations done in `repo.ts`, not in SQL:
 

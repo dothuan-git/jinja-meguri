@@ -74,3 +74,21 @@ export async function requireAdmin(): Promise<string> {
 export async function assertAdmin(): Promise<void> {
   if (!(await getAdminEmail())) throw new Error("Unauthorized");
 }
+
+/**
+ * For server components/pages that require *any* signed-in account (the personal
+ * collection surfaces): return the user or 404 if anonymous. Admins count as
+ * signed-in users — a stamp book / favorites list is personal regardless of role.
+ */
+export async function requireUser(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user) notFound();
+  return user;
+}
+
+/** For server actions: throw if not signed in; returns the signed-in user id. */
+export async function assertUser(): Promise<string> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+  return user.id;
+}

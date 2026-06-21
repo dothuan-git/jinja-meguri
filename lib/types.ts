@@ -279,6 +279,34 @@ export interface CalendarEntry {
   is_fallback: boolean;
 }
 
+// --- Per-user collections (favorites + goshuin stamp book) ---
+// `user_shrine_marks` is NOT part of `Store` — it is per-user data read on a
+// separate non-cached path (lib/db/userRepo.ts), keyed by the Neon Auth user id.
+
+/** One user↔shrine mark row, joined to the shrine's slug for the UI. */
+export interface UserMark {
+  slug: string;
+  saved_at: string | null; // non-null => favorited
+  stamped_at: string | null; // non-null => goshuin collected
+}
+
+/** Booleans handed to the client for a single shrine's mark state. */
+export interface MarkState {
+  saved: boolean;
+  stamped: boolean;
+}
+
+/** A collected shrine card carrying the goshuin date, for the profile stamp book. */
+export type StampEntry = ShrineCard & { stamped_at: string };
+/** A saved shrine card carrying the favorited date, for the profile saved list. */
+export type SavedEntry = ShrineCard & { saved_at: string };
+
+/** Assembled profile collections (cards joined from the cached Store). */
+export interface UserCollections {
+  stamped: StampEntry[];
+  saved: SavedEntry[];
+}
+
 export interface SearchDoc {
   slug: string;
   name_en: string;
