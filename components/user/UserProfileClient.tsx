@@ -46,6 +46,18 @@ export interface Crest {
   render: (className?: string) => React.ReactNode;
 }
 
+// Shared framed canvas — a thin double ring (the classic kamon "maru" border)
+// wrapping each motif. Keeps every crest on a consistent footprint.
+function CrestSvg({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="currentColor" strokeLinejoin="round" strokeLinecap="round">
+      <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" strokeWidth="1" />
+      {children}
+    </svg>
+  );
+}
+
 export const CRESTS: Crest[] = [
   {
     id: "tomoe",
@@ -54,13 +66,17 @@ export const CRESTS: Crest[] = [
     meaning: "Cosmic Flow & Protection",
     description: "The triple swirl represents the alignment of heaven, earth, and humanity, associated with Hachiman (deity of warriors) and protection from lightning and fire.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <path d="M 50,10 A 40,40 0 0,0 15.36,70 A 20,20 0 0,1 35.36,50 A 20,20 0 0,0 50,10 Z" />
-        <path d="M 15.36,70 A 40,40 0 0,0 84.64,70 A 20,20 0 0,1 50,50 A 20,20 0 0,0 15.36,70 Z" />
-        <path d="M 84.64,70 A 40,40 0 0,0 50,10 A 20,20 0 0,1 64.64,50 A 20,20 0 0,0 84.64,70 Z" />
-        <circle cx="50" cy="50" r="6" fill="currentColor" />
-      </svg>
+      <CrestSvg className={className}>
+        {/* Three interlocking commas (magatama) tiling the disc at 120° */}
+        {[0, 120, 240].map((angle) => (
+          <path
+            key={angle}
+            transform={`rotate(${angle} 50 50)`}
+            d="M 50,16 A 34,34 0 0,0 20.56,67 A 17,17 0 0,1 37.56,50 A 17,17 0 0,0 50,16 Z"
+          />
+        ))}
+        <circle cx="50" cy="50" r="4.5" />
+      </CrestSvg>
     ),
   },
   {
@@ -70,13 +86,13 @@ export const CRESTS: Crest[] = [
     meaning: "Longevity & Resilience",
     description: "The evergreen pine tree represents longevity, steadfastness, and enduring strength through harsh winters.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <path d="M 50,22 C 40,22 34,28 34,35 C 34,42 42,46 50,42 C 58,46 66,42 66,35 C 66,28 60,22 50,22 Z" />
-        <path d="M 32,48 C 22,48 16,54 16,61 C 16,68 24,72 32,68 C 40,72 48,68 48,61 C 48,54 42,48 32,48 Z" />
-        <path d="M 68,48 C 58,48 52,54 52,61 C 52,68 60,72 68,72 C 76,72 84,68 84,61 C 84,54 78,48 68,48 Z" />
-        <path d="M 50,42 L 50,75 M 32,68 L 50,75 M 68,68 L 50,75" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-      </svg>
+      <CrestSvg className={className}>
+        {/* Tiered evergreen — three stacked needle layers on a short trunk */}
+        <rect x="46.5" y="58" width="7" height="11" rx="1" />
+        <path d="M 50,38 L 30,60 L 70,60 Z" />
+        <path d="M 50,26 L 35,46 L 65,46 Z" />
+        <path d="M 50,15 L 39,34 L 61,34 Z" />
+      </CrestSvg>
     ),
   },
   {
@@ -86,15 +102,20 @@ export const CRESTS: Crest[] = [
     meaning: "Ephemeral Beauty & Life",
     description: "The cherry blossom is a central motif of Japanese aesthetics, celebrating fleeting grace, renewal, and the exquisite transience of life.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <circle cx="50" cy="50" r="8" fill="none" stroke="currentColor" strokeWidth="3" />
+      <CrestSvg className={className}>
+        {/* Five cleft petals (the notched tip distinguishes sakura from ume) */}
         {[0, 72, 144, 216, 288].map((angle) => (
-          <g key={angle} transform={`rotate(${angle} 50 50)`}>
-            <path d="M 50,42 C 43,26 46,14 49,16 C 50,14 50,14 51,16 C 54,14 57,26 50,42 Z" />
-          </g>
+          <path
+            key={angle}
+            transform={`rotate(${angle} 50 50)`}
+            d="M 50,50 C 42,49 35,41 37,30 C 38,24 43,18 47,16 C 48.5,15.2 49,18 50,21 C 51,18 51.5,15.2 53,16 C 57,18 62,24 63,30 C 65,41 58,49 50,50 Z"
+          />
         ))}
-      </svg>
+        <circle cx="50" cy="50" r="3.5" />
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <circle key={angle} transform={`rotate(${angle} 50 50)`} cx="50" cy="40" r="1.4" />
+        ))}
+      </CrestSvg>
     ),
   },
   {
@@ -104,17 +125,18 @@ export const CRESTS: Crest[] = [
     meaning: "Elegance & Scholarly Devotion",
     description: "Plum blossoms bloom in late winter snows, representing loyalty, intellectual dedication, and elegance under adversity. Dedicated to Tenjin, the patron kami of learning.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <circle cx="50" cy="50" r="7" fill="currentColor" />
+      <CrestSvg className={className}>
+        {/* Umebachi — five full rounded petals around a prominent core */}
         {[0, 72, 144, 216, 288].map((angle) => (
-          <g key={angle} transform={`rotate(${angle} 50 50)`}>
-            <path d="M 50,43 C 40,38 38,20 50,20 C 62,20 60,38 50,43 Z" />
-            <line x1="50" y1="43" x2="50" y2="24" stroke="currentColor" strokeWidth="2" />
-            <circle cx="50" cy="22" r="2" />
-          </g>
+          <path
+            key={angle}
+            transform={`rotate(${angle} 50 50)`}
+            d="M 50,50 C 43,49 37,43 37,34 C 37,25 43,19 50,19 C 57,19 63,25 63,34 C 63,43 57,49 50,50 Z"
+          />
         ))}
-      </svg>
+        <circle cx="50" cy="50" r="5.5" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="50" cy="50" r="2" />
+      </CrestSvg>
     ),
   },
   {
@@ -124,15 +146,24 @@ export const CRESTS: Crest[] = [
     meaning: "Nobility & Perfect Order",
     description: "The chrysanthemum represents the autumn season, royalty, high status, and immaculate geometric order.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <circle cx="50" cy="50" r="10" fill="currentColor" />
+      <CrestSvg className={className}>
+        {/* Imperial chrysanthemum — 16 outer petals over a 16-petal inner ring */}
         {Array.from({ length: 16 }).map((_, i) => (
-          <g key={i} transform={`rotate(${i * 22.5} 50 50)`}>
-            <path d="M 50,43 C 48,34 48,15 50,12 C 52,15 52,34 50,43 Z" />
-          </g>
+          <path
+            key={`o-${i}`}
+            transform={`rotate(${i * 22.5} 50 50)`}
+            d="M 50,49 C 47.5,40 47.5,22 50,15 C 52.5,22 52.5,40 50,49 Z"
+          />
         ))}
-      </svg>
+        {Array.from({ length: 16 }).map((_, i) => (
+          <path
+            key={`i-${i}`}
+            transform={`rotate(${i * 22.5 + 11.25} 50 50)`}
+            d="M 50,47 C 48.5,40 48.5,28 50,23 C 51.5,28 51.5,40 50,47 Z"
+          />
+        ))}
+        <circle cx="50" cy="50" r="7" />
+      </CrestSvg>
     ),
   },
   {
@@ -142,20 +173,23 @@ export const CRESTS: Crest[] = [
     meaning: "Grace & Welcoming Abundance",
     description: "Hanging wisteria flower clusters represent warm hospitality, elegance, and deep-rooted spiritual connection.",
     render: (className) => (
-      <svg viewBox="0 0 100 100" className={className} fill="currentColor">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" />
-        <path d="M 50,15 C 30,15 20,30 20,50 C 20,65 32,75 42,75 L 42,70 C 35,70 25,62 25,50 C 25,35 33,20 50,20 Z" />
-        <path d="M 50,15 C 70,15 80,30 80,50 C 80,65 68,75 58,75 L 58,70 C 65,70 75,62 75,50 C 75,35 67,20 50,20 Z" />
-        <circle cx="21" cy="40" r="3.5" />
-        <circle cx="23" cy="50" r="3.5" />
-        <circle cx="28" cy="60" r="3" />
-        <circle cx="35" cy="68" r="3" />
-        <circle cx="79" cy="40" r="3.5" />
-        <circle cx="77" cy="50" r="3.5" />
-        <circle cx="72" cy="60" r="3" />
-        <circle cx="65" cy="68" r="3" />
-        <path d="M 45,15 C 50,10 50,10 55,15 L 50,25 Z" />
-      </svg>
+      <CrestSvg className={className}>
+        {/* Sagari-fuji — two clusters of wisteria drooping from a crown of leaves */}
+        <path d="M 50,16 C 44,18 40,24 40,30 C 46,28 50,24 50,16 Z" />
+        <path d="M 50,16 C 56,18 60,24 60,30 C 54,28 50,24 50,16 Z" />
+        <path d="M 44,28 C 40,38 38,52 41,66" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M 56,28 C 60,38 62,52 59,66" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="41" cy="34" r="4" />
+        <circle cx="39" cy="42" r="4" />
+        <circle cx="39.5" cy="50" r="3.6" />
+        <circle cx="40.5" cy="58" r="3.1" />
+        <circle cx="42" cy="65" r="2.5" />
+        <circle cx="59" cy="34" r="4" />
+        <circle cx="61" cy="42" r="4" />
+        <circle cx="60.5" cy="50" r="3.6" />
+        <circle cx="59.5" cy="58" r="3.1" />
+        <circle cx="58" cy="65" r="2.5" />
+      </CrestSvg>
     ),
   },
 ];
