@@ -7,8 +7,8 @@ import { Compass, Calendar as CalendarIcon, Home, Sparkles, User, LogIn } from "
 import type { CurrentUser } from "@/lib/auth/server";
 
 const NAV = [
-  { href: "/shrines", label: "Sanctuaries", match: ["/shrines"] },
-  { href: "/deities", label: "Pantheon", match: ["/deities"] },
+  { href: "/shrines", label: "Shrines", match: ["/shrines"] },
+  { href: "/deities", label: "Deities", match: ["/deities"] },
   { href: "/calendar", label: "Festivals", match: ["/calendar"] },
 ];
 
@@ -104,11 +104,11 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
           </Link>
           <Link href="/shrines" className="flex flex-col items-center justify-center gap-1.5 w-20 h-12">
             <Compass size={18} className={isActive(pathname, ["/shrines"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/shrines"]) ? "text-torii" : "text-moss-light"}`}>Sanctuaries</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/shrines"]) ? "text-torii" : "text-moss-light"}`}>Shrines</span>
           </Link>
           <Link href="/deities" className="flex flex-col items-center justify-center gap-1.5 w-18 h-12">
             <Sparkles size={18} className={isActive(pathname, ["/deities"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/deities"]) ? "text-torii" : "text-moss-light"}`}>Pantheon</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/deities"]) ? "text-torii" : "text-moss-light"}`}>Deities</span>
           </Link>
           <Link href="/calendar" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
             <CalendarIcon size={18} className={isActive(pathname, ["/calendar"]) ? "text-torii scale-110" : "text-moss-light"} />

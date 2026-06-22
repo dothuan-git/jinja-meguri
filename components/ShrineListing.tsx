@@ -274,23 +274,23 @@ export default function ShrineListing({
       <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
-          <div className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-5deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+          <div data-reveal="stamp" className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-8deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
             社
           </div>
         </div>
 
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs mb-3 z-10">
           <Compass size={11} className="text-torii" />
-          <span>Sanctuary Archives</span>
+          <span>Shrine Archives</span>
           <span className="w-1 h-1 rounded-full bg-torii/30" />
           <span>神社一覧</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
-          Sacred Sanctuaries
+          Sacred Shrines
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
-          “Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates.”
+          "Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates."
         </p>
       </div>
 

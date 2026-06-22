@@ -1037,7 +1037,7 @@ function PageBody({
             id="location"
             ref={sectionRefs.location}
             data-reveal="rise"
-            className="relative scroll-mt-14 pb-8"
+            className="relative scroll-mt-14"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
               地
@@ -1104,19 +1104,6 @@ function PageBody({
                     onClose={() => setLocationPopupOpen(false)}
                   />
                 )}
-              </div>
-
-              <div className="flex flex-wrap gap-2 select-none">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shrine.name + " " + shrine.location)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-stone hover:bg-torii text-white rounded-lg text-[10px] tracking-widest uppercase hover:shadow-xs transition-all inline-flex items-center gap-1.5 font-bold cursor-pointer"
-                >
-                  <Map size={11} className="text-bamboo" />
-                  <span>Open Route in Google Maps</span>
-                  <ExternalLink size={10} className="opacity-70" />
-                </a>
               </div>
             </div>
           </section>
