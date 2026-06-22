@@ -14,12 +14,17 @@ Each table below lists every column with its **Type**, whether it is **Nullable*
 
 ## 1. Overview
 
-PostgreSQL on Neon. **13 base tables**, no views, no materialized views, no PostGIS.
+PostgreSQL on Neon. **13 base tables** in the cached content graph, plus two **per-user**
+tables (`user_shrine_marks`, §6.5; `user_profile`, §6.6). No views, no materialized views, no PostGIS.
 The model separates three concerns:
 
 - **Controlled vocabulary** (catalogs) — `regions`, `prefectures`, `ranks`, `prayer_categories`.
 - **Core entities** — `shrines`, `deities`.
 - **Relationships & detail** — junctions, 1:1 prose, festivals, occurrences, sources.
+
+The 13 content tables make up the cached global `Store` (`loadStore()`). `user_shrine_marks`
+and `user_profile` are **personal** data and live outside the `Store` — read on a separate
+non-cached path (`lib/db/userRepo.ts`), keyed by the signed-in user (§6.5, §6.6, §9).
 
 Authorization uses the Neon Auth user role, not an application table (see §7).
 
@@ -277,6 +282,55 @@ Index `idx_sources_shrine`. Rendered as visible footnotes on the detail page.
 
 ---
 
+## 6.5 Per-user collections (`user_shrine_marks`)
+
+Powers the **normal-user** features: favorites ("want to visit") and the **goshuin stamp book**
+(御朱印帳, "collected / visited"). One row per `(user_id, shrine_id)`; the two timestamp columns
+are independent flags. A row whose two timestamps are **both null** is meaningless and is deleted
+by the mutations.
+
+| Column       | Type          | Nullable | Constraints                            | Notes                                              |
+| ------------ | ------------- | -------- | -------------------------------------- | -------------------------------------------------- |
+| `user_id`    | `text`        | No       | PK                                     | Neon Auth user id (`neon_auth."user".id`).         |
+| `shrine_id`  | `uuid`        | No       | PK, → `shrines(id)` ON DELETE CASCADE  | The marked shrine.                                 |
+| `saved_at`   | `timestamptz` | Yes      | —                                      | Non-null ⇒ favorited ("want to visit").            |
+| `stamped_at` | `timestamptz` | Yes      | —                                      | Non-null ⇒ goshuin collected ("visited").          |
+
+Index: `idx_user_shrine_marks_user` on `(user_id)`.
+
+- **No FK to the Neon Auth user table.** `user_id` references `neon_auth."user".id` by value only —
+  Neon Auth owns that table (cross-schema), so there is no enforced FK; orphan rows for a deleted
+  account are harmless (and never read, since reads are scoped to the signed-in user).
+- **Outside the `Store` cache.** This is per-user data, so it is **not** loaded by `loadStore()` and
+  **not** invalidated by `STORE_TAG`. Reads go through `lib/db/userRepo.ts` (`loadUserMarks`, fresh
+  per request); writes through `lib/db/userMutations.ts` (`setSaved`/`setStamped`), invoked by the
+  server actions in `app/users/actions.ts` (guarded by `assertUser`). The pages that read it are
+  `force-dynamic`, so no revalidation is needed.
+
+---
+
+## 6.6 Per-user profile (`user_profile`)
+
+Holds per-account profile preferences — currently just the chosen **kamon crest** (the avatar
+shown on the profile page's "Sanctuary Pass"). One row per account, created lazily on the first
+crest save.
+
+| Column    | Type   | Nullable | Constraints | Notes                                                          |
+| --------- | ------ | -------- | ----------- | -------------------------------------------------------------- |
+| `user_id` | `text` | No       | PK          | Neon Auth user id (`neon_auth."user".id`).                     |
+| `crest`   | `text` | No       | DEFAULT `'tomoe'` | One of `CREST_IDS` (`lib/types.ts`): `tomoe`, `matsu`, `sakura`, `ume`, `kiku`, `fuji`. |
+
+- **No FK to the Neon Auth user table** (same cross-schema reasoning as §6.5).
+- **Outside the `Store` cache.** Read fresh per request via `getUserProfile` (`lib/db/userRepo.ts`),
+  which falls back to `'tomoe'` when no row exists or the stored value is unknown; written via
+  `setCrest` (`lib/db/userMutations.ts`), invoked by `saveCrestAction` in `app/users/actions.ts`
+  (guarded by `assertUser`, validates `crest` against `CREST_IDS`). No `STORE_TAG` revalidation —
+  the profile page is `force-dynamic`. The full crest definitions (SVG renderers) live in the
+  client component `components/user/UserProfileClient.tsx`; their ids must stay in sync with
+  `CREST_IDS`.
+
+---
+
 ## 7. Authorization (Neon Auth role)
 
 Authorization is a second gate after Neon Auth sign-in. **Admin is the Neon Auth user role**,
@@ -289,6 +343,10 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
 > (`getCurrentUser().isAdmin === false`). Self-sign-up always creates a normal-user role, so new
 > accounts are never admins until promoted: `UPDATE neon_auth."user" SET role='admin' WHERE
 > lower(email)=lower('…')` (or the `admin/set-role` endpoint). See [`ACCOUNTS.md`](./ACCOUNTS.md).
+
+> **User-scoped writes.** Any signed-in account (admins included) can own personal rows in
+> `user_shrine_marks` (§6.5) and `user_profile` (§6.6). These are gated by `assertUser`/`requireUser`
+> (in `lib/auth/server.ts`), the user analog of `assertAdmin`/`requireAdmin` — signed-in, no role check.
 
 > **Removed: `app_admin`.** An earlier model used a `public.app_admin` email allowlist. It has been
 > dropped from the database and `schema.sql`; authorization is now entirely the Neon Auth user role.
@@ -305,6 +363,8 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
   so it is not deleted when a shrine is removed.
 - Catalog FKs (`region_id`, `prefecture_id`, `rank_id`, `category_id`) have no cascade —
   catalogs are stable reference data.
+- `user_shrine_marks.shrine_id` → `shrines(id)` is **`ON DELETE CASCADE`**: deleting a shrine
+  removes every user's marks for it. `user_id` has no FK (Neon Auth owns the account table).
 
 ---
 
@@ -330,6 +390,8 @@ Neon Postgres
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
 | `FacetCatalogs`   | `getFacetCatalogs`    | Filter options, restricted to values actually in use                    |
+| `UserCollections` | `getUserCollections`  | **Per-user** (non-cached, `userRepo.ts`): the signed-in user's stamped + saved `ShrineCard`s for the profile dashboard, joined from `user_shrine_marks` (§6.5) |
+| `UserProfile`     | `getUserProfile`      | **Per-user** (non-cached, `userRepo.ts`): the signed-in user's profile preferences (chosen crest), from `user_profile` (§6.6) |
 
 Key derivations done in `repo.ts`, not in SQL:
 
@@ -339,8 +401,11 @@ Key derivations done in `repo.ts`, not in SQL:
 - **Calendar date resolution** — occurrence date wins over the festival's own date;
   `is_fallback = true` when neither exists (display `time_prose` only).
 
-> `loadStore()` is wrapped in React `cache()`, so Neon is queried once per request; a fresh cache
-> per request means admin writes appear on the next page load. See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) §3.
+> The DB read is cached in the Next Data Cache via `unstable_cache` (tag `STORE_TAG`) so the
+> assembled `Store` is reused across requests without re-querying Neon, and additionally in
+> React `cache()` for per-request dedup. Admin server actions call `revalidateTag(STORE_TAG)`
+> after every write, so edits appear on the next render (1-hour `revalidate` safety net for
+> out-of-band changes). See [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) §3.
 
 ---
 
@@ -371,14 +436,14 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    **no `canonical_lore`** — the deity already has it, so `SHRINE_RESEARCH_PROMPT.md` never re-gathers it.
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
    left null until edited on the deity record.)
-3. **Festival dates are deferred (at research time).** `festivals.start_date` / `end_date` are left
-   `null` by the shrine-research flow — `SHRINE_RESEARCH_PROMPT.md` gathers no festival dates. Concrete
-   yearly dates land in `festival_occurrences` (see the table above), loaded via `upsertOccurrences` /
-   the DB scripts — the importer UI was removed.
-   - The **in-place create page** (`/shrines/new`, `FestivalBlock`'s `DefaultDateField`) *does* collect a
-     festival's own `start_date`/`end_date` as **default, year-agnostic month-day** values (month + day
-     selects). They are stored as `YYYY-MM-DD` with the **current year as a placeholder** (the column is a
-     full `date`); the year carries no meaning — these are intended as recurring defaults.
+3. **Festival default dates are now collected at research time.** `SHRINE_RESEARCH_PROMPT.md` asks for
+   `start_date` / `end_date` for festivals with **fixed Gregorian dates** (e.g. always on 15 May);
+   stored as `YYYY-MM-DD` with the current year as a placeholder — only month + day matter. Lunar,
+   Nth-weekday, and otherwise shifting festivals leave both fields `null` and rely on `festival_occurrences`
+   instead (see the table above). The in-place create page (`/shrines/new`) also collects these via the
+   `FestivalBlock`'s `DefaultDateField`.
+   - They are intended as **recurring year-agnostic defaults**; the year in the stored `date` carries no
+     meaning.
    - **Read path** (`resolveCalendarDates` in `lib/calendar.ts`, used by `getFestivalYear` and
      `entriesForMonth`) — **calendar only**: for the calendar's year, (1) an occurrence for **that exact
      year** wins and is used literally; (2) otherwise the festival's **default month-day is projected onto
@@ -388,8 +453,8 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
      is added. The **shrine detail page is unchanged** — it shows the festival's own stored dates and never
      reads occurrences.
 
-> The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
-> on import — they are simply not gathered by the shrine research flow. Don't remove them.
+> The `canonical_lore` column + Zod contract field still exists and accepts values on import — it is
+> simply not gathered by the shrine research flow. Don't remove it.
 
 ---
 

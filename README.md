@@ -8,7 +8,7 @@ A Next.js (App Router) site that browses the shrine database: an atmospheric lan
 
 The site is **server-rendered on demand**. Each route queries a [Neon](https://neon.tech) serverless Postgres database at request time (via a pooled `pg` connection) and renders fresh HTML — so admin edits appear on the next page load without a rebuild.
 
-- Data access (`lib/db/`, server-only) queries the 13 normalized tables and assembles typed view models. `loadStore()` is wrapped in React `cache()` (one query pass per request). Pure logic (`lib/`) is unit-tested.
+- Data access (`lib/db/`, server-only) queries the 13 normalized tables and assembles typed view models. `loadStore()` is cached in the Next Data Cache (`unstable_cache`, tag `STORE_TAG`) so most requests skip Neon entirely, plus React `cache()` for per-request dedup; admin writes call `revalidateTag(STORE_TAG)` so edits show on the next render. Pure logic (`lib/`) is unit-tested.
 - `/shrines`, `/deities`, `/calendar`, and `/search` pass their prebuilt data to small client components for interactivity (URL-synced filters, month navigation, fuzzy search).
 - Shrine detail is rendered as a Next.js **intercepting + parallel route** (`@modal`): a side modal on soft navigation from the listing, a full page on a direct hit / shared link.
 - Search is **Fuse.js** over a per-shrine text blob (English + Japanese + typo tolerance) built in `lib/search.ts` from the loaded data.

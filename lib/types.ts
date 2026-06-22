@@ -192,12 +192,13 @@ export interface ShrineCard {
   prayer_focus: string | null;
   best_time: string | null;
   primary_deity_titles: string[];
-  image_url: string | null;
 }
 
 export interface ShrineDetail extends ShrineCard {
   address: string | null;
   coordinates: Coordinates | null;
+  // Kept (not displayed: ShrineImage is a procedural placeholder) because the
+  // inline editor round-trips it via shrineDetailToInput → upsertShrine.
   image_urls: string[] | null;
   deities: DeityView[];
   ranks: RankView[];
@@ -276,6 +277,47 @@ export interface CalendarEntry {
   end_date: string | null;
   time_prose: string | null;
   is_fallback: boolean;
+}
+
+// --- Per-user collections (favorites + goshuin stamp book) ---
+// `user_shrine_marks` is NOT part of `Store` — it is per-user data read on a
+// separate non-cached path (lib/db/userRepo.ts), keyed by the Neon Auth user id.
+
+/** One user↔shrine mark row, joined to the shrine's slug for the UI. */
+export interface UserMark {
+  slug: string;
+  saved_at: string | null; // non-null => favorited
+  stamped_at: string | null; // non-null => goshuin collected
+}
+
+/** Booleans handed to the client for a single shrine's mark state. */
+export interface MarkState {
+  saved: boolean;
+  stamped: boolean;
+}
+
+/** A collected shrine card carrying the goshuin date, for the profile stamp book. */
+export type StampEntry = ShrineCard & { stamped_at: string };
+/** A saved shrine card carrying the favorited date, for the profile saved list. */
+export type SavedEntry = ShrineCard & { saved_at: string };
+
+/** Assembled profile collections (cards joined from the cached Store). */
+export interface UserCollections {
+  stamped: StampEntry[];
+  saved: SavedEntry[];
+}
+
+/**
+ * Valid kamon crest ids — the server-importable source of truth used to validate
+ * crest writes. The full crest definitions (with SVG renderers) live in the client
+ * component `components/user/UserProfileClient.tsx`; keep its ids in sync with this.
+ */
+export const CREST_IDS = ["tomoe", "matsu", "sakura", "ume", "kiku", "fuji"] as const;
+export type CrestId = (typeof CREST_IDS)[number];
+
+/** Per-account profile preferences (currently just the chosen crest). */
+export interface UserProfile {
+  crest: CrestId;
 }
 
 export interface SearchDoc {

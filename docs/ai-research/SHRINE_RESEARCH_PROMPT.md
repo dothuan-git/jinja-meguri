@@ -86,7 +86,7 @@ Use the type-correct empty value — never `"-"`, never `""`:
 | `details` | history, description, prayer_focus, best_time, quote | **5** |
 | each `deities[]` | name_ja, is_primary, sort_order, regional_lore, canonical | **5** |
 | each `canonical` | name_en, name_ja, deity_type, titles | **4** |
-| each `festivals[]` | name_en, name_ja, time_prose, origin, meaning, ritual, prayer, festival_type, visitor_notes, occurrences | **10** |
+| each `festivals[]` | name_en, name_ja, time_prose, start_date, end_date, origin, meaning, ritual, prayer, festival_type, visitor_notes, occurrences | **12** |
 | each `occurrences[]` | year, start_date, end_date, notes | **4** |
 | each `sources[]` | url, title | **2** |
 
@@ -104,9 +104,12 @@ Array *lengths* vary by shrine, so the grand total varies — verify the **key s
 - Festivals: include **only major / uniquely significant** festivals (skip daily and monthly rites).
   At most **2** festivals may be `festival_type: "pilgrimage"`. Use `"spectacle"` only for genuinely
   visible ceremonies/processions. If a festival is neither, omit `festival_type`.
-- Dates: do **not** supply festival dates — concrete dates are added separately as `occurrences`
-  (leave `occurrences: []`). Describe the timing in `time_prose`, and note any timing caveat in
-  `visitor_notes` (e.g. that the date shifts yearly).
+- Dates: supply `start_date` / `end_date` at the **festival level** for events with **fixed
+  Gregorian dates** (e.g. "15 May every year") — format `"YYYY-MM-DD"` using the current year as a
+  placeholder (only the month + day carry meaning; the year is discarded by the calendar). Leave both
+  `null` for lunar, Nth-weekday, or otherwise shifting dates; describe the timing in `time_prose` and
+  note any caveat in `visitor_notes`. Yearly exact dates are still added separately as `occurrences`
+  (always leave `occurrences: []`).
 
 ### Field reference (the import contract)
 Required keys are marked **(req)**. Everything else is optional — omit it or use `null`.
@@ -173,6 +176,10 @@ Festival object (in `festivals[]`):
 - `prayer` — what participants hope for: the specific human need or aspiration the event addresses.
 - `visitor_notes` — practical notes / guidance for visitors.
   (`name_ja`, `time_prose`, and the four prose fields above are all optional — `null` when unknown.)
+- `start_date` — `"YYYY-MM-DD"` default start date for festivals with **fixed Gregorian dates** (e.g.
+  always on 15 May); use the current year as a placeholder — only month + day matter. `null` for
+  lunar, Nth-weekday, or otherwise shifting dates.
+- `end_date` — `"YYYY-MM-DD"` default end date, or `null` for single-day / shifting festivals.
 - `festival_type` — `"spectacle"` or `"pilgrimage"` or omit (visitor access / experience type; max 2 `"pilgrimage"` per shrine).
 - `occurrences` — concrete yearly dates, curated separately — leave as `[]`. (For reference, each
   occurrence has the shape:
@@ -236,7 +243,8 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - [ ] Any companion lore that must display on the shrine page is in `regional_lore` (canonical lore is curated separately).
 - [ ] Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded — see **Prose voice & length**.
 - [ ] At most 2 festivals have `festival_type: "pilgrimage"`; any `festival_type` is a valid enum value.
-- [ ] `occurrences` is `[]` (concrete dates are added separately).
+- [ ] Festival `start_date` / `end_date` are `"YYYY-MM-DD"` (current year as placeholder) for fixed-Gregorian festivals, `null` for lunar / shifting dates.
+- [ ] `occurrences` is `[]` (concrete yearly dates are added separately).
 - [ ] All `sources[].url` and any `image_urls[]` are real, valid URLs.
 - [ ] No invented facts; claims are covered by `sources`.
 

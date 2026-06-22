@@ -174,6 +174,37 @@ CREATE INDEX idx_festival_occurrences_festival ON festival_occurrences(festival_
 CREATE INDEX idx_festival_occurrences_year     ON festival_occurrences(year);
 
 -- ------------------------------------------------------------
+-- USER COLLECTIONS (per-account favorites + goshuin stamp book)
+-- ------------------------------------------------------------
+-- One row per (user_id, shrine_id). saved_at non-null => favorited ("want to
+-- visit"); stamped_at non-null => goshuin collected ("visited"). A row whose
+-- two timestamps are both null is meaningless and is deleted by the mutations.
+-- user_id is the Neon Auth user id (neon_auth."user".id, a text id); there is no
+-- cross-schema FK to it (Neon Auth owns that table). This table is per-user data
+-- and lives OUTSIDE the cached global Store — see DATA_MODEL.md.
+CREATE TABLE user_shrine_marks (
+    user_id    text        NOT NULL,                                  -- neon_auth."user".id
+    shrine_id  uuid        NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
+    saved_at   timestamptz,                                           -- non-null => favorited
+    stamped_at timestamptz,                                           -- non-null => goshuin collected
+    PRIMARY KEY (user_id, shrine_id)
+);
+
+CREATE INDEX idx_user_shrine_marks_user ON user_shrine_marks(user_id);
+
+-- ------------------------------------------------------------
+-- USER PROFILE (per-account preferences)
+-- ------------------------------------------------------------
+-- One row per signed-in account holding profile preferences (currently the chosen
+-- kamon crest / avatar). user_id is the Neon Auth user id (neon_auth."user".id); no
+-- cross-schema FK (Neon Auth owns that table). Per-user data that lives OUTSIDE the
+-- cached global Store — read fresh per request (userRepo), written via userMutations.
+CREATE TABLE user_profile (
+    user_id text PRIMARY KEY,                                           -- neon_auth."user".id
+    crest   text NOT NULL DEFAULT 'tomoe'
+);
+
+-- ------------------------------------------------------------
 -- AUTHORIZATION
 -- ------------------------------------------------------------
 -- There is no application-level auth table. Admin authorization is the Neon Auth

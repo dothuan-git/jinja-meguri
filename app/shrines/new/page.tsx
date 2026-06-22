@@ -26,7 +26,6 @@ const EMPTY_DETAIL: ShrineDetail = {
   prayer_focus: null,
   best_time: null,
   primary_deity_titles: [],
-  image_url: null,
   address: null,
   coordinates: null,
   image_urls: [],

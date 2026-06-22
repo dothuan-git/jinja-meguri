@@ -81,7 +81,7 @@ JOIN regions r ON r.name_en = p.region_name;
 INSERT INTO ranks (name_en, description, name_ja, rank_order) VALUES
   ('Honso',             'Supreme Head Shrine of All Shinto', '本宗',       0),
   ('Sohonsha',          'Head Shrine of a Network',          '総本社',     1),
-  ('Chokusaisha',       'Imperial Envoy Shrine',             '勅祭社',     2),
+  ('Chokusaisha',       '16 Imperial Envoy Shrine',          '勅祭社',     2),
   ('Ichinomiya',        'Highest Provincial Shrine',         '一宮',       3),
   ('Myojin-Taisha',     'Eminent Engishiki Shrine',          '名神大社',   4),
   ('Shikinai-sha',      'Engishiki-listed Shrine',           '式内社',     5),

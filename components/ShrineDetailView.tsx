@@ -13,6 +13,7 @@ import {
   Crown,
   ExternalLink,
   FileText,
+  Heart,
   Lock,
   Map,
   MapPin,
@@ -21,6 +22,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
+import { useShrineMarks } from "@/components/user/useShrineMark";
 import { buildEmbedUrl } from "@/lib/maps";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import ShrineImage from "@/components/ShrineImage";
@@ -46,6 +48,24 @@ export interface ShrineDetailEditor {
   /** "create" mounts the editor immediately on an empty draft; default "update". */
   mode?: "create" | "update";
 }
+
+/** The signed-in viewer's collection state for this shrine (favorite + goshuin). */
+export interface ShrineMarkInfo {
+  saved: boolean;
+  stamped: boolean;
+  stampedAt: string | null;
+}
+
+function formatStampDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 import { getCategoryColor, getDeityTypeTextColor } from "@/lib/facetColors";
 import { FESTIVAL_TYPE_LABEL, DEITY_TYPE_LABEL } from "@/lib/labels";
 import { CHIP, typo } from "@/components/shrineEdit/detailStyles";
@@ -70,7 +90,6 @@ function toView(shrine: ShrineDetail) {
     location: shrine.city ?? "",
     prefecture: shrine.prefecture,
     region: shrine.region,
-    image: shrine.image_urls?.[0] ?? undefined,
     ranks: shrine.ranks.map((r) => r.name_en),
     prayerFocus: shrine.categories.map((c) => c.name_en),
     prayerFocusText: shrine.details?.prayer_focus ?? "",
@@ -166,16 +185,21 @@ export default function ShrineDetailView({
   shrine,
   variant,
   editor,
+  mark,
+  isSignedIn = false,
 }: {
   shrine: ShrineDetail;
   variant: "modal" | "page";
   editor?: ShrineDetailEditor;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const router = useRouter();
   const creating = editor?.mode === "create";
 
-  if (variant === "modal") return <ModalBody view={toView(shrine)} />;
+  if (variant === "modal")
+    return <ModalBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />;
 
   // Create flow: mount the editor immediately on an empty draft (no read view).
   if (creating && editor) {
@@ -187,7 +211,7 @@ export default function ShrineDetailView({
         onCancel={() => router.push("/shrines")}
         onSaved={(savedSlug) => router.push(`/shrines/${savedSlug}`)}
       >
-        <PageBody view={toView(shrine)} />
+        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
@@ -207,7 +231,7 @@ export default function ShrineDetailView({
           else router.refresh();
         }}
       >
-        <PageBody view={toView(shrine)} />
+        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
@@ -217,6 +241,8 @@ export default function ShrineDetailView({
       view={toView(shrine)}
       canEdit={Boolean(editor)}
       onEdit={() => setEditing(true)}
+      mark={mark}
+      isSignedIn={isSignedIn}
     />
   );
 }
@@ -229,10 +255,14 @@ function PageBody({
   view: shrine,
   canEdit,
   onEdit,
+  mark,
+  isSignedIn = false,
 }: {
   view: View;
   canEdit?: boolean;
   onEdit?: () => void;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
 }) {
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -249,8 +279,16 @@ function PageBody({
     ? (edit?.getValue("coordinates") as Coordinates | null)
     : shrine.coordinates;
 
-  // Goshuin Stamp local interactive state
-  const [stampReceived, setStampReceived] = useState<string | null>(null);
+  // Per-user collection state (favorite + goshuin), server-backed + optimistic.
+  const marks = useShrineMarks({
+    saved: mark?.saved ? [shrine.slug] : [],
+    stamped: mark?.stamped ? [shrine.slug] : [],
+  });
+  const isSaved = marks.isSaved(shrine.slug);
+  const isStamped = marks.isStamped(shrine.slug);
+  // Local display date for the stamp: seeded from the server, set client-side on a
+  // fresh stamp (the toggle action returns only booleans, not the timestamp).
+  const [stampDate, setStampDate] = useState<string | null>(mark?.stampedAt ?? null);
 
   // Scroll spy references
   const containerRef = useRef<HTMLDivElement>(null);
@@ -267,81 +305,58 @@ function PageBody({
     location: useRef<HTMLDivElement>(null),
   };
 
-  // Load stamp relative to this shrine slug
+  // Reset scroll/section when navigating between shrines.
   useEffect(() => {
-    const savedStamp = localStorage.getItem(`jinja-goshuin-${shrine.slug}`);
-    setStampReceived(savedStamp);
-
-    // Dynamic reset scroll to top
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0;
-    }
+    window.scrollTo(0, 0);
     setActiveSection("overview");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shrine.slug]);
 
-  // Handle scroll to track progress & active tab
+  // Handle scroll to track active section tab — keyed off window scroll
   const handleScroll = () => {
-    const el = containerRef.current;
-    if (!el) return;
-
     let currentSection = "overview";
     const buffer = 150;
 
     for (const key of Object.keys(sectionRefs)) {
       const secEl = sectionRefs[key as keyof typeof sectionRefs]?.current;
-      if (secEl) {
-        const rect = secEl.getBoundingClientRect();
-        const containerRect = el.getBoundingClientRect();
-        const relativeTop = rect.top - containerRect.top;
-
-        if (relativeTop <= buffer) {
-          currentSection = key;
-        }
+      if (secEl && secEl.getBoundingClientRect().top <= buffer) {
+        currentSection = key;
       }
     }
     setActiveSection(currentSection);
   };
 
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const scrollToSection = (secId: string) => {
     const target = sectionRefs[secId as keyof typeof sectionRefs]?.current;
-    if (target && containerRef.current) {
-      const container = containerRef.current;
-      const targetRect = target.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      const relativeTop = targetRect.top - containerRect.top + container.scrollTop;
-
-      container.scrollTo({
-        top: relativeTop - 15,
-        behavior: "smooth"
+    if (target) {
+      window.scrollTo({
+        top: target.getBoundingClientRect().top + window.scrollY - 15,
+        behavior: "smooth",
       });
       setActiveSection(secId);
     }
   };
 
-  // Stamp Actions
+  // Stamp Actions (server-backed via the optimistic marks hook)
   const handleReceiveStamp = () => {
-    const nowString = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-    localStorage.setItem(`jinja-goshuin-${shrine.slug}`, nowString);
-    setStampReceived(nowString);
+    marks.toggleStamp(shrine.slug, shrine.name);
+    setStampDate(new Date().toISOString());
   };
 
   const handleClearStamp = () => {
-    localStorage.removeItem(`jinja-goshuin-${shrine.slug}`);
-    setStampReceived(null);
+    marks.toggleStamp(shrine.slug, shrine.name);
+    setStampDate(null);
   };
 
   return (
     <div
       ref={containerRef}
-      onScroll={handleScroll}
-      className="w-full flex-1 flex flex-col h-[calc(100vh-80px)] overflow-y-auto bg-transparent relative scroll-smooth pb-16"
+      className="w-full flex-1 flex flex-col bg-transparent relative pb-16"
     >
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
 
@@ -365,7 +380,7 @@ function PageBody({
 
         {/* Cinematic Header Display (Borderless, natural merge) */}
         <div data-reveal="fade-up-blur" className="relative w-full rounded-2xl overflow-hidden shadow-xs aspect-[16/7] md:aspect-[21/7] bg-stone/5">
-          <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
+          <ShrineImage alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
           <div className="absolute inset-0 bg-gradient-to-t from-stone/60 via-stone/5 to-transparent pointer-events-none" />
 
           {/* Elegant overlay vertical seal */}
@@ -497,6 +512,20 @@ function PageBody({
               </EditableProse>
             )}
           </div>
+          {isSignedIn && !creating && (
+            <button
+              onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
+              disabled={marks.pending}
+              aria-pressed={isSaved}
+              title={isSaved ? "Remove from saved" : "Save to your list"}
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
+                isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
+              }`}
+            >
+              <Heart size={11} className={isSaved ? "fill-torii" : ""} />
+              <span>{isSaved ? "Saved" : "Save"}</span>
+            </button>
+          )}
         </div>
 
       </div>
@@ -608,7 +637,7 @@ function PageBody({
                 editClassName="w-full text-base font-quote italic text-stone/85"
               >
                 <div className={`${typo.quote} py-4 select-text`}>
-                  “{shrine.prayerFocusText}”
+                  "{shrine.prayerFocusText}"
                 </div>
               </EditableProse>
 
@@ -923,7 +952,7 @@ function PageBody({
 
                     <div className="text-[9px] font-mono text-stone/30 uppercase tracking-widest block font-bold">奉拝 (Worshiped)</div>
 
-                    {stampReceived ? (
+                    {isStamped ? (
                       <motion.div
                         initial={{ scale: 0.85, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -950,10 +979,12 @@ function PageBody({
                     )}
 
                     <div className="text-[8px] font-mono text-center text-stone/50 tracking-wide select-none">
-                      {stampReceived ? (
+                      {isStamped ? (
                         <>
                           <span className="text-torii font-bold block">Sacred Proof</span>
-                          <span className="block font-sans [font-size:7px] mt-0.5">{stampReceived}</span>
+                          {stampDate && (
+                            <span className="block font-sans [font-size:7px] mt-0.5">{formatStampDate(stampDate)}</span>
+                          )}
                         </>
                       ) : (
                         <span>Stamp is empty</span>
@@ -968,17 +999,26 @@ function PageBody({
                     </p>
 
                     <div className="flex flex-wrap gap-2 select-none">
-                      {!stampReceived ? (
+                      {!isSignedIn ? (
+                        <Link
+                          href="/sign-in"
+                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+                        >
+                          Sign in to collect your goshuin
+                        </Link>
+                      ) : !isStamped ? (
                         <button
                           onClick={handleReceiveStamp}
-                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer"
+                          disabled={marks.pending}
+                          className="px-4 py-2 bg-torii hover:bg-torii-dark text-white rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-xs hover:shadow-sm transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                         >
                           Affix Sacred Goshuin Seal
                         </button>
                       ) : (
                         <button
                           onClick={handleClearStamp}
-                          className="px-3 py-1.5 border border-stone/20 hover:border-torii text-stone/65 hover:text-torii rounded-lg text-[9px] font-mono tracking-widest uppercase hover:bg-stone/5 transition-all shrink-0 cursor-pointer"
+                          disabled={marks.pending}
+                          className="px-3 py-1.5 border border-stone/20 hover:border-torii text-stone/65 hover:text-torii rounded-lg text-[9px] font-mono tracking-widest uppercase hover:bg-stone/5 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                         >
                           Reset Ink Seal
                         </button>
@@ -997,7 +1037,7 @@ function PageBody({
             id="location"
             ref={sectionRefs.location}
             data-reveal="rise"
-            className="relative scroll-mt-14 pb-8"
+            className="relative scroll-mt-14"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
               地
@@ -1065,19 +1105,6 @@ function PageBody({
                   />
                 )}
               </div>
-
-              <div className="flex flex-wrap gap-2 select-none">
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shrine.name + " " + shrine.location)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-stone hover:bg-torii text-white rounded-lg text-[10px] tracking-widest uppercase hover:shadow-xs transition-all inline-flex items-center gap-1.5 font-bold cursor-pointer"
-                >
-                  <Map size={11} className="text-bamboo" />
-                  <span>Open Route in Google Maps</span>
-                  <ExternalLink size={10} className="opacity-70" />
-                </a>
-              </div>
             </div>
           </section>
 
@@ -1127,7 +1154,20 @@ function PageBody({
 /* the drawer shell + close header live in components/Modal.tsx          */
 /* ===================================================================== */
 
-function ModalBody({ view: shrine }: { view: View }) {
+function ModalBody({
+  view: shrine,
+  mark,
+  isSignedIn = false,
+}: {
+  view: View;
+  mark?: ShrineMarkInfo;
+  isSignedIn?: boolean;
+}) {
+  const marks = useShrineMarks({
+    saved: mark?.saved ? [shrine.slug] : [],
+    stamped: mark?.stamped ? [shrine.slug] : [],
+  });
+  const isSaved = marks.isSaved(shrine.slug);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(shrine.name + " " + shrine.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
 
   // Group festivals so each festival type renders as a single combined card.
@@ -1143,7 +1183,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
       {/* Full-bleed cover image */}
       <div className="relative h-48 sm:h-60 md:h-72 w-full shrink-0 bg-stone/5 border-b border-moss/10 overflow-hidden select-none">
-        <ShrineImage src={shrine.image} alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
+        <ShrineImage alt={shrine.name} shrineId={shrine.slug} prefecture={shrine.prefecture} nameJa={shrine.japaneseName} />
       </div>
 
       <div className="px-6 md:px-10 py-7 space-y-9 pb-9">
@@ -1151,14 +1191,30 @@ function ModalBody({ view: shrine }: { view: View }) {
         {/* Identity block */}
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
-              {shrine.ranks.map((rank, i) => (
-                <span key={rank} className="inline-flex items-center gap-1">
-                  {i > 0 && <span className="opacity-30">|</span>}
-                  {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                  <span>{rank}</span>
-                </span>
-              ))}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+                {shrine.ranks.map((rank, i) => (
+                  <span key={rank} className="inline-flex items-center gap-1">
+                    {i > 0 && <span className="opacity-30">|</span>}
+                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                    <span>{rank}</span>
+                  </span>
+                ))}
+              </div>
+              {isSignedIn && (
+                <button
+                  onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
+                  disabled={marks.pending}
+                  aria-pressed={isSaved}
+                  title={isSaved ? "Remove from saved" : "Save to your list"}
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
+                    isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
+                  }`}
+                >
+                  <Heart size={11} className={isSaved ? "fill-torii" : ""} />
+                  <span>{isSaved ? "Saved" : "Save"}</span>
+                </button>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -1187,7 +1243,7 @@ function ModalBody({ view: shrine }: { view: View }) {
 
           {shrine.quote && (
             <p className={typo.quote}>
-              "{shrine.quote}"
+              “{shrine.quote}”
             </p>
           )}
         </div>

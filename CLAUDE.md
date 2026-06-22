@@ -49,15 +49,19 @@ route; the rest is read-only public content.
 
 ```
 Neon Postgres
-  └─ lib/db/store.ts (loadStore)   — fetches all 13 tables in parallel via a pg.Pool, wrapped in React cache()
+  └─ lib/db/store.ts (loadStore)   — fetches all 13 tables in parallel via a pg.Pool, cached in the Next Data Cache (+ React cache())
        └─ lib/db/repo.ts           — pure functions assembling typed view models from the Store
             └─ app/*/page.tsx      — server components call repo functions, pass results to client components
 ```
 
-`Store` (defined in `lib/types.ts`) holds every table as a typed array. `loadStore()` is
-wrapped in React `cache()`, so within a single request Neon is queried once; a fresh cache
-is created per request, so admin writes show up on the next page load. The shared
-`pg.Pool` is exported from `lib/db/store.ts` and reused by auth and mutations.
+`Store` (defined in `lib/types.ts`) holds every table as a typed array. The DB read is
+wrapped in **two** caches: `unstable_cache` (the Next Data Cache, keyed/tagged `STORE_TAG`)
+caches the assembled `Store` **across requests** so most page loads never touch Neon, and
+React `cache()` dedupes it **within** a request. The cache is held until an admin write calls
+`revalidateTag(STORE_TAG)` (wired into every server action in `app/admin/actions.ts`), so
+edits appear on the next render; a 1-hour `revalidate` is a safety net for out-of-band DB
+changes (e.g. `db:reset`). The shared `pg.Pool` is exported from `lib/db/store.ts` and reused
+by auth and mutations.
 
 ### View model layers (`lib/types.ts`)
 
@@ -99,7 +103,10 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
 
 - **Accounts & roles:** anyone can self-register at `/sign-up` and sign in at `/sign-in`
   (custom forms in `components/auth/`, in the `app/(auth)` route group, using the `authClient`
-  from `lib/auth/client.ts`). Sign-up creates a **normal user** (Neon Auth role `user`). The nav
+  from `lib/auth/client.ts`). Both forms also render `components/auth/SocialAuthButtons.tsx`
+  (e.g. *Continue with Google* via `authClient.signIn.social`); OAuth is one flow for sign-up and
+  sign-in, and each provider must be enabled in the Neon Auth console (no provider config in code).
+  Sign-up creates a **normal user** (Neon Auth role `user`). The nav
   (`components/SiteChrome.tsx`) shows Sign in / Sign up when logged out and a profile icon →
   `/users/[id]` (owner-only profile, with Sign out) when logged in. `app/layout.tsx` reads
   `getCurrentUser()` once and hands the `user` to `SiteChrome`.
@@ -120,11 +127,31 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
   Guards live in `lib/auth/server.ts` (`getCurrentUser` returns `{ id, email, name, isAdmin } | null`;
   `requireAdmin` 404s unauthorized visitors; `assertAdmin` throws in server actions;
   `getAdminEmail` gates the inline editing affordances on public pages). `middleware.ts`
-  refreshes the session cookie on a cache miss; its matcher now covers all page routes (excluding
-  `/api`, `/_next`, and static assets) because the layout/pages read the session at render time.
-- **Role-aware controls:** admins see the existing "Admin Controls" bars; signed-in normal users
-  see a scaffold `components/UserControls.tsx` (features TBD), currently mounted only on the
-  `/shrines` listing via an `isUser` prop alongside `isAdmin`.
+  refreshes the session cookie on a cache miss **and completes the OAuth handshake**: social login
+  returns to the app with a one-time `neon_auth_session_verifier` query param, which the middleware
+  forwards to `/api/auth/get-session` (redeeming it + the `session_challange` cookie for the real
+  session cookie) and then redirects to the verifier-stripped URL — without this step OAuth users
+  land signed-out. Its matcher covers all page routes (excluding `/api`, `/_next`, and static
+  assets) because the layout/pages read the session at render time. Note the Neon Auth session
+  cookies are `__Secure-` prefixed, so they only persist over HTTPS (auth won't stick on plain
+  `http://localhost`).
+- **Role-aware controls:** admins see the existing "Admin Controls" bars. Signed-in **normal users**
+  get personal-collection affordances — a heart (favorite / "want to visit") on shrine cards and the
+  detail/modal header, the **goshuin stamp** on the detail page (now account-persistent, see below),
+  and a floating `components/UserControls.tsx` "My Collection" pill on `/shrines` that toggles the
+  URL-synced `saved` / `collected` filters. The affordances surface for any signed-in account, but the
+  `UserControls` pill is shown to non-admins only (admins have their own bottom pill). The profile page
+  `/users/[id]` is a dashboard listing the user's **御朱印帳** (stamp book) and saved shrines.
+- **User collections (favorites + goshuin):** a per-user `user_shrine_marks` table (one row per
+  `(user_id, shrine_id)`, columns `saved_at` / `stamped_at`) holds this data. It lives **outside the
+  cached `Store`** — read fresh per request via `lib/db/userRepo.ts` (`loadUserMarks`,
+  `getUserCollections`), written via `lib/db/userMutations.ts` (`setSaved`/`setStamped`). Server actions
+  in `app/users/actions.ts` (`toggleSaveAction`/`toggleStampAction`) are guarded by `assertUser`
+  (signed-in, no role check; `requireUser` is the page analog) and do **not** touch `STORE_TAG` — the
+  reading pages are `force-dynamic`. The client uses the optimistic `components/user/useShrineMark.ts`
+  hook (`useShrineMarks`), which needs a `ToastProvider` (now mounted globally in `app/layout.tsx`).
+  The goshuin stamp is **signed-in only**; the old localStorage (`jinja-goshuin-*`) path was removed.
+  See `docs/DATA_MODEL.md` §6.5.
 - **Writes:** server actions in `app/admin/actions.ts` (the directory now holds only this file)
   validate a JSON envelope with Zod (`lib/admin/shrineContract.ts`, `lib/admin/deityContract.ts`),
   then call runtime mutations in `lib/db/mutations.ts` (transactional upsert/delete, deity dedup
@@ -184,10 +211,9 @@ upserted to Neon via `lib/db/mutations.ts`. The schema is in `docs/schema.sql`; 
 - **Deities are created first**, with `canonical_lore`. Then shrines link them by `name_ja`; the shrine's
   embedded `deities[].canonical` block is identity-only (no `canonical_lore`), so the shrine research
   flow never re-gathers deity lore.
-- **Festival `start_date`/`end_date` are deferred in the shrine-research flow** — left null at
-  shrine-research time (no date fields in the prompt). Yearly dates land in `festival_occurrences`. The
-  **in-place create page** (`/shrines/new`) does collect them as default, year-agnostic month-day values
-  (stored `YYYY-MM-DD` with the current year as a placeholder). See `docs/DATA_MODEL.md` §10 for the
-  calendar read-path caveat.
-- The `canonical_lore` and festival-date **columns + Zod contract fields still exist** and accept values
-  on import; they are just not gathered by the shrine flow. Don't strip them.
+- **Festival `start_date`/`end_date`** are now collected at shrine-research time for festivals with
+  fixed Gregorian dates (stored `YYYY-MM-DD` with the current year as a placeholder — only month + day
+  matter). Lunar / Nth-weekday festivals leave both null and land yearly dates in `festival_occurrences`
+  instead. See `docs/DATA_MODEL.md` §10 for the calendar read-path caveat.
+- The `canonical_lore` column + Zod contract field still exists and accepts values; it is just not
+  gathered by the shrine research flow. Don't strip it.

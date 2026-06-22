@@ -68,8 +68,10 @@ Write the prose like a **told story**, storytelling voice, not an encyclopedia e
 - Festivals: include **only major / uniquely significant** ones (skip daily/monthly rites). Pick `Type`
   = `pilgrimage` only for participatory pilgrimage festivals (**max 2 per shrine**), `spectacle` for
   visible ceremonies/processions, otherwise leave `—`.
-- Festival dates are added separately later (per-year), so there are no date fields — just describe the
-  timing under `Time (display)`.
+- Festival dates: for events with **fixed Gregorian dates** (e.g. "15 May every year"), fill
+  `Start date` and `End date` as `YYYY-MM-DD` using the current year as a placeholder — only the
+  month + day carry meaning. Leave both `—` for lunar, Nth-weekday, or otherwise shifting dates;
+  describe the timing under `Time (display)` instead.
 
 ### Lore guidance (Regional lore)
 The deity's **canonical lore** is entered beforehand on the deity record itself (via the deity importer),
@@ -100,6 +102,9 @@ Latitude: <decimal, e.g. 34.9671>
 Longitude: <decimal, e.g. 135.7727>
 
 Details
+Quote:
+<short 1–2 sentence evocative epigraph capturing the shrine's spirit, or —>
+
 History:
 <prose — founding, legendary events, syncretic layers>
 
@@ -111,9 +116,6 @@ Prayer focus:
 
 Best time to visit:
 <prose — nature, atmosphere, and timing>
-
-Quote:
-<short 1–2 sentence evocative epigraph capturing the shrine's spirit, or —>
 
 Ranks (tick all that apply; if none, write "none"):
 [x] <Rank value>
@@ -144,6 +146,8 @@ Name (English): <name>
 Name (Japanese): <kanji, or —>
 Type: <spectacle | pilgrimage | —>
 Time (display): <human-readable timing, e.g. "First Day of the Horse in February">
+Start date: <YYYY-MM-DD for fixed Gregorian, — for lunar/shifting>
+End date: <YYYY-MM-DD for fixed Gregorian multi-day, — for single-day/lunar/shifting>
 
 Origin:
 <prose — the historical cause, crisis, myth, or founding moment>
@@ -207,6 +211,7 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - Region and Prefecture are on the lists and consistent (prefecture belongs to its region).
 - Every Rank / Prayer Category line is spelled exactly as listed.
 - At most 2 festivals are `pilgrimage`.
+- Festival `Start date` / `End date` are `YYYY-MM-DD` (current year as placeholder) for fixed-Gregorian events, `—` for lunar / shifting dates.
 - No invented facts; claims are covered by **Sources**.
 - Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded.
 

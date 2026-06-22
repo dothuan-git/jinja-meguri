@@ -1,7 +1,12 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import pg from "pg";
 import type { Store } from "@/lib/types";
+
+// Data Cache tag for the whole Store. The admin server actions call
+// revalidateTag(STORE_TAG) after every write so the next render re-reads Neon.
+export const STORE_TAG = "store";
 
 const TABLES: (keyof Store)[] = [
   "regions",
@@ -29,67 +34,78 @@ export function buildStore(raw: Record<string, unknown[]>): Store {
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: true },
-  max: 5,
+  // Headroom for loadStore's 13 concurrent queries (below) plus an in-flight
+  // mutation transaction. The Neon pooled endpoint (pgbouncer) multiplexes these.
+  max: 16,
 });
 
-// React cache() dedupes within a single request; a fresh cache is created per
-// request, so admin writes are always reflected on the next page load.
-export const loadStore = cache(async (): Promise<Store> => {
-  const client = await pool.connect();
-  try {
-    const raw: Record<string, unknown[]> = {};
+// The raw DB read. Pure (no cookies/headers), so it is safe to wrap in the Next
+// Data Cache below. Each query goes through `pool.query` (not one checked-out
+// client), so the pool gives each its own connection and they run *genuinely* in
+// parallel — a single pg client serializes queries through one connection.
+async function fetchStore(): Promise<Store> {
+  const raw: Record<string, unknown[]> = {};
 
-    const [
-      regions,
-      prefectures,
-      ranks,
-      prayerCategories,
-      deities,
-      shrinesRaw,
-      shrineDeities,
-      shrineRanks,
-      shrinePrayerCategories,
-      shrineDetails,
-      festivalsRaw,
-      sources,
-      festivalOccurrences,
-    ] = await Promise.all([
-      client.query("SELECT * FROM regions"),
-      client.query("SELECT * FROM prefectures"),
-      client.query("SELECT * FROM ranks"),
-      client.query("SELECT * FROM prayer_categories"),
-      client.query("SELECT * FROM deities"),
-      client.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls FROM shrines"),
-      client.query("SELECT * FROM shrine_deities"),
-      client.query("SELECT * FROM shrine_ranks"),
-      client.query("SELECT * FROM shrine_prayer_categories"),
-      client.query("SELECT * FROM shrine_details"),
-      client.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes FROM festivals"),
-      client.query("SELECT * FROM sources"),
-      client.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
-    ]);
+  const [
+    regions,
+    prefectures,
+    ranks,
+    prayerCategories,
+    deities,
+    shrinesRaw,
+    shrineDeities,
+    shrineRanks,
+    shrinePrayerCategories,
+    shrineDetails,
+    festivalsRaw,
+    sources,
+    festivalOccurrences,
+  ] = await Promise.all([
+    pool.query("SELECT * FROM regions"),
+    pool.query("SELECT * FROM prefectures"),
+    pool.query("SELECT * FROM ranks"),
+    pool.query("SELECT * FROM prayer_categories"),
+    pool.query("SELECT * FROM deities"),
+    pool.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls FROM shrines"),
+    pool.query("SELECT * FROM shrine_deities"),
+    pool.query("SELECT * FROM shrine_ranks"),
+    pool.query("SELECT * FROM shrine_prayer_categories"),
+    pool.query("SELECT * FROM shrine_details"),
+    pool.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes FROM festivals"),
+    pool.query("SELECT * FROM sources"),
+    pool.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
+  ]);
 
-    raw["regions"] = regions.rows;
-    raw["prefectures"] = prefectures.rows;
-    raw["ranks"] = ranks.rows;
-    raw["prayer_categories"] = prayerCategories.rows;
-    raw["deities"] = deities.rows;
-    raw["shrines"] = shrinesRaw.rows.map((r) => ({
-      ...r,
-      coordinates: r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null,
-      lat: undefined,
-      lng: undefined,
-    }));
-    raw["shrine_deities"] = shrineDeities.rows;
-    raw["shrine_ranks"] = shrineRanks.rows;
-    raw["shrine_prayer_categories"] = shrinePrayerCategories.rows;
-    raw["shrine_details"] = shrineDetails.rows;
-    raw["festivals"] = festivalsRaw.rows;
-    raw["sources"] = sources.rows;
-    raw["festival_occurrences"] = festivalOccurrences.rows;
+  raw["regions"] = regions.rows;
+  raw["prefectures"] = prefectures.rows;
+  raw["ranks"] = ranks.rows;
+  raw["prayer_categories"] = prayerCategories.rows;
+  raw["deities"] = deities.rows;
+  raw["shrines"] = shrinesRaw.rows.map((r) => ({
+    ...r,
+    coordinates: r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null,
+    lat: undefined,
+    lng: undefined,
+  }));
+  raw["shrine_deities"] = shrineDeities.rows;
+  raw["shrine_ranks"] = shrineRanks.rows;
+  raw["shrine_prayer_categories"] = shrinePrayerCategories.rows;
+  raw["shrine_details"] = shrineDetails.rows;
+  raw["festivals"] = festivalsRaw.rows;
+  raw["sources"] = sources.rows;
+  raw["festival_occurrences"] = festivalOccurrences.rows;
 
-    return buildStore(raw);
-  } finally {
-    client.release();
-  }
+  return buildStore(raw);
+}
+
+// Cross-request cache: the assembled Store is cached in the Next Data Cache under
+// STORE_TAG and reused across requests until an admin write calls
+// revalidateTag(STORE_TAG). The 1-hour `revalidate` is a safety net for any
+// out-of-band DB change (e.g. db:reset) that bypasses the server actions.
+const getCachedStore = unstable_cache(fetchStore, ["store"], {
+  tags: [STORE_TAG],
+  revalidate: 3600,
 });
+
+// React cache() additionally dedupes the cached read within a single request.
+export const loadStore = cache((): Promise<Store> => getCachedStore());

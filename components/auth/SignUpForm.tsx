@@ -2,16 +2,41 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion, type Variants } from "motion/react";
+import { Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
+import SocialAuthButtons from "./SocialAuthButtons";
+import OmikujiAlert from "./OmikujiAlert";
 
 const INPUT =
-  "w-full rounded-xl border border-moss/20 bg-washi/60 px-4 py-2.5 text-sm text-stone outline-none transition-colors placeholder:text-moss-light/60 focus:border-torii";
-const LABEL = "block text-[11px] font-bold uppercase tracking-widest text-moss-light";
+  "w-full rounded-xl border border-moss/20 bg-washi/60 px-4 py-2.5 text-sm text-stone outline-none transition-all placeholder:text-moss-light/50 focus:border-torii focus:ring-3 focus:ring-torii/10 focus:bg-washi/90";
+const LABEL = "block text-[11px] font-bold uppercase tracking-widest text-moss-light/95";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 120, damping: 14 },
+  },
+};
+
 
 export default function SignUpForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -21,7 +46,12 @@ export default function SignUpForm() {
     setPending(true);
     setError(null);
     try {
-      const { error } = await authClient.signUp.email({ email, password, name });
+      const { error } = await authClient.signUp.email({
+        email,
+        password,
+        name,
+        callbackURL: "/shrines", // where the email-verification link lands after confirming
+      });
       if (error) {
         setError(error.message ?? "Could not create your account.");
         return;
@@ -38,81 +68,133 @@ export default function SignUpForm() {
 
   if (done) {
     return (
-      <div className="space-y-5 text-center">
-        <p className="text-sm text-moss-light">
-          We sent a verification link to <span className="font-bold text-stone">{email}</span>.
-          Open it to activate your account, then sign in.
-        </p>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-6 text-center"
+      >
+        <OmikujiAlert
+          type="success"
+          message={`A verification link has been sent to ${email}. Please check your inbox to activate your account.`}
+        />
+        
+        <div className="pt-2 text-xs tracking-wide text-moss-light/80 leading-relaxed">
+          Didn&apos;t receive the email? Check your spam folder or{" "}
+          <Link
+            href={`/resend-verification?email=${encodeURIComponent(email)}`}
+            className="font-bold text-torii hover:underline"
+          >
+            resend the verification link
+          </Link>
+          .
+        </div>
+
         <Link
           href="/sign-in"
-          className="inline-block rounded-xl bg-torii px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-washi transition-opacity hover:opacity-90"
+          className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
         >
           Go to sign in
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      {error && (
-        <p className="rounded-xl border border-torii/30 bg-torii/5 px-4 py-2.5 text-sm text-torii">
-          {error}
-        </p>
-      )}
-      <div className="space-y-1.5">
-        <label htmlFor="name" className={LABEL}>Name</label>
-        <input
-          id="name"
-          type="text"
-          autoComplete="name"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={INPUT}
-          placeholder="Your name"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label htmlFor="email" className={LABEL}>Email</label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={INPUT}
-          placeholder="you@example.com"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label htmlFor="password" className={LABEL}>Password</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={INPUT}
-          placeholder="At least 8 characters"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-xl bg-torii px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-washi transition-opacity hover:opacity-90 disabled:opacity-50"
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      <motion.div variants={itemVariants}>
+        <SocialAuthButtons />
+      </motion.div>
+
+      <motion.form
+        onSubmit={onSubmit}
+        variants={containerVariants}
+        className="space-y-5"
       >
-        {pending ? "Creating account…" : "Sign up"}
-      </button>
-      <p className="text-center text-xs tracking-widest uppercase text-moss-light">
-        Already have an account?{" "}
-        <Link href="/sign-in" className="font-bold text-torii hover:underline">
-          Sign in
-        </Link>
-      </p>
-    </form>
+        {error && (
+          <motion.div variants={itemVariants}>
+            <OmikujiAlert type="error" message={error} />
+          </motion.div>
+        )}
+
+        <motion.div variants={itemVariants} className="space-y-1.5">
+          <label htmlFor="name" className={LABEL}>Name</label>
+          <input
+            id="name"
+            type="text"
+            autoComplete="name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={INPUT}
+            placeholder="Your name"
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-1.5">
+          <label htmlFor="email" className={LABEL}>Email</label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={INPUT}
+            placeholder="you@example.com"
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="space-y-1.5">
+          <label htmlFor="password" className={LABEL}>Password</label>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`${INPUT} pr-11`}
+              placeholder="At least 8 characters"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-moss-light/50 hover:text-torii transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </motion.div>
+
+        <motion.button
+          type="submit"
+          disabled={pending}
+          variants={itemVariants}
+          whileTap={{ scale: 0.98 }}
+          className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
+        >
+          {pending ? "Creating account…" : "Sign up"}
+        </motion.button>
+
+        <motion.p
+          variants={itemVariants}
+          className="text-center text-xs tracking-widest uppercase text-moss-light"
+        >
+          Already have an account?{" "}
+          <Link href="/sign-in" className="font-bold text-torii hover:underline">
+            Sign in
+          </Link>
+        </motion.p>
+      </motion.form>
+    </motion.div>
   );
 }
+

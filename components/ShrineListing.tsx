@@ -12,6 +12,7 @@ import {
   ArrowUpDown,
   Compass,
   Filter,
+  Heart,
   Plus,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ import { useEntranceReveal } from "@/components/useEntranceReveal";
 import { getCategoryColor } from "@/lib/facetColors";
 import RankTag from "@/components/RankTag";
 import UserControls from "@/components/UserControls";
+import { useShrineMarks } from "@/components/user/useShrineMark";
 
 // Canonical compact chip style shared by category + rank tags across the
 // table, cards, and the shrine detail/modal views. Color comes from facetColors.
@@ -47,11 +49,38 @@ const PARAM_KEY: Record<Exclude<keyof Filters, "searchQuery">, string> = {
   deity: "deity",
 };
 
-export default function ShrineListing({ cards, facets, isAdmin, isUser }: { cards: ShrineCard[]; facets: FacetCatalogs; isAdmin?: boolean; isUser?: boolean }) {
+export default function ShrineListing({
+  cards,
+  facets,
+  isAdmin,
+  isSignedIn,
+  savedSlugs = [],
+  stampedSlugs = [],
+}: {
+  cards: ShrineCard[];
+  facets: FacetCatalogs;
+  isAdmin?: boolean;
+  isSignedIn?: boolean;
+  savedSlugs?: string[];
+  stampedSlugs?: string[];
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
+
+  // Per-user collection state (optimistic). Seeds the heart toggles and the
+  // "Show saved / Show collected" filters below.
+  const marks = useShrineMarks({ saved: savedSlugs, stamped: stampedSlugs });
+  const showSaved = params.get("saved") === "1";
+  const showCollected = params.get("collected") === "1";
+
+  function setFlag(key: string, on: boolean) {
+    const next = new URLSearchParams(params.toString());
+    if (on) next.set(key, "1");
+    else next.delete(key);
+    router.replace(`/shrines?${next.toString()}`, { scroll: false });
+  }
 
   const getList = (key: string) => params.getAll(key);
   const filters: Filters = {
@@ -128,6 +157,10 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
   // Filter & Sort Application
   const filteredShrines = cards
     .filter((card) => {
+      // Personal collection filters (signed-in only; sets update optimistically).
+      if (showSaved && !marks.isSaved(card.slug)) return false;
+      if (showCollected && !marks.isStamped(card.slug)) return false;
+
       // Search Term match
       if (filters.searchQuery) {
         const query = filters.searchQuery.toLowerCase();
@@ -209,7 +242,30 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
 
   // Calculate active filter count
   const hasActiveFilters =
-    Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) || filters.searchQuery !== "";
+    Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) ||
+    filters.searchQuery !== "" ||
+    showSaved ||
+    showCollected;
+
+  // Heart toggle shared by the table rows and cards (signed-in only).
+  const renderHeart = (slug: string, name: string, className: string) =>
+    isSignedIn ? (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          marks.toggleSave(slug, name);
+        }}
+        disabled={marks.pending}
+        aria-pressed={marks.isSaved(slug)}
+        title={marks.isSaved(slug) ? "Remove from saved" : "Save to your list"}
+        className={className}
+      >
+        <Heart
+          size={15}
+          className={marks.isSaved(slug) ? "fill-torii text-torii" : "text-stone/35 hover:text-torii"}
+        />
+      </button>
+    ) : null;
 
   return (
     <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto mt-4 pb-20 z-10 select-none flex flex-col">
@@ -218,23 +274,23 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
       <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
-          <div className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-5deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+          <div data-reveal="stamp" className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-8deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
             社
           </div>
         </div>
 
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs mb-3 z-10">
           <Compass size={11} className="text-torii" />
-          <span>Sanctuary Archives</span>
+          <span>Shrine Archives</span>
           <span className="w-1 h-1 rounded-full bg-torii/30" />
           <span>神社一覧</span>
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-display text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-          Sacred Sanctuaries
+        <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
+          Sacred Shrines
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
-          “Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates.”
+          "Enter the realm of ancient deities, preserved chronicle lineages, and sacred geographic coordinates."
         </p>
       </div>
 
@@ -465,8 +521,11 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
                           {/* Column 1: Shrine Name & Location */}
                           <td className="py-6 px-6 align-top">
                             <div className="flex flex-col space-y-1">
-                              <div className="font-display font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
-                                {card.name_en}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="font-display font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
+                                  {card.name_en}
+                                </div>
+                                {renderHeart(card.slug, card.name_en, "shrink-0 -mt-0.5 cursor-pointer disabled:cursor-wait")}
                               </div>
                               <div className="text-[11px] text-[#5c685f]/70 font-display tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                 {card.name_ja ?? ""}
@@ -552,7 +611,13 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
                       <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
                         {/* Beautiful curved top-header image with loader fallback built-in */}
                         <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-                          <ShrineImage src={card.image_url ?? undefined} alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
+                          <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
+
+                          {renderHeart(
+                            card.slug,
+                            card.name_en,
+                            "absolute top-2 right-2 z-10 rounded-full bg-washi/85 backdrop-blur p-1.5 shadow-2xs transition-transform hover:scale-110 cursor-pointer disabled:cursor-wait",
+                          )}
 
                           {/* Traditional paper/wood placard (Ofuda badge) */}
                           <div
@@ -756,8 +821,15 @@ export default function ShrineListing({ cards, facets, isAdmin, isUser }: { card
         )}
       </AnimatePresence>
 
-      {/* User Controls — scaffold shown to signed-in non-admin users */}
-      {isUser && !isAdmin && <UserControls />}
+      {/* User Controls — personal collection filters for signed-in non-admin users */}
+      {isSignedIn && !isAdmin && (
+        <UserControls
+          showSaved={showSaved}
+          showCollected={showCollected}
+          onToggleSaved={() => setFlag("saved", !showSaved)}
+          onToggleCollected={() => setFlag("collected", !showCollected)}
+        />
+      )}
 
       {/* Admin Controls — floating pill mirroring the shrine detail page bar */}
       {isAdmin && (
