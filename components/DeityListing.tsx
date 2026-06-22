@@ -297,12 +297,12 @@ export default function DeityListing({
       {/* THE MAIN IMMERSIVE PORTFOLIO CAROUSEL CONTAINER */}
       <div data-reveal="rise" className="relative w-full md:w-[calc(100%+4rem)] md:-mx-8 select-text z-10">
 
-        {/* Floating Left Controller Button */}
+        {/* Floating Left Controller Button (overlay on md-xl, outside on xl+) */}
         {!editing && (
           <button
             onClick={handlePrev}
             aria-label="Previous Deity Portfolio"
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden left-4 xl:left-0 xl:-translate-x-[calc(100%+1.5rem)]"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
             <ChevronLeft size={18} />
@@ -390,12 +390,12 @@ export default function DeityListing({
           )}
         </div>
 
-        {/* Floating Right Controller Button */}
+        {/* Floating Right Controller Button (overlay on md-xl, outside on xl+) */}
         {!editing && (
           <button
             onClick={handleNext}
             aria-label="Next Deity Portfolio"
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden right-4 xl:right-0 xl:translate-x-[calc(100%+1.5rem)]"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
             <ChevronRight size={18} />

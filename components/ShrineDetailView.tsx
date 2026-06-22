@@ -533,6 +533,34 @@ function PageBody({
       {/* Main Responsive Storytelling Block (Minimal, floating sidebar navigation, white spacing) */}
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
 
+        {/* Mobile/Tablet sticky horizontal navigation bar (hidden on lg+, shown on mobile/tablet) */}
+        <div className="lg:hidden sticky top-0 z-30 w-full -mx-4 md:-mx-8 px-4 md:px-8 py-2.5 overflow-x-auto bg-washi/95 border-b border-moss/10 scrollbar-none flex gap-4 select-none backdrop-blur-md">
+          {[
+            { id: "overview", label: "Blessing", kanji: "福" },
+            { id: "deities", label: "Pantheon", kanji: "神" },
+            { id: "chronicles", label: "History", kanji: "史" },
+            { id: "festivals", label: "Festivals", kanji: "祭" },
+            { id: "pilgrimage", label: "Stamp", kanji: "印" },
+            { id: "location", label: "Transit", kanji: "地" },
+          ].filter((sec) => !creating || sec.id !== "pilgrimage").map(sec => {
+            const isActive = activeSection === sec.id;
+            return (
+              <button
+                key={sec.id}
+                onClick={() => scrollToSection(sec.id)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border shrink-0 text-xs font-sans tracking-wider transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? "border-torii bg-torii/5 text-torii font-bold"
+                    : "border-moss/10 bg-white/50 text-stone/60 hover:text-stone hover:border-moss/35"
+                }`}
+              >
+                <span className={`text-[10px] font-serif ${isActive ? "text-torii" : "text-stone/40"}`}>{sec.kanji}</span>
+                <span>{sec.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Floating Sidebar Directory (Simple hover items, no borders, no boxes) */}
         <nav data-reveal="slide-left" className="w-full lg:w-48 shrink-0 lg:sticky lg:top-14 h-fit hidden lg:block select-none z-10">
           <span className="inline-block text-[10px] font-mono tracking-[0.15em] px-2 py-0.5 border-2 border-torii text-torii bg-torii/[0.04] rotate-[-2.5deg] mb-5 font-black uppercase rounded-xs shadow-[inset_0_0_1.5px_rgba(201,75,50,0.25)] select-none">

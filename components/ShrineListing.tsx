@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -267,6 +267,126 @@ export default function ShrineListing({
       </button>
     ) : null;
 
+  const renderCardGrid = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredShrines.map((card, idx) => (
+        <motion.div
+          key={card.slug}
+          data-testid="shrine-card"
+          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, delay: idx * 0.03 }}
+          onClick={() => router.push(`/shrines/${card.slug}`)}
+          className="group flex flex-col justify-between wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.01] hover:bg-white transition-all duration-300 h-auto bg-washi/85 shrink-0"
+        >
+          {(() => {
+            const isExpanded = expandedCards.has(card.slug);
+            return (
+              <>
+          <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
+            {/* Beautiful curved top-header image with loader fallback built-in */}
+            <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
+              <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
+
+              {renderHeart(
+                card.slug,
+                card.name_en,
+                "absolute top-2 right-2 z-10 rounded-full bg-washi/85 backdrop-blur p-1.5 shadow-2xs transition-transform hover:scale-110 cursor-pointer disabled:cursor-wait",
+              )}
+
+              {/* Traditional paper/wood placard (Ofuda badge) */}
+              <div
+                className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-display text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
+                style={{ fontFamily: "'Noto Serif JP', serif" }}
+              >
+                {card.name_ja ?? ""}
+              </div>
+            </div>
+
+            {/* Card Text Content with structured layouts */}
+            <div className="p-5 flex flex-col space-y-4">
+              {/* Card Header Title and Location */}
+              <div>
+                <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                  <h4 className="text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
+                    {card.name_en}
+                  </h4>
+                </div>
+                <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
+                  {card.city ?? ""}, {card.prefecture}
+                </div>
+              </div>
+
+              {/* Ranks & Titles List */}
+              <div className="flex flex-wrap gap-1">
+                {card.rank_codes.map((rankTitle) => (
+                  <span key={rankTitle} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
+                    {rankTitle}
+                  </span>
+                ))}
+              </div>
+
+              {/* Main Deity Section */}
+              <div className="space-y-1 pt-1.5 border-t border-moss/5">
+                <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Main Deity</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
+                  <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    {card.primary_deity?.name_ja ?? ""}
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-stone/60 leading-normal space-y-0.5 pt-0.5 font-sans">
+                  {card.primary_deity_titles.map((title, tIdx) => (
+                    <div key={tIdx} className="leading-snug">{title}</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prayer Focus Section */}
+              <div className="space-y-1.5 pt-1.5 border-t border-moss/5">
+                <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Prayer Focus</span>
+                <p className="text-stone/70 text-[11px] leading-relaxed font-sans">
+                  {card.prayer_focus ?? ""}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {card.category_codes.map((focus) => (
+                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                      {focus}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Best Time Visitation block */}
+              <div className="pt-2.5 border-t border-moss/5 flex flex-col space-y-0.5">
+                <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
+                <p className="text-[11px] text-stone/60 leading-relaxed font-sans">
+                  {card.best_time ?? ""}
+                </p>
+              </div>
+
+            </div>
+            {!isExpanded && (
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-washi to-transparent pointer-events-none" />
+            )}
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
+            className="flex items-center justify-center gap-1 border-t border-moss/10 py-2 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
+          >
+            {isExpanded ? "collapse" : "show more"}
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+              </>
+            );
+          })()}
+        </motion.div>
+      ))}
+    </div>
+  );
+
   return (
     <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto mt-4 pb-20 z-10 select-none flex flex-col">
 
@@ -448,8 +568,8 @@ export default function ShrineListing({
               </select>
             </div>
 
-            {/* View Buttons switcher */}
-            <div className="flex items-center border border-moss/15 rounded-xl p-0.5 select-none bg-sand/40">
+            {/* View Buttons switcher (hidden on mobile, shown on md+) */}
+            <div className="hidden md:flex items-center border border-moss/15 rounded-xl p-0.5 select-none bg-sand/40">
               <button
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 transition-all rounded-lg cursor-pointer ${viewMode === "table" ? "bg-stone text-sand shadow-xs" : "text-moss-light hover:text-stone"}`}
@@ -491,8 +611,10 @@ export default function ShrineListing({
           <div className="relative">
             {/* ==================== SCREEN STATE: MAIN DATA RENDERS ==================== */}
             <AnimatePresence mode="popLayout">
-              {viewMode === "table" ? (                   /* ----------------- 5A. TABLE GRID PRESENTATION ----------------- */
-                <div className="overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-text">
+            {viewMode === "table" ? (
+              <>
+                {/* Table View (hidden on mobile/tablet below md, shown on md+) */}
+                <div className="hidden md:block overflow-x-auto w-full wabi-sabi-card bg-washi/85 rounded-2xl select-text">
                   <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                       <tr className="border-b border-moss/10 bg-[#5c685f]/5 text-[10px] uppercase font-sans tracking-widest text-[#5c685f] font-bold select-none">
@@ -590,126 +712,15 @@ export default function ShrineListing({
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                /* ----------------- 5B. HIGH-FIDELITY ARCHITECTURAL VERTICAL CARDS ----------------- */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredShrines.map((card, idx) => (
-                    <motion.div
-                      key={card.slug}
-                      data-testid="shrine-card"
-                      initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.03 }}
-                      onClick={() => router.push(`/shrines/${card.slug}`)}
-                      className="group flex flex-col justify-between wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.01] hover:bg-white transition-all duration-300 h-auto bg-washi/85 shrink-0"
-                    >
-                      {(() => {
-                        const isExpanded = expandedCards.has(card.slug);
-                        return (
-                          <>
-                      <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
-                        {/* Beautiful curved top-header image with loader fallback built-in */}
-                        <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-                          <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
-
-                          {renderHeart(
-                            card.slug,
-                            card.name_en,
-                            "absolute top-2 right-2 z-10 rounded-full bg-washi/85 backdrop-blur p-1.5 shadow-2xs transition-transform hover:scale-110 cursor-pointer disabled:cursor-wait",
-                          )}
-
-                          {/* Traditional paper/wood placard (Ofuda badge) */}
-                          <div
-                            className="absolute bottom-3 right-3 bg-washi border border-torii/25 px-2.5 py-1.5 rounded shadow-2xs font-display text-[10px] text-torii tracking-widest font-medium leading-none select-none z-10"
-                            style={{ fontFamily: "'Noto Serif JP', serif" }}
-                          >
-                            {card.name_ja ?? ""}
-                          </div>
-                        </div>
-
-                        {/* Card Text Content with structured layouts */}
-                        <div className="p-5 flex flex-col space-y-4">
-                          {/* Card Header Title and Location */}
-                          <div>
-                            <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                              <h4 className="text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
-                                {card.name_en}
-                              </h4>
-                            </div>
-                            <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
-                              {card.city ?? ""}, {card.prefecture}
-                            </div>
-                          </div>
-
-                          {/* Ranks & Titles List */}
-                          <div className="flex flex-wrap gap-1">
-                            {card.rank_codes.map((rankTitle) => (
-                              <span key={rankTitle} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
-                                {rankTitle}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Main Deity Section */}
-                          <div className="space-y-1 pt-1.5 border-t border-moss/5">
-                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Main Deity</span>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
-                              <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {card.primary_deity?.name_ja ?? ""}
-                              </span>
-                            </div>
-                            <div className="text-[10.5px] text-stone/60 leading-normal space-y-0.5 pt-0.5 font-sans">
-                              {card.primary_deity_titles.map((title, tIdx) => (
-                                <div key={tIdx} className="leading-snug">{title}</div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Prayer Focus Section */}
-                          <div className="space-y-1.5 pt-1.5 border-t border-moss/5">
-                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Prayer Focus</span>
-                            <p className="text-stone/70 text-[11px] leading-relaxed font-sans">
-                              {card.prayer_focus ?? ""}
-                            </p>
-
-                            <div className="flex flex-wrap gap-1.5">
-                              {card.category_codes.map((focus) => (
-                                <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                                  {focus}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Best Time Visitation block */}
-                          <div className="pt-2.5 border-t border-moss/5 flex flex-col space-y-0.5">
-                            <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
-                            <p className="text-[11px] text-stone/60 leading-relaxed font-sans">
-                              {card.best_time ?? ""}
-                            </p>
-                          </div>
-
-                        </div>
-                        {!isExpanded && (
-                          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-washi to-transparent pointer-events-none" />
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
-                        className="flex items-center justify-center gap-1 border-t border-moss/10 py-2 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
-                      >
-                        {isExpanded ? "collapse" : "show more"}
-                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      </button>
-                          </>
-                        );
-                      })()}
-                    </motion.div>
-                  ))}
+                {/* Mobile/Tablet Fallback Card Grid (shown on mobile, hidden on md+) */}
+                <div className="block md:hidden">
+                  {renderCardGrid()}
                 </div>
-              )}
+              </>
+            ) : (
+              /* Card Grid View (shown everywhere) */
+              renderCardGrid()
+            )}
             </AnimatePresence>
           </div>
         )}

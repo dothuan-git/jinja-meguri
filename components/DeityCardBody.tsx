@@ -223,7 +223,7 @@ export default function DeityCardBody({
               <div
                 key={id}
                 onClick={() => onShrineClick?.(slug)}
-                className={`snap-start shrink-0 w-[380px] md:w-[560px] p-5 rounded-xl border transition-all text-left group cursor-pointer hover:bg-stone/[0.015] ${
+                className={`snap-start shrink-0 w-[calc(100vw-3rem)] sm:w-[380px] md:w-[560px] p-5 rounded-xl border transition-all text-left group cursor-pointer hover:bg-stone/[0.015] ${
                   isPrimary
                     ? "bg-white border-torii/15 hover:border-torii shadow-3xs"
                     : "bg-stone/[0.01] border-stone/10 hover:border-moss shadow-4xs"

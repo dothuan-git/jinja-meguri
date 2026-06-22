@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
@@ -793,10 +793,10 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                 </div>
 
                 {/* Main Calendar Space: Left Grid & Right agenda column (Dual Layout) */}
-                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
 
                   {/* 1. SEVEN COLUMN MONTH GRID */}
-                  <div className="flex-1 flex flex-col overflow-y-auto border-r border-[#e5dfd3]">
+                  <div className="flex-1 flex flex-col overflow-visible md:overflow-y-auto border-r border-[#e5dfd3]">
 
                     {/* Calendar Days Header */}
                     <div className="grid grid-cols-7 border-b border-[#e5dfd3]/60 text-center font-mono text-[9px] md:text-[10px] tracking-widest uppercase font-bold text-moss/70 bg-sand/15 py-2 shrink-0">
@@ -856,7 +856,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                             <div
                               key={idx}
                               onClick={() => setSelectedDay({ day: cell.day, month: cell.month, year: cell.year })}
-                              className={`min-h-[60px] md:min-h-[85px] p-1.5 flex flex-col justify-between transition-all cursor-pointer relative ${
+                              className={`min-h-[48px] sm:min-h-[60px] md:min-h-[85px] p-1.5 flex flex-col justify-between transition-all cursor-pointer relative ${
                                 cell.isCurrentMonth ? "bg-white" : "bg-[#faf8f5]/60 text-stone/35"
                               } ${
                                 isSelected ? "ring-2 ring-torii/30 bg-torii/[0.01] z-10" : "hover:bg-sand/35"
@@ -879,8 +879,8 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                 )}
                               </div>
 
-                              {/* Event Listing Grid block (Google Calendar style) */}
-                              <div className="mt-1 flex-1 overflow-y-auto space-y-0.5 select-none scrollbar-none max-h-[48px] md:max-h-[65px]">
+                              {/* Event Listing Grid block (Google Calendar style) (hidden on mobile/tablet below md, shown on md+) */}
+                              <div className="hidden md:block mt-1 flex-1 overflow-y-auto space-y-0.5 select-none scrollbar-none max-h-[65px]">
                                 {cell.isCurrentMonth && cellEvents.slice(0, 3).map((fest) => {
                                   const isPilgrimage = fest.type.category === "pilgrimage";
                                   return (

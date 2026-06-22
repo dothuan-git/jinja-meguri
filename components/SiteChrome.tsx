@@ -27,7 +27,7 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-[calc(100%-2.5rem)] max-w-7xl mx-5 mt-5 px-8 py-4.5 hidden md:flex items-center justify-between z-30 shrink-0 border border-moss/15 bg-washi/75 shadow-sm rounded-2xl backdrop-blur-md sticky top-5"
+        className="w-[calc(100%-2.5rem)] max-w-7xl mx-5 mt-5 px-4 md:px-6 lg:px-8 py-4.5 hidden md:flex items-center justify-between z-30 shrink-0 border border-moss/15 bg-washi/75 shadow-sm rounded-2xl backdrop-blur-md sticky top-5"
       >
         <Link href="/" className="flex items-center gap-3 cursor-pointer select-none group">
           <div className="w-7 h-7 hanko-seal text-[15px] p-0.5 rounded-xs flex items-center justify-center font-black transition-transform duration-300 group-hover:rotate-6">
@@ -43,7 +43,7 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-8 select-none">
+        <nav className="flex items-center gap-4 md:gap-6 lg:gap-8 select-none">
           {NAV.map((item) => (
             <Link
               key={item.href}
