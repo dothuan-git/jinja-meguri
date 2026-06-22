@@ -1,7 +1,17 @@
 import "server-only";
 import { pool } from "@/lib/db/store";
 import { getShrineCards } from "@/lib/db/repo";
-import type { Store, UserMark, MarkState, UserCollections, StampEntry, SavedEntry } from "@/lib/types";
+import {
+  CREST_IDS,
+  type Store,
+  type UserMark,
+  type MarkState,
+  type UserCollections,
+  type StampEntry,
+  type SavedEntry,
+  type UserProfile,
+  type CrestId,
+} from "@/lib/types";
 
 /**
  * Per-user collection rows for one account, joined to each shrine's slug.
@@ -60,4 +70,23 @@ export function getUserCollections(store: Store, marks: UserMark[]): UserCollect
     .map((m) => ({ ...cardBySlug.get(m.slug)!, saved_at: m.saved_at! }));
 
   return { stamped, saved };
+}
+
+/**
+ * The account's profile preferences (currently the chosen kamon crest). Like
+ * `loadUserMarks`, this is the non-cached per-request read path via the shared
+ * `pool` — `user_profile` lives outside the cached Store. Falls back to the
+ * default crest when no row exists or the stored value is unknown.
+ */
+export async function getUserProfile(userId: string): Promise<UserProfile> {
+  const { rows } = await pool.query(
+    "SELECT crest FROM user_profile WHERE user_id = $1",
+    [userId],
+  );
+  const crest = rows[0]?.crest as string | undefined;
+  return {
+    crest: (CREST_IDS as readonly string[]).includes(crest ?? "")
+      ? (crest as CrestId)
+      : "tomoe",
+  };
 }

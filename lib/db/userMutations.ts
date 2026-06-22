@@ -70,3 +70,16 @@ export function setSaved(userId: string, slug: string, saved: boolean): Promise<
 export function setStamped(userId: string, slug: string, stamped: boolean): Promise<MarkState> {
   return setMark(userId, slug, "stamped_at", stamped);
 }
+
+/**
+ * Persist the account's chosen kamon crest (upsert one `user_profile` row). The
+ * caller (server action) validates `crest` against CREST_IDS. Like the mark
+ * writes, this does NOT touch the cached Store — `user_profile` is non-cached.
+ */
+export async function setCrest(userId: string, crest: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO user_profile (user_id, crest) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET crest = EXCLUDED.crest`,
+    [userId, crest],
+  );
+}

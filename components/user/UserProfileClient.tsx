@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -18,13 +18,178 @@ import {
   Lock,
   CheckCircle2,
   Map as MapIcon,
-  User,
+  BookOpen,
+  ScrollText,
+  Trophy,
+  Globe,
+  Compass,
+  Crown,
+  Landmark,
   Shield,
-  BookOpen
+  ShieldCheck,
+  Sun,
+  Flame,
+  Flag,
+  GraduationCap,
+  Users,
+  Coins,
+  Activity,
+  Footprints,
+  CalendarDays,
+  Bookmark,
+  Mountain,
+  Medal,
+  Gem,
+  Wheat,
+  Flower2,
+  Fish,
+  Swords,
+  Moon,
+  Waves,
+  type LucideIcon,
 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/ui/Toast";
+import { saveCrestAction } from "@/app/users/actions";
+import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, type Milestone } from "@/lib/milestones";
 import type { StampEntry, SavedEntry } from "@/lib/types";
+
+// Maps a milestone's `icon` string key (kept React-free in lib/milestones.ts) to a
+// lucide component. Unknown keys fall back to a generic award icon.
+const MILESTONE_ICONS: Record<string, LucideIcon> = {
+  stamp: Stamp,
+  bookOpen: BookOpen,
+  scroll: ScrollText,
+  trophy: Trophy,
+  mapPin: MapPin,
+  map: MapIcon,
+  globe: Globe,
+  compass: Compass,
+  crown: Crown,
+  landmark: Landmark,
+  award: Award,
+  shield: Shield,
+  shieldCheck: ShieldCheck,
+  sun: Sun,
+  flame: Flame,
+  flag: Flag,
+  graduationCap: GraduationCap,
+  sparkles: Sparkles,
+  users: Users,
+  heart: Heart,
+  coins: Coins,
+  activity: Activity,
+  footprints: Footprints,
+  calendarDays: CalendarDays,
+  bookmark: Bookmark,
+  mountain: Mountain,
+  medal: Medal,
+  gem: Gem,
+  wheat: Wheat,
+  flower: Flower2,
+  fish: Fish,
+  sword: Swords,
+  moon: Moon,
+  waves: Waves,
+};
+
+// A single Sacred Milestone card — reused for both unlocked and locked states.
+function MilestoneCard({
+  def,
+  unlocked,
+  current,
+  target,
+  percent,
+}: {
+  def: Milestone;
+  unlocked: boolean;
+  current: number;
+  target: number;
+  percent: number;
+}) {
+  const Icon = MILESTONE_ICONS[def.icon] ?? Award;
+  // Count-style milestones (target > 1) show the "current / target" tally; boolean
+  // ones (target === 1) rely on the empty/full bar alone.
+  const showCount = target > 1;
+  // Three visual states: earned (unlocked), started (in progress — any progress made),
+  // and not-yet-started (locked, grayed out). In-progress cards stay fully enabled to
+  // invite the next visit rather than being dimmed like untouched goals.
+  const inProgress = !unlocked && current >= 1;
+  const active = unlocked || inProgress;
+  return (
+    <div
+      className={`wabi-sabi-card rounded-2xl p-4.5 flex gap-4 h-full transition-all relative overflow-hidden ${
+        unlocked
+          ? "bg-washi/90 border-bamboo/25 text-stone"
+          : inProgress
+            ? "bg-washi/70 border-moss/15 text-stone"
+            : "bg-stone/5 border-moss/10 opacity-60 text-stone/50"
+      }`}
+    >
+      {unlocked && (
+        <div className="absolute -right-8 -top-8 w-16 h-16 bg-bamboo/10 rotate-45 border border-dashed border-bamboo/20 pointer-events-none" />
+      )}
+      <div
+        className={`w-12 min-h-12 rounded-xl flex items-center justify-center shrink-0 border ${
+          unlocked
+            ? "border-bamboo/30 bg-bamboo-light text-bamboo"
+            : inProgress
+              ? "border-torii/25 bg-torii/5 text-torii"
+              : "border-moss/15 bg-stone/5 text-stone/40"
+        }`}
+      >
+        <Icon size={20} />
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center gap-2">
+          <h4 className={`font-sans text-xs font-bold uppercase tracking-wider ${active ? "text-stone" : "text-stone/60"}`}>
+            {def.title_en}
+          </h4>
+          <span className="font-serif text-[10px] text-torii">({def.title_ja})</span>
+        </div>
+        <p className="text-[11px] text-stone/75 leading-relaxed">{def.description}</p>
+
+        {/* Progress bar — fills as the milestone nears completion */}
+        <div className="pt-1.5 space-y-1">
+          <div className="flex items-center justify-between gap-1 text-[9px] font-mono tracking-widest">
+            {unlocked ? (
+              <span className="text-bamboo font-bold flex items-center gap-0.5">
+                <CheckCircle2 size={10} /> UNLOCKED
+              </span>
+            ) : inProgress ? (
+              <span className="text-torii font-bold flex items-center gap-0.5">
+                <Activity size={10} /> {percent}%
+              </span>
+            ) : (
+              <span className="text-stone/40 font-bold flex items-center gap-0.5">
+                <Lock size={10} /> {percent}%
+              </span>
+            )}
+            {showCount && (
+              <span className={unlocked ? "text-bamboo/80 font-bold" : inProgress ? "text-torii/80 font-bold" : "text-stone/45"}>
+                {current} / {target}
+              </span>
+            )}
+          </div>
+          <div
+            className={`h-1 w-full rounded-full overflow-hidden ${unlocked ? "bg-bamboo/15" : inProgress ? "bg-torii/10" : "bg-stone/10"}`}
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${percent}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className={`h-full ${unlocked ? "bg-bamboo" : "bg-torii/60"}`}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export interface CurrentUser {
   id: string;
@@ -204,6 +369,9 @@ interface UserProfileClientProps {
   stamped: StampEntry[];
   saved: SavedEntry[];
   totalShrines: number;
+  totalRegions: number;
+  totalPrefectures: number;
+  crest: string;
 }
 
 export default function UserProfileClient({
@@ -211,6 +379,9 @@ export default function UserProfileClient({
   stamped,
   saved,
   totalShrines,
+  totalRegions,
+  totalPrefectures,
+  crest,
 }: UserProfileClientProps) {
   const router = useRouter();
   const toast = useToast();
@@ -231,137 +402,84 @@ export default function UserProfileClient({
     setExpandedShrinesPref((prev) => ({ ...prev, [prefName]: !prev[prefName] }));
   };
 
-  // Edit State
+  // Edit State — crest is server-persisted (passed in from the profile page)
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName] = useState(user.name || "");
-  const [selectedCrestId, setSelectedCrestId] = useState("tomoe");
-
-  // Load avatar crest preference from localstorage on mount
-  useEffect(() => {
-    const savedCrest = localStorage.getItem(`crest_${user.id}`);
-    if (savedCrest && CRESTS.some((c) => c.id === savedCrest)) {
-      setSelectedCrestId(savedCrest);
-    }
-  }, [user.id]);
+  const [selectedCrestId, setSelectedCrestId] = useState(crest);
 
   const activeCrest = CRESTS.find((c) => c.id === selectedCrestId) || CRESTS[0];
 
-  // Pilgrim Status Level Calculations
+  // Pilgrim Status — the headline rank/level, derived from the goshuin count via the
+  // stamp-count ranks in lib/milestones.ts (Sanctuary Explorer, Devoted Wanderer, …).
+  // These replace the old hardcoded tiers and are excluded from the Sacred Milestones list.
   const stampCount = stamped.length;
-  let statusLevel = 0;
-  let statusNameEn = "Novice Pilgrim";
-  let statusNameJa = "駆け出しの巡礼者";
-  let statusDesc = "Your pilgrimage has just begun. Cross the threshold and collect your first goshuin stamp.";
-  let progressPercentage = 0;
-  let nextGoal = 1;
-
-  if (stampCount >= 9) {
-    statusLevel = 3;
-    statusNameEn = "Master of Goshuin";
-    statusNameJa = "御朱印の達人";
-    statusDesc = "A revered traveler who has accumulated divine grace across the islands of Japan.";
-    progressPercentage = 100;
-    nextGoal = 9;
-  } else if (stampCount >= 4) {
-    statusLevel = 2;
-    statusNameEn = "Dedicated Devotee";
-    statusNameJa = "誠実な信者";
-    statusDesc = "Your footsteps fall in deep rhythm with the sanctuaries. The kami guide your journey.";
-    progressPercentage = Math.min(((stampCount - 4) / 5) * 100, 99);
-    nextGoal = 9;
-  } else if (stampCount >= 1) {
-    statusLevel = 1;
-    statusNameEn = "Sanctuary Wanderer";
-    statusNameJa = "鳥居の旅人";
-    statusDesc = "You have unlocked the seal catalog and begun collecting sacred calligraphy marks.";
-    progressPercentage = Math.min(((stampCount - 1) / 3) * 100, 99);
-    nextGoal = 4;
-  } else {
-    statusLevel = 0;
-    statusNameEn = "Novice Pilgrim";
-    statusNameJa = "駆け出しの巡礼者";
-    statusDesc = "Your pilgrimage has just begun. Cross the threshold and collect your first goshuin stamp.";
-    progressPercentage = 0;
-    nextGoal = 1;
-  }
+  const rank = getPilgrimRank(stampCount);
+  const statusNameEn = rank.current.title_en;
+  const statusNameJa = rank.current.title_ja;
+  const statusDesc = rank.current.description;
+  const progressPercentage = rank.percent;
+  const nextGoal = rank.next?.threshold ?? stampCount;
 
   // Calculate statistics
   const wishlistCount = saved.length;
   const coveragePercentage = totalShrines > 0 ? Math.round((stampCount / totalShrines) * 100) : 0;
 
-  // Compile visited prefectures
-  const visitedPrefecturesMap = stamped.reduce((acc, s) => {
-    acc[s.prefecture] = (acc[s.prefecture] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const visitedPrefectures = Object.entries(visitedPrefecturesMap).sort((a, b) => b[1] - a[1]);
-
-  // Compile deities met
-  const deitiesMet = Array.from(
-    new Map(
-      stamped
-        .filter((s) => s.primary_deity)
-        .map((s) => [s.primary_deity!.name_en, s.primary_deity!])
-    ).values()
+  // Sacred Milestones — derived from the collections (see lib/milestones.ts).
+  // In-progress (not-yet-earned) first, then earned; laid out in a horizontal
+  // scroller of 3-row columns. ~2.5 columns show by default (6 cards: the 3rd
+  // column peeks to signal scrollability) and the rest, including completed ones,
+  // are reached by scrolling right.
+  const milestones = evaluateMilestones(
+    buildMilestoneContext(stamped, saved, { totalShrines, totalRegions, totalPrefectures }),
   );
-
-  // Compile achievements
-  const achievements = [
-    {
-      id: "first_stamp",
-      title_en: "First Steps",
-      title_ja: "初参拝",
-      description: "Affix your first sacred seal in your Goshuin Stamp Book.",
-      isUnlocked: stampCount >= 1,
-      icon: Stamp,
-    },
-    {
-      id: "explorer",
-      title_en: "Sanctuary Explorer",
-      title_ja: "神域の探求者",
-      description: "Visit at least 5 sanctuaries and collect their seals.",
-      isUnlocked: stampCount >= 5,
-      icon: BookOpen,
-    },
-    {
-      id: "cross_pref",
-      title_en: "Cross-Prefectural Pilgrim",
-      title_ja: "国境越えの巡礼",
-      description: "Visit shrines in 2 or more different prefectures.",
-      isUnlocked: visitedPrefectures.length >= 2,
-      icon: MapIcon,
-    },
-    {
-      id: "pantheon",
-      title_en: "Pantheon Seeker",
-      title_ja: "神話の語り手",
-      description: "Visit a shrine dedicated to a major deity (Amaterasu, Susanoo, or Inari).",
-      isUnlocked: stamped.some((s) => {
-        const name = s.primary_deity?.name_en?.toLowerCase() || "";
-        const targetDeities = ["amaterasu", "susanoo", "inari", "ugajin", "okuninushi"];
-        return targetDeities.some((d) => name.includes(d));
-      }),
-      icon: Sparkles,
-    },
-    {
-      id: "grand_shrine",
-      title_en: "Imperial Communion",
-      title_ja: "大社・神宮参拝",
-      description: "Visit a Grand Shrine (Taisha 大社) or Imperial Shrine (Jingū 神宮).",
-      isUnlocked: stamped.some((s) => {
-        const nameEn = s.name_en.toLowerCase();
-        const nameJa = s.name_ja || "";
-        return (
-          nameEn.includes("jingu") ||
-          nameEn.includes("taisha") ||
-          nameEn.includes("grand shrine") ||
-          nameJa.includes("神宮") ||
-          nameJa.includes("大社")
-        );
-      }),
-      icon: Award,
-    },
+  const unlockedCount = milestones.filter((m) => m.unlocked).length;
+  const orderedMilestones = [
+    ...milestones.filter((m) => !m.unlocked),
+    ...milestones.filter((m) => m.unlocked),
   ];
+
+  // Translate a vertical mouse wheel into horizontal scrolling over the milestone
+  // row, so a normal wheel scrolls it without grabbing the scrollbar. A non-passive
+  // native listener is required to preventDefault; at the row's horizontal edges we
+  // bail so the page resumes its usual vertical scroll.
+  const milestoneScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = milestoneScrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0 || e.shiftKey) return;
+      if (el.scrollWidth <= el.clientWidth) return;
+      const atStart = el.scrollLeft <= 0;
+      const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth;
+      if ((e.deltaY < 0 && atStart) || (e.deltaY > 0 && atEnd)) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Click-and-drag ("grab") panning with the mouse; touch/pen keep native scrolling.
+  const milestoneDrag = useRef({ active: false, startX: 0, startLeft: 0 });
+  function onMilestonePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    const el = milestoneScrollRef.current;
+    if (!el || e.pointerType !== "mouse" || e.button !== 0) return;
+    milestoneDrag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft };
+    el.setPointerCapture(e.pointerId);
+  }
+  function onMilestonePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const el = milestoneScrollRef.current;
+    const s = milestoneDrag.current;
+    if (!el || !s.active) return;
+    el.scrollLeft = s.startLeft - (e.clientX - s.startX);
+  }
+  function endMilestoneDrag(e: React.PointerEvent<HTMLDivElement>) {
+    if (!milestoneDrag.current.active) return;
+    milestoneDrag.current.active = false;
+    const el = milestoneScrollRef.current;
+    if (!el) return;
+    if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+  }
 
   // Sign out handle
   const [signingOut, setSigningOut] = useState(false);
@@ -397,8 +515,13 @@ export default function UserProfileClient({
           return;
         }
 
-        // Save crest to local storage
-        localStorage.setItem(`crest_${user.id}`, selectedCrestId);
+        // Persist the chosen crest to the backend (user_profile table).
+        const crestResult = await saveCrestAction(selectedCrestId);
+        if (crestResult.error) {
+          toast.notify(crestResult.error || "Failed to save crest", "error");
+          return;
+        }
+
         toast.notify("Pilgrim pass updated successfully", "success");
         setIsEditOpen(false);
         router.refresh();
@@ -492,13 +615,6 @@ export default function UserProfileClient({
                 {/* Inline Action Row - Smaller and placed next to name */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => setIsEditOpen(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-moss/20 bg-washi/90 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-stone hover:text-torii hover:border-torii transition-colors shadow-3xs cursor-pointer"
-                  >
-                    <Edit2 size={11} />
-                    Edit Record
-                  </button>
-                  <button
                     disabled={signingOut}
                     onClick={handleSignOut}
                     className="flex items-center gap-1.5 rounded-lg border border-dashed border-moss/25 hover:bg-torii/5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-moss-light hover:text-torii hover:border-torii/40 transition-colors cursor-pointer"
@@ -515,20 +631,20 @@ export default function UserProfileClient({
 
             {/* Pilgrim Level Badge */}
             <div className="w-full">
-              <div className="flex flex-col items-center md:items-start p-3 rounded-xl border border-bamboo/15 bg-bamboo-light/20 w-full">
+              <div className="flex flex-col items-center md:items-start gap-2 p-5 rounded-2xl border border-bamboo/15 bg-bamboo-light/20 w-full">
                 <div className="flex items-center gap-2">
                   <Award size={15} className="text-torii" />
-                  <span className="font-serif text-sm font-bold text-stone tracking-wide">
+                  <span className="font-sans text-sm font-bold uppercase text-stone tracking-wide">
                     {statusNameEn} <span className="font-serif text-xs text-torii ml-1">({statusNameJa})</span>
                   </span>
                 </div>
-                <p className="text-[11px] text-stone/75 mt-1 leading-normal text-center md:text-left">
+                <p className="text-[11px] text-stone/75 leading-normal text-center md:text-left mb-2">
                   {statusDesc}
                 </p>
-                
+
                 {/* Progress Bar to next level */}
-                {stampCount < 9 && (
-                  <div className="w-full mt-2 space-y-1">
+                {rank.next && (
+                  <div className="w-full space-y-1.5">
                     <div className="flex justify-between text-[9px] font-mono tracking-widest text-moss-light/80">
                       <span>PROGRESS TO NEXT RANK</span>
                       <span>{stampCount} / {nextGoal} STAMPS</span>
@@ -802,69 +918,34 @@ export default function UserProfileClient({
                 transition={{ duration: 0.4 }}
                 className="space-y-8"
               >
-                {/* Achievements List */}
-                <div className="space-y-4">
+                {/* Sacred Milestones — horizontal grab/scroll row; in-progress first */}
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-6">
                     <Award size={18} className="text-torii" />
                     <h3 className="font-serif text-md font-black text-stone">Sacred Milestones</h3>
+                    <span className="ml-auto text-[10px] font-mono font-bold tracking-widest rounded-full bg-bamboo-light/50 border border-moss/10 px-2 py-0.5 text-moss">
+                      {unlockedCount} / {milestones.length} earned
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {achievements.map((a) => {
-                      const Icon = a.icon;
-                      return (
-                        <div
-                          key={a.id}
-                          className={`wabi-sabi-card rounded-2xl p-4.5 flex gap-4 transition-all relative overflow-hidden ${
-                            a.isUnlocked
-                              ? "bg-washi/90 border-bamboo/25 text-stone"
-                              : "bg-stone/5 border-moss/10 opacity-60 text-stone/50"
-                          }`}
-                        >
-                          {/* Ribbon or unlock banner */}
-                          {a.isUnlocked && (
-                            <div className="absolute -right-8 -top-8 w-16 h-16 bg-bamboo/10 rotate-45 border border-dashed border-bamboo/20 pointer-events-none" />
-                          )}
-
-                          {/* Icon container */}
-                          <div
-                            className={`w-12 min-h-12 rounded-xl flex items-center justify-center shrink-0 border ${
-                              a.isUnlocked
-                                ? "border-bamboo/30 bg-bamboo-light text-bamboo"
-                                : "border-moss/15 bg-stone/5 text-stone/40"
-                            }`}
-                          >
-                            <Icon size={20} />
-                          </div>
-
-                          {/* Prose details */}
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className={`font-sans text-xs font-bold uppercase tracking-wider ${a.isUnlocked ? "text-stone" : "text-stone/60"}`}>
-                                {a.title_en}
-                              </h4>
-                              <span className="font-serif text-[10px] text-torii">({a.title_ja})</span>
-                            </div>
-                            <p className="text-[11px] text-stone/75 leading-relaxed">
-                              {a.description}
-                            </p>
-                            
-                            <div className="flex items-center gap-1 pt-1 text-[9px] font-mono tracking-widest">
-                              {a.isUnlocked ? (
-                                <span className="text-bamboo font-bold flex items-center gap-0.5">
-                                  <CheckCircle2 size={10} /> UNLOCKED
-                                </span>
-                              ) : (
-                                <span className="text-stone/40 font-bold flex items-center gap-0.5">
-                                  <Lock size={10} /> LOCKED
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div
+                    ref={milestoneScrollRef}
+                    onPointerDown={onMilestonePointerDown}
+                    onPointerMove={onMilestonePointerMove}
+                    onPointerUp={endMilestoneDrag}
+                    onPointerCancel={endMilestoneDrag}
+                    className="grid grid-flow-col grid-rows-3 gap-4 overflow-x-auto pb-1 -mx-1 px-1 items-stretch cursor-grab select-none active:cursor-grabbing [grid-auto-columns:80%] sm:[grid-auto-columns:55%] md:[grid-auto-columns:40%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  >
+                    {orderedMilestones.map(({ def, unlocked, current, target, percent }) => (
+                      <div key={def.id} className="h-full">
+                        <MilestoneCard def={def} unlocked={unlocked} current={current} target={target} percent={percent} />
+                      </div>
+                    ))}
                   </div>
+
+                  <p className="flex items-center justify-end gap-1 text-[10px] font-mono uppercase tracking-widest text-moss-light/60">
+                    Drag or shift + scroll to reveal more <span aria-hidden>→</span>
+                  </p>
                 </div>
 
                 {/* Pilgrimage Chronicle */}

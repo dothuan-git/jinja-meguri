@@ -307,6 +307,19 @@ export interface UserCollections {
   saved: SavedEntry[];
 }
 
+/**
+ * Valid kamon crest ids — the server-importable source of truth used to validate
+ * crest writes. The full crest definitions (with SVG renderers) live in the client
+ * component `components/user/UserProfileClient.tsx`; keep its ids in sync with this.
+ */
+export const CREST_IDS = ["tomoe", "matsu", "sakura", "ume", "kiku", "fuji"] as const;
+export type CrestId = (typeof CREST_IDS)[number];
+
+/** Per-account profile preferences (currently just the chosen crest). */
+export interface UserProfile {
+  crest: CrestId;
+}
+
 export interface SearchDoc {
   slug: string;
   name_en: string;

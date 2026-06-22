@@ -193,6 +193,18 @@ CREATE TABLE user_shrine_marks (
 CREATE INDEX idx_user_shrine_marks_user ON user_shrine_marks(user_id);
 
 -- ------------------------------------------------------------
+-- USER PROFILE (per-account preferences)
+-- ------------------------------------------------------------
+-- One row per signed-in account holding profile preferences (currently the chosen
+-- kamon crest / avatar). user_id is the Neon Auth user id (neon_auth."user".id); no
+-- cross-schema FK (Neon Auth owns that table). Per-user data that lives OUTSIDE the
+-- cached global Store — read fresh per request (userRepo), written via userMutations.
+CREATE TABLE user_profile (
+    user_id text PRIMARY KEY,                                           -- neon_auth."user".id
+    crest   text NOT NULL DEFAULT 'tomoe'
+);
+
+-- ------------------------------------------------------------
 -- AUTHORIZATION
 -- ------------------------------------------------------------
 -- There is no application-level auth table. Admin authorization is the Neon Auth

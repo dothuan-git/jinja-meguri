@@ -14,8 +14,8 @@ Each table below lists every column with its **Type**, whether it is **Nullable*
 
 ## 1. Overview
 
-PostgreSQL on Neon. **13 base tables** in the cached content graph, plus one **per-user**
-table (`user_shrine_marks`, §6.5). No views, no materialized views, no PostGIS.
+PostgreSQL on Neon. **13 base tables** in the cached content graph, plus two **per-user**
+tables (`user_shrine_marks`, §6.5; `user_profile`, §6.6). No views, no materialized views, no PostGIS.
 The model separates three concerns:
 
 - **Controlled vocabulary** (catalogs) — `regions`, `prefectures`, `ranks`, `prayer_categories`.
@@ -23,8 +23,8 @@ The model separates three concerns:
 - **Relationships & detail** — junctions, 1:1 prose, festivals, occurrences, sources.
 
 The 13 content tables make up the cached global `Store` (`loadStore()`). `user_shrine_marks`
-is **personal** data and lives outside the `Store` — read on a separate non-cached path
-(`lib/db/userRepo.ts`), keyed by the signed-in user (§6.5, §9).
+and `user_profile` are **personal** data and live outside the `Store` — read on a separate
+non-cached path (`lib/db/userRepo.ts`), keyed by the signed-in user (§6.5, §6.6, §9).
 
 Authorization uses the Neon Auth user role, not an application table (see §7).
 
@@ -309,6 +309,28 @@ Index: `idx_user_shrine_marks_user` on `(user_id)`.
 
 ---
 
+## 6.6 Per-user profile (`user_profile`)
+
+Holds per-account profile preferences — currently just the chosen **kamon crest** (the avatar
+shown on the profile page's "Sanctuary Pass"). One row per account, created lazily on the first
+crest save.
+
+| Column    | Type   | Nullable | Constraints | Notes                                                          |
+| --------- | ------ | -------- | ----------- | -------------------------------------------------------------- |
+| `user_id` | `text` | No       | PK          | Neon Auth user id (`neon_auth."user".id`).                     |
+| `crest`   | `text` | No       | DEFAULT `'tomoe'` | One of `CREST_IDS` (`lib/types.ts`): `tomoe`, `matsu`, `sakura`, `ume`, `kiku`, `fuji`. |
+
+- **No FK to the Neon Auth user table** (same cross-schema reasoning as §6.5).
+- **Outside the `Store` cache.** Read fresh per request via `getUserProfile` (`lib/db/userRepo.ts`),
+  which falls back to `'tomoe'` when no row exists or the stored value is unknown; written via
+  `setCrest` (`lib/db/userMutations.ts`), invoked by `saveCrestAction` in `app/users/actions.ts`
+  (guarded by `assertUser`, validates `crest` against `CREST_IDS`). No `STORE_TAG` revalidation —
+  the profile page is `force-dynamic`. The full crest definitions (SVG renderers) live in the
+  client component `components/user/UserProfileClient.tsx`; their ids must stay in sync with
+  `CREST_IDS`.
+
+---
+
 ## 7. Authorization (Neon Auth role)
 
 Authorization is a second gate after Neon Auth sign-in. **Admin is the Neon Auth user role**,
@@ -322,9 +344,9 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
 > accounts are never admins until promoted: `UPDATE neon_auth."user" SET role='admin' WHERE
 > lower(email)=lower('…')` (or the `admin/set-role` endpoint). See [`ACCOUNTS.md`](./ACCOUNTS.md).
 
-> **User-scoped writes.** Any signed-in account (admins included) can own personal collection rows
-> in `user_shrine_marks` (§6.5). These are gated by `assertUser`/`requireUser` (in `lib/auth/server.ts`),
-> the user analog of `assertAdmin`/`requireAdmin` — signed-in, no role check.
+> **User-scoped writes.** Any signed-in account (admins included) can own personal rows in
+> `user_shrine_marks` (§6.5) and `user_profile` (§6.6). These are gated by `assertUser`/`requireUser`
+> (in `lib/auth/server.ts`), the user analog of `assertAdmin`/`requireAdmin` — signed-in, no role check.
 
 > **Removed: `app_admin`.** An earlier model used a `public.app_admin` email allowlist. It has been
 > dropped from the database and `schema.sql`; authorization is now entirely the Neon Auth user role.
@@ -369,6 +391,7 @@ Neon Postgres
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
 | `FacetCatalogs`   | `getFacetCatalogs`    | Filter options, restricted to values actually in use                    |
 | `UserCollections` | `getUserCollections`  | **Per-user** (non-cached, `userRepo.ts`): the signed-in user's stamped + saved `ShrineCard`s for the profile dashboard, joined from `user_shrine_marks` (§6.5) |
+| `UserProfile`     | `getUserProfile`      | **Per-user** (non-cached, `userRepo.ts`): the signed-in user's profile preferences (chosen crest), from `user_profile` (§6.6) |
 
 Key derivations done in `repo.ts`, not in SQL:
 
