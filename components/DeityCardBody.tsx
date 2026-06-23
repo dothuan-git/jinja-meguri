@@ -177,7 +177,7 @@ export default function DeityCardBody({
       </div>
 
       {/* ZONE 2 — Canonical Chronicle */}
-      <div className="space-y-3 pt-8 mt-8 border-t border-moss/10">
+      <div className="space-y-3 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
           Canonical Chronicle
         </span>
@@ -198,7 +198,7 @@ export default function DeityCardBody({
       </div>
 
       {/* ZONE 3 — Enshrined Sites (read-only, derived) */}
-      <div className="space-y-4 pt-8 mt-8 border-t border-moss/10">
+      <div className="space-y-4 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[9px] font-bold tracking-widest text-[#782c1a] uppercase block select-none">
             Enshrined Sites & Regional Lore

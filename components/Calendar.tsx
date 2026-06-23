@@ -205,7 +205,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
     <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-24 z-10 select-none">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
-      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-4 md:mt-6 mb-4 md:mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
           <div data-reveal="stamp" className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-13deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -229,7 +229,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 2. SEASONAL TERMINOLOGY RESOURCE BANNER */}
-      <div data-reveal="fade-up" className="w-full bg-washi border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-washi border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-5 md:mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-3xs">
         <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
           <div className="w-10 h-10 rounded-xl bg-torii/5 border border-torii/15 flex items-center justify-center text-torii shrink-0 shadow-3xs">
             <Sun size={18} className="stroke-[1.5]" />
@@ -287,7 +287,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 4. CHRONOLOGY FILTER & SEARCH ACTIONS PANEL */}
-      <div data-reveal="fade-up" className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-4 rounded-2xl mb-12 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 relative shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-4 rounded-2xl mb-6 md:mb-12 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 relative shadow-3xs">
 
         {/* Search input styled as a scroll calligraphy ledger search */}
         <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
@@ -362,7 +362,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       <div data-reveal="rise" className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative pb-16">
 
         {/* LEFT COLUMN: THE CORE CHRONOLOGICAL TIMELINE PATH (col-span-12 lg:col-span-10) */}
-        <div className="col-span-12 lg:col-span-10 space-y-16">
+        <div className="col-span-12 lg:col-span-10 space-y-8 md:space-y-16">
           <AnimatePresence mode="popLayout">
             {activeMonths.length === 0 ? (
               <motion.div
@@ -392,7 +392,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-6 items-start relative border-l border-stone/15 pl-6 md:pl-10 ml-[18px] md:ml-[26px] pb-12 scroll-mt-24"
+                    className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-6 items-start relative border-l border-stone/15 pl-6 md:pl-10 ml-[18px] md:ml-[26px] pb-6 md:pb-12 scroll-mt-24"
                   >
 
                     {/* Minimal traditional red dot bullet on the timeline axis */}

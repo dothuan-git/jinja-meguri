@@ -178,7 +178,7 @@ export default function DeityListing({
     <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 flex flex-col items-center">
 
       {/* Editorial Watermarked Title (matching Sancturary Archives structure) */}
-      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-4 md:mt-6 mb-4 md:mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
 
         {/* Sacred Kanji Calligraphy Watermark - "神" (Kami / Deity) */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none z-0">
@@ -204,7 +204,7 @@ export default function DeityListing({
       </div>
 
       {/* SEARCH AND DIRECT SELECTOR REGION */}
-      <div data-reveal="fade-up" className="w-full max-w-xl mb-12 relative z-30 px-2">
+      <div data-reveal="fade-up" className="w-full max-w-xl mb-6 md:mb-12 relative z-30 px-2">
         <div className="relative flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
           <Search className="absolute left-3 text-stone/40" size={14} />
 

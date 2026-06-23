@@ -532,7 +532,7 @@ export default function UserProfileClient({
   }
 
   return (
-    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl py-12 md:py-16">
+    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl py-6 md:py-16">
       {/* =======================================================================
           PILGRIM SANCTUARY PASS (HEADER CARD)
           ======================================================================= */}
@@ -551,7 +551,7 @@ export default function UserProfileClient({
         {/* Soft torii glow, top-right corner */}
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-torii/5 blur-2xl pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 relative z-10">
           {/* Avatar Octagon Frame */}
           <div className="relative group shrink-0">
             <motion.div
@@ -665,7 +665,7 @@ export default function UserProfileClient({
         </div>
 
         {/* Statistics Grid */}
-        <div className="grid grid-cols-3 gap-3 border-t border-moss/10 pt-6 mt-8">
+        <div className="grid grid-cols-3 gap-3 border-t border-moss/10 pt-4 md:pt-6 mt-4 md:mt-8">
           <div className="text-center p-3 rounded-xl bg-washi/50 border border-moss/5">
             <div className="flex justify-center text-torii mb-1">
               <Stamp size={16} />
@@ -695,7 +695,7 @@ export default function UserProfileClient({
       {/* =======================================================================
           TABBED CONTENTS SELECTOR (EMA TABLETS)
           ======================================================================= */}
-      <div className="mt-12">
+      <div className="mt-6 md:mt-12">
         <div className="flex justify-center border-b border-moss/15 gap-4 md:gap-8 select-none overflow-x-auto pb-px">
           {([
             { id: "stamps", label: "御朱印帳", sub: "Stamp Book", count: stampCount },
@@ -738,7 +738,7 @@ export default function UserProfileClient({
         {/* =======================================================================
             TAB CONTENTS
             ======================================================================= */}
-        <div className="mt-8">
+        <div className="mt-4 md:mt-8">
           <AnimatePresence mode="wait">
             {activeTab === "stamps" && (
               <motion.div

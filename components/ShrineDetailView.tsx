@@ -624,7 +624,7 @@ function PageBody({
         </nav>
 
         {/* Flowing Text Canvas */}
-        <div className="flex-1 min-w-0 space-y-12">
+        <div className="flex-1 min-w-0 space-y-8 md:space-y-12">
 
           {/* SECTION 1: OVERVIEW */}
           <section
@@ -935,7 +935,7 @@ function PageBody({
               </div>
 
               {/* Festival listings - elegant box-free editorial design */}
-              <div className="space-y-16">
+              <div className="space-y-8 md:space-y-16">
                 {creating ? (
                   <FestivalCreateEditor />
                 ) : (
@@ -973,7 +973,7 @@ function PageBody({
                   A traditional vermillion ink imprint (御朱印) acting as official sacred receipt of your personal communion at {shrine.name}.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center gap-8 pt-2">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 pt-2">
                   {/* Visual representation of the stamp */}
                   <div className="relative w-40 h-56 bg-washi shadow-xs flex flex-col justify-between items-center p-3.5 border border-moss/10 rounded-xs select-none">
                     <div className="absolute inset-1.5 border border-dashed border-torii/10 pointer-events-none" />
