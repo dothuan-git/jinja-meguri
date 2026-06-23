@@ -131,6 +131,7 @@ export default function ShrineListing({
 
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(false);
   const [sorting, setSorting] = useState<{ field: SortField; direction: SortDirection }>({
     field: "name",
     direction: "asc",
@@ -267,26 +268,126 @@ export default function ShrineListing({
       </button>
     ) : null;
 
+  const renderListRows = () => (
+    <div className="flex flex-col gap-3">
+      {filteredShrines.map((card, idx) => {
+        const isExpanded = expandedCards.has(card.slug);
+        return (
+          <motion.div
+            key={card.slug}
+            data-testid="shrine-list-row"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, delay: idx * 0.025 }}
+            onClick={() => toggleCard(card.slug)}
+            className="wabi-sabi-card bg-washi/85 rounded-xl p-3 cursor-pointer hover:border-torii/40 hover:bg-white transition-all duration-200"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="font-display font-black text-stone text-[15px] leading-snug">
+                    {card.name_en}
+                  </span>
+                  <span className="text-[10.5px] text-torii font-display tracking-widest shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    {card.name_ja ?? ""}
+                  </span>
+                </div>
+                <div className="text-[11px] text-stone/55 font-mono tracking-wide mt-0.5">
+                  {card.primary_deity?.name_en ? `${card.primary_deity.name_en} · ` : ""}
+                  {card.city ?? ""}, {card.prefecture}
+                </div>
+                {card.category_codes.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {card.category_codes.map((focus) => (
+                      <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
+                        {focus}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {renderHeart(card.slug, card.name_en, "cursor-pointer disabled:cursor-wait mt-0.5")}
+                <span
+                  aria-hidden
+                  className="mt-0.5 p-0.5 rounded-full text-stone/30"
+                >
+                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </span>
+              </div>
+            </div>
+
+            {/* Expandable: Prayer Focus + Best Time + detail link */}
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  key="details"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="pt-3 mt-2 border-t border-moss/10 space-y-3">
+                    {card.prayer_focus && (
+                      <div>
+                        <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black mb-1">
+                          Prayer Focus
+                        </span>
+                        <p className="text-[11.5px] text-stone/70 leading-relaxed font-sans tracking-wide">
+                          {card.prayer_focus}
+                        </p>
+                      </div>
+                    )}
+                    {card.best_time && (
+                      <div>
+                        <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black mb-1">
+                          Best Time
+                        </span>
+                        <p className="text-[11px] text-stone/65 font-sans leading-relaxed tracking-wide">
+                          {card.best_time}
+                        </p>
+                      </div>
+                    )}
+                    <a
+                      href={`/shrines/${card.slug}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center justify-center gap-1.5 w-full rounded-lg bg-torii px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-widest text-washi hover:bg-torii-dark transition-colors"
+                    >
+                      View Shrine
+                      <Compass size={13} />
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+
   const renderCardGrid = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredShrines.map((card, idx) => (
-        <motion.div
-          key={card.slug}
-          data-testid="shrine-card"
-          initial={{ opacity: 0, scale: 0.98, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25, delay: idx * 0.03 }}
-          onClick={() => router.push(`/shrines/${card.slug}`)}
-          className="group flex flex-col justify-between wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.01] hover:bg-white transition-all duration-300 h-auto bg-washi/85 shrink-0"
-        >
-          {(() => {
-            const isExpanded = expandedCards.has(card.slug);
-            return (
-              <>
-          <div className={`relative overflow-hidden transition-[max-height] duration-300 ease-in-out ${isExpanded ? "max-h-[2000px]" : "max-h-[360px]"}`}>
-            {/* Beautiful curved top-header image with loader fallback built-in */}
-            <div className="h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
+      {filteredShrines.map((card, idx) => {
+        const isExpanded = expandedCards.has(card.slug);
+        const hasDetails =
+          card.primary_deity_titles.length > 0 || !!card.prayer_focus || !!card.best_time;
+        return (
+          <motion.div
+            key={card.slug}
+            data-testid="shrine-card"
+            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, delay: idx * 0.03 }}
+            onClick={() => router.push(`/shrines/${card.slug}`)}
+            className="group flex flex-col wabi-sabi-card hover:border-torii/40 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:bg-white transition-all duration-300 bg-washi/85"
+          >
+            {/* Image header */}
+            <div className="h-28 sm:h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
               <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
 
               {renderHeart(
@@ -304,52 +405,42 @@ export default function ShrineListing({
               </div>
             </div>
 
-            {/* Card Text Content with structured layouts */}
-            <div className="p-5 flex flex-col space-y-4">
-              {/* Card Header Title and Location */}
+            {/* Card content — essentials always visible */}
+            <div className="p-3 sm:p-5 flex flex-col gap-2 sm:gap-3.5 flex-1">
+              {/* Header: title + ranks + location */}
               <div>
-                <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                  <h4 className="text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-base sm:text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
                     {card.name_en}
                   </h4>
+                  {card.rank_codes.length > 0 && (
+                    <div className="flex flex-wrap justify-end gap-1 shrink-0">
+                      {card.rank_codes.map((rankTitle) => (
+                        <span key={rankTitle} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
+                          {rankTitle}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
                   {card.city ?? ""}, {card.prefecture}
                 </div>
               </div>
 
-              {/* Ranks & Titles List */}
-              <div className="flex flex-wrap gap-1">
-                {card.rank_codes.map((rankTitle) => (
-                  <span key={rankTitle} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
-                    {rankTitle}
-                  </span>
-                ))}
-              </div>
-
-              {/* Main Deity Section */}
+              {/* Main Deity */}
               <div className="space-y-1 pt-1.5 border-t border-moss/5">
                 <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Main Deity</span>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
                   <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                     {card.primary_deity?.name_ja ?? ""}
                   </span>
                 </div>
-                <div className="text-[10.5px] text-stone/60 leading-normal space-y-0.5 pt-0.5 font-sans">
-                  {card.primary_deity_titles.map((title, tIdx) => (
-                    <div key={tIdx} className="leading-snug">{title}</div>
-                  ))}
-                </div>
               </div>
 
-              {/* Prayer Focus Section */}
-              <div className="space-y-1.5 pt-1.5 border-t border-moss/5">
-                <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Prayer Focus</span>
-                <p className="text-stone/70 text-[11px] leading-relaxed font-sans">
-                  {card.prayer_focus ?? ""}
-                </p>
-
+              {/* Category chips */}
+              {card.category_codes.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {card.category_codes.map((focus) => (
                     <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
@@ -357,41 +448,66 @@ export default function ShrineListing({
                     </span>
                   ))}
                 </div>
-              </div>
+              )}
 
-              {/* Best Time Visitation block */}
-              <div className="pt-2.5 border-t border-moss/5 flex flex-col space-y-0.5">
-                <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
-                <p className="text-[11px] text-stone/60 leading-relaxed font-sans">
-                  {card.best_time ?? ""}
-                </p>
-              </div>
-
+              {/* Expandable details: deity titles + prayer focus + best time */}
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    key="details"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex flex-col gap-3 sm:gap-3.5">
+                      {card.primary_deity_titles.length > 0 && (
+                        <div className="text-[10.5px] text-stone/60 leading-normal space-y-0.5 font-sans">
+                          {card.primary_deity_titles.map((title, tIdx) => (
+                            <div key={tIdx} className="leading-snug">{title}</div>
+                          ))}
+                        </div>
+                      )}
+                      {card.prayer_focus && (
+                        <div className="space-y-1.5 pt-1.5 border-t border-moss/5">
+                          <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Prayer Focus</span>
+                          <p className="text-stone/70 text-[11px] leading-relaxed font-sans">{card.prayer_focus}</p>
+                        </div>
+                      )}
+                      {card.best_time && (
+                        <div className="space-y-0.5 pt-1.5 border-t border-moss/5">
+                          <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">Best Time to Visit</span>
+                          <p className="text-[11px] text-stone/60 leading-relaxed font-sans">{card.best_time}</p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            {!isExpanded && (
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-washi to-transparent pointer-events-none" />
+
+            {/* Show more / collapse */}
+            {hasDetails && (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
+                className="flex items-center justify-center gap-1 border-t border-moss/10 py-2.5 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
+              >
+                {isExpanded ? "collapse" : "show more"}
+                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
             )}
-          </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); toggleCard(card.slug); }}
-            className="flex items-center justify-center gap-1 border-t border-moss/10 py-2 text-[10px] font-mono tracking-widest text-[#5c685f]/50 uppercase hover:text-torii transition-colors duration-200 w-full"
-          >
-            {isExpanded ? "collapse" : "show more"}
-            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-              </>
-            );
-          })()}
-        </motion.div>
-      ))}
+          </motion.div>
+        );
+      })}
     </div>
   );
 
   return (
-    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 select-none flex flex-col">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-28 md:pb-20 z-10 select-none flex flex-col">
 
       {/* Page Title with low opacity backdrop calligraphic seal */}
-      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-4 sm:mt-6 mb-5 sm:mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
         {/* Calligraphic/Hanko Seal watermark behind the page title */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.075] pointer-events-none select-none z-0">
           <div data-reveal="stamp" className="border-[3.5px] border-torii text-torii text-[64px] md:text-[76px] font-black p-2.5 md:p-3.5 rounded-sm rotate-[-8deg] flex items-center justify-center leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -418,9 +534,9 @@ export default function ShrineListing({
       <section data-reveal="fade-up" className="w-full pb-2 mb-2 flex flex-col gap-4 select-none text-xs">
 
         {/* Search Row & Active Filters Clear */}
-        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1">
-            {/* Search Input */}
+        <div className="flex flex-col gap-3">
+          {/* Search input + mobile filter icon (inline) */}
+          <div className="flex items-stretch gap-2">
             <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
               <Search className="absolute left-3 text-stone/40" size={14} />
               <input
@@ -440,91 +556,87 @@ export default function ShrineListing({
                 </button>
               )}
             </div>
-
-            {/* Dropdown Selectors for Desktop next to search */}
-            <div className="hidden md:flex items-center gap-2.5">
-              {[
-                { id: "region" as const, label: "Region", list: REGIONS_LIST },
-                { id: "prefecture" as const, label: "Prefecture", list: PREFECTURES_LIST },
-              ].map(dropdown => {
-                const activeOptionsCount = filters[dropdown.id].length;
-                const isOpen = activeFilterDropdown === dropdown.id;
-                return (
-                  <div key={dropdown.id} className="relative select-none">
-                    <button
-                      onClick={() => setActiveFilterDropdown(isOpen ? null : dropdown.id)}
-                      className={`px-4 py-3 border rounded-xl text-xs tracking-wide flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                        activeOptionsCount > 0
-                          ? "border-torii bg-torii/5 text-torii font-extrabold"
-                          : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
-                      }`}
-                    >
-                      <span className="font-sans">
-                        {activeOptionsCount > 0
-                          ? `${dropdown.label}: ${activeOptionsCount}`
-                          : dropdown.label
-                        }
-                      </span>
-                      {isOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
-                    </button>
-
-                    {/* Droplist flyout */}
-                    <AnimatePresence>
-                      {isOpen && (
-                        <>
-                          {/* Backdrop dismiss overlay */}
-                          <div className="fixed inset-0 z-40" onClick={() => setActiveFilterDropdown(null)} />
-
-                          <motion.div
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 8 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute left-0 mt-2 w-56 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50 max-h-[280px] overflow-y-auto"
-                          >
-                            <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
-                              Select {dropdown.label}
-                            </span>
-                            <div className="space-y-0.5">
-                              {dropdown.list.map((option) => {
-                                const checked = filters[dropdown.id].includes(option);
-                                return (
-                                  <label key={option} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={() => handleToggleFilter(dropdown.id, option)}
-                                      className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
-                                    />
-                                    <span className={`transition-colors truncate font-sans font-medium ${checked ? 'text-torii font-bold' : 'text-stone/72'}`}>
-                                      {option}
-                                    </span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 select-none self-end md:self-center">
-            {/* Mobile Filters button */}
+            {/* Mobile filter icon button — inline with search bar */}
             <button
               onClick={() => setMobileFilterOpen(true)}
-              className="md:hidden text-xs text-stone border border-moss/10 hover:bg-sand/30 px-3 py-1.5 rounded-md flex items-center gap-1 font-bold cursor-pointer"
+              className="md:hidden relative shrink-0 flex items-center justify-center w-11 rounded-xl border border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45 transition-all cursor-pointer"
             >
-              Filters
+              <Filter size={16} className={hasActiveFilters ? "text-torii" : ""} />
               {hasActiveFilters && (
-                <span className="w-1 h-1 rounded-full bg-torii" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-torii" />
               )}
             </button>
+          </div>
 
+          {/* Desktop: Region/Prefecture dropdowns + clear filters */}
+          <div className="hidden md:flex items-center gap-2.5">
+            {[
+              { id: "region" as const, label: "Region", list: REGIONS_LIST },
+              { id: "prefecture" as const, label: "Prefecture", list: PREFECTURES_LIST },
+            ].map(dropdown => {
+              const activeOptionsCount = filters[dropdown.id].length;
+              const isOpen = activeFilterDropdown === dropdown.id;
+              return (
+                <div key={dropdown.id} className="relative select-none">
+                  <button
+                    onClick={() => setActiveFilterDropdown(isOpen ? null : dropdown.id)}
+                    className={`px-4 py-3 border rounded-xl text-xs tracking-wide flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                      activeOptionsCount > 0
+                        ? "border-torii bg-torii/5 text-torii font-extrabold"
+                        : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
+                    }`}
+                  >
+                    <span className="font-sans">
+                      {activeOptionsCount > 0
+                        ? `${dropdown.label}: ${activeOptionsCount}`
+                        : dropdown.label
+                      }
+                    </span>
+                    {isOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
+                  </button>
+
+                  {/* Droplist flyout */}
+                  <AnimatePresence>
+                    {isOpen && (
+                      <>
+                        {/* Backdrop dismiss overlay */}
+                        <div className="fixed inset-0 z-40" onClick={() => setActiveFilterDropdown(null)} />
+
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 mt-2 w-56 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50 max-h-[280px] overflow-y-auto"
+                        >
+                          <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
+                            Select {dropdown.label}
+                          </span>
+                          <div className="space-y-0.5">
+                            {dropdown.list.map((option) => {
+                              const checked = filters[dropdown.id].includes(option);
+                              return (
+                                <label key={option} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => handleToggleFilter(dropdown.id, option)}
+                                    className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
+                                  />
+                                  <span className={`transition-colors truncate font-sans font-medium ${checked ? 'text-torii font-bold' : 'text-stone/72'}`}>
+                                    {option}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
             {hasActiveFilters && (
               <button
                 onClick={handleClearAllFilters}
@@ -534,6 +646,18 @@ export default function ShrineListing({
               </button>
             )}
           </div>
+
+          {/* Mobile: clear filters link (below search row, only when active) */}
+          {hasActiveFilters && (
+            <div className="md:hidden flex justify-end">
+              <button
+                onClick={handleClearAllFilters}
+                className="text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer"
+              >
+                Clear Filters [×]
+              </button>
+            </div>
+          )}
         </div>
 
       </section>
@@ -542,10 +666,10 @@ export default function ShrineListing({
       <main data-reveal="rise" className="flex-1 flex flex-col min-w-0">
 
         {/* Upper Action Bar (Sorting control, layout picker, counter) */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-moss/15 shrink-0">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-moss/15 shrink-0">
 
           <div className="flex items-center gap-2 select-none">
-            <span className="text-stone font-display font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+            <span className="hidden sm:inline text-stone font-display font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
               神域 (Sanctuaries)
             </span>
             <span className="text-moss font-sans tracking-wide text-[10px] bg-bamboo-light/50 border border-moss/10 px-2.5 py-0.5 rounded-full font-bold uppercase">
@@ -553,7 +677,7 @@ export default function ShrineListing({
             </span>
           </div>
 
-          <div className="flex items-center gap-4 select-none">
+          <div className="flex items-center gap-2 sm:gap-4 select-none">
             {/* Quick Sort dropdown */}
             <div className="flex items-center gap-1">
               <span className="text-moss-light text-[10px] tracking-wider uppercase font-sans hidden sm:inline">Sort by:</span>
@@ -568,8 +692,8 @@ export default function ShrineListing({
               </select>
             </div>
 
-            {/* View Buttons switcher (hidden on mobile, shown on md+) */}
-            <div className="hidden md:flex items-center border border-moss/15 rounded-xl p-0.5 select-none bg-sand/40">
+            {/* View Buttons switcher */}
+            <div className="flex items-center border border-moss/15 rounded-xl p-0.5 select-none bg-sand/40">
               <button
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 transition-all rounded-lg cursor-pointer ${viewMode === "table" ? "bg-stone text-sand shadow-xs" : "text-moss-light hover:text-stone"}`}
@@ -712,9 +836,9 @@ export default function ShrineListing({
                     </tbody>
                   </table>
                 </div>
-                {/* Mobile/Tablet Fallback Card Grid (shown on mobile, hidden on md+) */}
+                {/* Mobile/Tablet Fallback: compact list rows (shown on mobile, hidden on md+) */}
                 <div className="block md:hidden">
-                  {renderCardGrid()}
+                  {renderListRows()}
                 </div>
               </>
             ) : (
@@ -726,105 +850,101 @@ export default function ShrineListing({
         )}
       </main>
 
-      {/* ==================== MOBILE DRAWER SLIDE PANELS ==================== */}
+      {/* ==================== MOBILE FILTER POPUP (centered, themed) ==================== */}
       <AnimatePresence>
         {mobileFilterOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/60 z-50 flex justify-end md:hidden backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone/60 backdrop-blur-xs md:hidden"
+            onClick={() => setMobileFilterOpen(false)}
           >
             <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="w-full max-w-md h-full bg-white flex flex-col p-6 shadow-2xl overflow-y-auto"
+              initial={{ opacity: 0, scale: 0.95, y: -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -6 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="w-full max-w-sm rounded-xl border border-torii/20 bg-sand/97 backdrop-blur-md shadow-lg washi-paper sumi-shadow p-5 space-y-4 max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                <span className="font-display font-bold text-slate-800 tracking-wider flex items-center gap-1">
-                  <Filter size={14} />
-                  Structured Filters
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-[10px] font-mono tracking-widest uppercase font-black text-torii">
+                  <Filter size={12} />
+                  Filters · 絞り込み
                 </span>
                 <button
                   onClick={() => setMobileFilterOpen(false)}
-                  className="p-1 rounded-full border border-slate-205 text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  className="p-1 rounded-full border border-moss/10 text-stone/50 hover:bg-torii hover:text-white hover:-rotate-90 transition-all duration-300 cursor-pointer"
                 >
-                  <X size={18} />
+                  <X size={14} />
                 </button>
               </div>
 
-              {/* Scrollable filters inside drawer */}
-              <div className="flex-1 space-y-6">
-                <div>
-                  <span className="block text-[10px] font-semibold text-slate-400 tracking-widest uppercase mb-2">Search Term</span>
-                  <input
-                    type="text"
-                    placeholder="Search shrines..."
-                    value={filters.searchQuery}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full text-xs px-3 py-2.5 bg-slate-50 border border-slate-205 focus:border-slate-800 rounded-lg outline-none"
-                  />
-                </div>
-
-                {/* Mobile selections list */}
-                <div className="space-y-6">
-                  {/* Region */}
-                  <div>
-                    <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Region</span>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {REGIONS_LIST.map((reg) => {
-                        const checked = filters.region.includes(reg);
-                        return (
-                          <button
-                            key={reg}
-                            onClick={() => handleToggleFilter("region", reg)}
-                            className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
-                          >
-                            {reg}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Prefecture */}
-                  <div>
-                    <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Prefecture</span>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {PREFECTURES_LIST.map((pref) => {
-                        const checked = filters.prefecture.includes(pref);
-                        return (
-                          <button
-                            key={pref}
-                            onClick={() => handleToggleFilter("prefecture", pref)}
-                            className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
-                          >
-                            {pref}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
+              {/* Region */}
+              <div className="space-y-2">
+                <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black border-b border-moss/10 pb-1.5">
+                  Region
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {REGIONS_LIST.map((reg) => {
+                    const checked = filters.region.includes(reg);
+                    return (
+                      <button
+                        key={reg}
+                        onClick={() => handleToggleFilter("region", reg)}
+                        className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer font-mono tracking-wide ${
+                          checked
+                            ? "border-torii bg-torii/10 text-torii font-bold"
+                            : "border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45"
+                        }`}
+                      >
+                        {reg}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Drawer Sticky Footer with controls */}
-              <div className="pt-4 border-t border-slate-100 flex gap-3 mt-6">
+              {/* Prefecture */}
+              <div className="space-y-2">
+                <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black border-b border-moss/10 pb-1.5">
+                  Prefecture
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {PREFECTURES_LIST.map((pref) => {
+                    const checked = filters.prefecture.includes(pref);
+                    return (
+                      <button
+                        key={pref}
+                        onClick={() => handleToggleFilter("prefecture", pref)}
+                        className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer font-mono tracking-wide ${
+                          checked
+                            ? "border-torii bg-torii/10 text-torii font-bold"
+                            : "border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45"
+                        }`}
+                      >
+                        {pref}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 pt-3 border-t border-moss/10">
                 <button
-                  onClick={handleClearAllFilters}
-                  className="flex-1 py-3 text-center border border-slate-200 text-xs tracking-widest uppercase text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer"
+                  onClick={() => { handleClearAllFilters(); setMobileFilterOpen(false); }}
+                  className="flex-1 py-2.5 text-center text-[10px] tracking-widest uppercase font-mono font-bold border border-moss/20 text-moss bg-washi/80 rounded-lg hover:bg-washi transition-colors cursor-pointer"
                 >
                   Reset
                 </button>
                 <button
                   onClick={() => setMobileFilterOpen(false)}
-                  className="flex-1 py-3 text-center text-xs tracking-widest uppercase text-white bg-slate-900 rounded-xl hover:bg-slate-800 font-semibold cursor-pointer shadow-sm"
+                  className="flex-1 py-2.5 text-center text-[10px] tracking-widest uppercase font-mono font-bold bg-torii text-washi rounded-lg hover:bg-torii-dark transition-colors cursor-pointer shadow-sm"
                 >
-                  Apply Filters
+                  Done
                 </button>
               </div>
             </motion.div>
@@ -842,10 +962,63 @@ export default function ShrineListing({
         />
       )}
 
-      {/* Admin Controls — floating pill mirroring the shrine detail page bar */}
+      {/* Admin Controls — floating pill */}
       {isAdmin && (
-        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
+        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-20 md:pb-5 pointer-events-none">
+          {/* Mobile: single pill that expands/contracts via layout animation */}
+          <motion.div
+            layout
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            className="md:hidden pointer-events-auto inline-flex rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md shadow-lg overflow-hidden"
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              {adminExpanded ? (
+                <motion.div
+                  key="admin-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  className="flex items-center gap-3 px-4 py-2.5 whitespace-nowrap"
+                >
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+                    Admin Controls
+                  </span>
+                  <span className="text-stone/25 font-mono select-none text-xs">|</span>
+                  <Link
+                    href="/shrines/new"
+                    className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
+                  >
+                    <Plus size={12} className="transition-transform group-hover:rotate-90" />
+                    <span>Add shrine</span>
+                  </Link>
+                  <button
+                    onClick={() => setAdminExpanded(false)}
+                    aria-label="Collapse"
+                    className="ml-0.5 p-1 rounded-full text-stone/35 hover:text-stone/70 transition-colors cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="admin-icons"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setAdminExpanded(true)}
+                  aria-label="Admin Controls"
+                  className="flex items-center justify-center w-12 h-12 cursor-pointer text-torii"
+                >
+                  <Plus size={18} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Desktop: always full bar */}
+          <div className="hidden md:flex pointer-events-auto items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
               Admin Controls
             </span>
