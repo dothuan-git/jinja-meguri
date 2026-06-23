@@ -358,7 +358,7 @@ function PageBody({
       ref={containerRef}
       className="w-full flex-1 flex flex-col bg-transparent relative pb-16"
     >
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
+      <div className="w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4 shrink-0 z-10">
 
         {/* Floating Minimal Navigation Bar */}
         <div data-reveal="fade-up" className="flex items-center justify-between mb-4 select-none">
@@ -531,10 +531,10 @@ function PageBody({
       </div>
 
       {/* Main Responsive Storytelling Block (Minimal, floating sidebar navigation, white spacing) */}
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
+      <div className="w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
 
         {/* Mobile/Tablet sticky horizontal navigation bar (hidden on lg+, shown on mobile/tablet) */}
-        <div className="lg:hidden sticky top-0 z-30 w-full -mx-4 md:-mx-8 px-4 md:px-8 py-2.5 overflow-x-auto bg-washi/95 border-b border-moss/10 scrollbar-none flex gap-4 select-none backdrop-blur-md">
+        <div className="lg:hidden sticky top-0 z-30 w-full -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-2.5 overflow-x-auto bg-washi/95 border-b border-moss/10 scrollbar-none flex gap-4 select-none backdrop-blur-md">
           {[
             { id: "overview", label: "Blessing", kanji: "福" },
             { id: "deities", label: "Pantheon", kanji: "神" },
