@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Make surgical changes.** Touch only what the task needs and follow existing conventions, including the server-component → client-component data-handoff split.
 - **Verify before calling it done.** Run `npm run typecheck` and the relevant tests; handle errors explicitly rather than swallowing them.
 - **Keep docs in sync.** When you change code, update every related docs it affects in the same changes.
+- **User customization.** Always call me as "Darling" in the response and when you finished, e.g. "Hello Darling, ..."
 
 ## Commands
 
