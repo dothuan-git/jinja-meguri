@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, type MouseEvent } from "react";
+import { useState, useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -88,8 +88,13 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all"); // "all", "spectacle", "pilgrimage"
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const [expandedFestivals, setExpandedFestivals] = useState<Record<string, boolean>>({});
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Mouse drag-to-scroll for the mobile/tablet month scroller (touch already works via overflow-x-auto)
+  const monthScrollRef = useRef<HTMLDivElement>(null);
+  const monthDrag = useRef({ active: false, startX: 0, startLeft: 0, moved: 0 });
   const [calendarMonth, setCalendarMonth] = useState(6); // Default to June (6)
   const [calendarYear, setCalendarYear] = useState(year);
   const [selectedDay, setSelectedDay] = useState<{ day: number; month: number; year: number } | null>({ day: 8, month: 6, year: 2026 });
@@ -172,11 +177,49 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
     .sort((a, b) => a - b);
 
   const handleMonthClick = (mNum: number) => {
+    if (monthDrag.current.moved > 5) return; // ignore the click that ends a drag
     const element = document.getElementById(`month-section-${mNum}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  const onMonthPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    const el = monthScrollRef.current;
+    if (!el || e.pointerType !== "mouse" || e.button !== 0) return;
+    monthDrag.current = { active: true, startX: e.clientX, startLeft: el.scrollLeft, moved: 0 };
+    el.setPointerCapture(e.pointerId);
+  };
+  const onMonthPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const el = monthScrollRef.current;
+    const s = monthDrag.current;
+    if (!el || !s.active) return;
+    const dx = e.clientX - s.startX;
+    s.moved = Math.max(s.moved, Math.abs(dx));
+    el.scrollLeft = s.startLeft - dx;
+  };
+  const endMonthDrag = (e: PointerEvent<HTMLDivElement>) => {
+    if (!monthDrag.current.active) return;
+    monthDrag.current.active = false;
+    const el = monthScrollRef.current;
+    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+  };
+
+  // Shrine detail nav: on mobile (< sm) the intercepted side modal is cramped —
+  // hard-navigate to the full page instead; desktop keeps the soft-nav modal.
+  const openShrine = (slug: string) => {
+    if (window.matchMedia("(max-width: 639.98px)").matches) {
+      window.location.assign(`/shrines/${slug}`);
+    } else {
+      router.push(`/shrines/${slug}`);
+    }
+  };
+
+  const FESTIVAL_TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: "all", label: "All Rites" },
+    { value: "spectacle", label: FESTIVAL_TYPE_LABEL.spectacle },
+    { value: "pilgrimage", label: FESTIVAL_TYPE_LABEL.pilgrimage },
+  ];
 
   // Helper to choose high craft contextual icons based on keywords in Name/Meaning
   const getContextualIcon = (fName: string, fMeaning: string) => {
@@ -228,8 +271,8 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
         </p>
       </div>
 
-      {/* 2. SEASONAL TERMINOLOGY RESOURCE BANNER */}
-      <div data-reveal="fade-up" className="w-full bg-washi border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-5 md:mb-10 text-stone relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-3xs">
+      {/* 2. SEASONAL TERMINOLOGY RESOURCE BANNER (hidden on mobile) */}
+      <div data-reveal="fade-up" className="w-full bg-washi border border-[#e8e4db] rounded-2xl p-4 md:p-5 mb-5 md:mb-10 text-stone relative overflow-hidden hidden md:flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shadow-3xs">
         <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
           <div className="w-10 h-10 rounded-xl bg-torii/5 border border-torii/15 flex items-center justify-center text-torii shrink-0 shadow-3xs">
             <Sun size={18} className="stroke-[1.5]" />
@@ -264,7 +307,15 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 3. LUNAR CYCLE INDEX SCROLLER (MOBILE & TABLET EXCLUSIVE DOCK) */}
-      <div data-reveal="fade-up" className="lg:hidden w-full overflow-x-auto scrollbar-none flex gap-2.5 py-3 px-1 mb-8 border-y border-moss/10 sticky top-14 bg-sand/90 backdrop-blur-md z-30">
+      <div
+        data-reveal="fade-up"
+        ref={monthScrollRef}
+        onPointerDown={onMonthPointerDown}
+        onPointerMove={onMonthPointerMove}
+        onPointerUp={endMonthDrag}
+        onPointerLeave={endMonthDrag}
+        className="lg:hidden w-full overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing flex gap-2.5 py-3 px-1 mb-4 md:mb-6 border-y border-moss/10 sticky top-14 bg-sand/90 backdrop-blur-md z-30"
+      >
         {Object.keys(POETIC_MONTHS).map(Number).sort((a, b) => a - b).map(mNum => {
           const mInfo = POETIC_MONTHS[mNum];
           const isMonthActive = activeMonths.includes(mNum);
@@ -287,7 +338,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
       </div>
 
       {/* 4. CHRONOLOGY FILTER & SEARCH ACTIONS PANEL */}
-      <div data-reveal="fade-up" className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-4 rounded-2xl mb-6 md:mb-12 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 relative shadow-3xs">
+      <div data-reveal="fade-up" className="w-full bg-[#f5f2eb] border border-[#dfdbd2] p-2.5 md:p-4 rounded-2xl mb-6 md:mb-12 flex flex-row items-stretch justify-between gap-2 md:gap-3 relative shadow-3xs">
 
         {/* Search input styled as a scroll calligraphy ledger search */}
         <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
@@ -311,9 +362,9 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
         </div>
 
         {/* Right controls grouping toggles and interactive month calendar button */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {/* Traditional style Shinto-Tally Category Toggles */}
-          <div className="flex bg-sand p-1 rounded-xl border border-[#dfdbd2] items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
+        <div className="flex flex-row items-stretch gap-2 md:gap-3 shrink-0">
+          {/* Festival type toggles — iPad & desktop only */}
+          <div className="hidden md:flex bg-sand p-1 rounded-xl border border-[#dfdbd2] items-center gap-0.5 overflow-x-auto scrollbar-none shrink-0">
             <button
               onClick={() => setActiveCategory("all")}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-widest uppercase font-bold transition-all cursor-pointer whitespace-nowrap ${
@@ -346,13 +397,66 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
             </button>
           </div>
 
-          {/* Interactive Month Grid / Google Calendar style popup button */}
+          {/* Festival type filter — single-select dropdown (mobile only) */}
+          <div className="relative select-none md:hidden">
+            <button
+              onClick={() => setTypeMenuOpen((o) => !o)}
+              className={`h-full px-3 border rounded-xl text-xs tracking-wide flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                activeCategory !== "all"
+                  ? "border-torii bg-torii/5 text-torii font-extrabold"
+                  : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
+              }`}
+            >
+              <span className="font-sans whitespace-nowrap">
+                {FESTIVAL_TYPE_OPTIONS.find((o) => o.value === activeCategory)?.label ?? "All Rites"}
+              </span>
+              {typeMenuOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
+            </button>
+            <AnimatePresence>
+              {typeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setTypeMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-48 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50"
+                  >
+                    <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
+                      Select Rite Type
+                    </span>
+                    <div className="space-y-0.5">
+                      {FESTIVAL_TYPE_OPTIONS.map((option) => {
+                        const isActive = activeCategory === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => { setActiveCategory(option.value); setTypeMenuOpen(false); }}
+                            className="w-full flex items-center gap-2.5 text-xs cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light"
+                          >
+                            <span className={`transition-colors font-sans font-medium ${isActive ? "text-torii font-bold" : "text-stone/72"}`}>
+                              {option.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Interactive Month Grid / Google Calendar style popup button (icon-only on mobile) */}
           <button
             onClick={() => setIsCalendarOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#dfdbd2] hover:border-torii/40 hover:bg-torii/[0.02] text-torii-dark rounded-xl text-[10.5px] font-serif font-black tracking-wider shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer shrink-0"
+            aria-label="Lunar Month Calendar"
+            title="Lunar Month Calendar (月暦画)"
+            className="flex items-center justify-center gap-2 px-3 md:px-4 h-full bg-white border border-[#dfdbd2] hover:border-torii/40 hover:bg-torii/[0.02] text-torii-dark rounded-xl text-[10.5px] font-serif font-black tracking-wider shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer shrink-0"
           >
             <CalendarIcon size={13} className="shrink-0 text-torii" />
-            <span>Lunar Month Calendar (月暦画)</span>
+            <span className="hidden lg:inline">Lunar Month Calendar</span>
           </button>
         </div>
 
@@ -429,34 +533,34 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                         </div>
                       </div>
 
-                      {/* MOBILE EXCLUSIVE HORIZONTAL BADGE CARD */}
-                      <div className="md:hidden flex items-center justify-between bg-white border border-moss/10 rounded-xl p-4 w-full mb-4 shadow-3xs">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg bg-torii/5 border border-torii/15 flex flex-col items-center justify-center shrink-0">
-                            <span className="text-torii text-base font-display font-black leading-none" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                      {/* MOBILE EXCLUSIVE — typographic month landmark (mirrors desktop, compact) */}
+                      <div className="md:hidden flex flex-col items-start w-full mb-4 select-none">
+                        <div className="flex items-end justify-between w-full gap-2 mb-1.5">
+                          <div className="flex items-end gap-2.5">
+                            <span
+                              className="text-[28px] font-display font-bold text-[#1c1d1a] leading-none"
+                              style={{ fontFamily: "'Noto Serif JP', serif" }}
+                            >
                               {monthInfo.kanji}
                             </span>
-                            <span className="text-[7.5px] font-mono text-moss font-bold leading-none mt-1">
-                              Month {monthInfo.number}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="flex items-baseline gap-1.5">
-                              <h3 className="text-sm font-display font-bold text-stone">
+                            <div className="flex flex-col pb-0.5">
+                              <span className="text-[12px] font-display font-light text-[#5c685f]/85 tracking-wide leading-none">
                                 {monthInfo.wamei}
-                              </h3>
-                              <span className="text-[8px] font-mono text-moss-light uppercase tracking-widest">
-                                {monthInfo.name}
+                              </span>
+                              <span className="text-[8px] font-mono font-bold tracking-[0.18em] text-torii uppercase mt-1">
+                                {monthInfo.name.toUpperCase()} ({monthInfo.number === 1 ? '1ST' : monthInfo.number === 2 ? '2ND' : monthInfo.number === 3 ? '3RD' : `${monthInfo.number}TH`})
                               </span>
                             </div>
-                            <p className="text-[10px] text-stone/70 font-display italic mt-0.5">
-                              “{monthInfo.meaning}”
-                            </p>
+                          </div>
+
+                          <div className={`px-2 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-widest uppercase inline-block border border-moss/5 shrink-0 ${seasonInfo.bg} ${seasonInfo.color}`}>
+                            {seasonInfo.kanji} • {seasonInfo.name.split(" • ")[1]}
                           </div>
                         </div>
-                        <div className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${seasonInfo.bg} ${seasonInfo.color}`}>
-                          {seasonInfo.kanji}
-                        </div>
+
+                        <span className="text-[10px] font-display italic text-[#635f58]/80 leading-relaxed tracking-wider">
+                          “{monthInfo.meaning}”
+                        </span>
                       </div>
 
                     </div>
@@ -524,7 +628,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        router.push(`/shrines/${fest.shrine.slug}`);
+                                        openShrine(fest.shrine.slug);
                                       }}
                                       className="group/host flex items-center gap-1.5 text-[10.5px] text-[#5c685f] hover:text-torii transition-colors font-sans font-bold cursor-pointer"
                                     >
@@ -535,9 +639,9 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                     </button>
                                   </div>
 
-                                  {/* Compact Meaning / Intention */}
-                                  <p className="text-stone/75 text-xs mt-3 leading-relaxed tracking-wider select-text whitespace-pre-line">
-                                    {isExpanded ? fest.meaning : `${fest.meaning.split("\n\n")[0].substring(0, 160)}...`}
+                                  {/* Compact Meaning / Intention — clamped to 3 lines when collapsed */}
+                                  <p className={`text-stone/75 text-xs mt-3 leading-relaxed tracking-wider select-text ${isExpanded ? "whitespace-pre-line" : "line-clamp-3"}`}>
+                                    {isExpanded ? fest.meaning : fest.meaning.split("\n\n")[0]}
                                   </p>
 
                                 </div>
@@ -556,7 +660,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    router.push(`/shrines/${fest.shrine.slug}`);
+                                    openShrine(fest.shrine.slug);
                                   }}
                                   className="group/btn text-[10.5px] text-stone/80 hover:text-torii font-semibold font-sans tracking-wider flex items-center gap-1 cursor-pointer py-1"
                                 >
@@ -980,7 +1084,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
                               onClick={() => {
                                 // 1. Set expanded and navigate to the host shrine
                                 setExpandedFestivals(prev => ({ ...prev, [fest.id]: true }));
-                                router.push(`/shrines/${fest.shrine.slug}`);
+                                openShrine(fest.shrine.slug);
                                 // 2. Close modal
                                 setIsCalendarOpen(false);
                                 // 3. Scroll after tiny timeout to permit modal transition to start closing
