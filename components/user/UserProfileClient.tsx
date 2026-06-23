@@ -532,7 +532,7 @@ export default function UserProfileClient({
   }
 
   return (
-    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl py-6 md:py-16">
+    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl pt-6 md:pt-16 pb-16">
       {/* =======================================================================
           PILGRIM SANCTUARY PASS (HEADER CARD)
           ======================================================================= */}
