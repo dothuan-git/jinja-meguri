@@ -361,7 +361,7 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
             placeholder="Search by deity name, shrine origin, or ceremony terms..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs font-sans pl-9 pr-12 py-3 bg-transparent border-none outline-none focus:ring-0 text-stone font-semibold placeholder:text-stone/40"
+            className="w-full text-xs font-sans pl-9 pr-12 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
           />
           {searchQuery && (
             <button

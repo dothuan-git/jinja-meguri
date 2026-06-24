@@ -533,132 +533,129 @@ export default function ShrineListing({
       {/* ==================== TYPOGRAPHY-FOCUSED INLINE FILTER PANEL ==================== */}
       <section data-reveal="fade-up" className="w-full pb-2 mb-2 flex flex-col gap-4 select-none text-xs">
 
-        {/* Search Row & Active Filters Clear */}
-        <div className="flex flex-col gap-3">
-          {/* Search input + mobile filter icon (inline) */}
-          <div className="flex items-stretch gap-2">
-            <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
-              <Search className="absolute left-3 text-stone/40" size={14} />
-              <input
-                type="text"
-                placeholder="Search by keywords (e.g., Kyoto, Amaterasu, Victory)..."
-                value={filters.searchQuery}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full text-xs font-sans pl-9 pr-12 py-3 bg-transparent border-none outline-none focus:ring-0 text-stone font-semibold placeholder:text-stone/40"
-              />
-              {filters.searchQuery && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors"
-                  title="Clear Search"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-            {/* Mobile filter icon button — inline with search bar */}
-            <button
-              onClick={() => setMobileFilterOpen(true)}
-              className="md:hidden relative shrink-0 flex items-center justify-center w-11 rounded-xl border border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45 transition-all cursor-pointer"
-            >
-              <Filter size={16} className={hasActiveFilters ? "text-torii" : ""} />
-              {hasActiveFilters && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-torii" />
-              )}
-            </button>
-          </div>
-
-          {/* Desktop: Region/Prefecture dropdowns + clear filters */}
-          <div className="hidden md:flex items-center gap-2.5">
-            {[
-              { id: "region" as const, label: "Region", list: REGIONS_LIST },
-              { id: "prefecture" as const, label: "Prefecture", list: PREFECTURES_LIST },
-            ].map(dropdown => {
-              const activeOptionsCount = filters[dropdown.id].length;
-              const isOpen = activeFilterDropdown === dropdown.id;
-              return (
-                <div key={dropdown.id} className="relative select-none">
-                  <button
-                    onClick={() => setActiveFilterDropdown(isOpen ? null : dropdown.id)}
-                    className={`px-4 py-3 border rounded-xl text-xs tracking-wide flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
-                      activeOptionsCount > 0
-                        ? "border-torii bg-torii/5 text-torii font-extrabold"
-                        : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
-                    }`}
-                  >
-                    <span className="font-sans">
-                      {activeOptionsCount > 0
-                        ? `${dropdown.label}: ${activeOptionsCount}`
-                        : dropdown.label
-                      }
-                    </span>
-                    {isOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
-                  </button>
-
-                  {/* Droplist flyout */}
-                  <AnimatePresence>
-                    {isOpen && (
-                      <>
-                        {/* Backdrop dismiss overlay */}
-                        <div className="fixed inset-0 z-40" onClick={() => setActiveFilterDropdown(null)} />
-
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute left-0 mt-2 w-56 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50 max-h-[280px] overflow-y-auto"
-                        >
-                          <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
-                            Select {dropdown.label}
-                          </span>
-                          <div className="space-y-0.5">
-                            {dropdown.list.map((option) => {
-                              const checked = filters[dropdown.id].includes(option);
-                              return (
-                                <label key={option} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => handleToggleFilter(dropdown.id, option)}
-                                    className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
-                                  />
-                                  <span className={`transition-colors truncate font-sans font-medium ${checked ? 'text-torii font-bold' : 'text-stone/72'}`}>
-                                    {option}
-                                  </span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-            {hasActiveFilters && (
+        {/* Search + filters — single row on desktop, search + icon on mobile */}
+        <div className="flex items-stretch gap-2">
+          {/* Search input */}
+          <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
+            <Search className="absolute left-3 text-stone/40" size={14} />
+            <input
+              type="text"
+              placeholder="Search by keywords (e.g., Kyoto, Amaterasu, Victory)..."
+              value={filters.searchQuery}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full text-xs font-sans pl-9 pr-12 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
+            />
+            {filters.searchQuery && (
               <button
-                onClick={handleClearAllFilters}
-                className="text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer"
+                onClick={() => setSearch("")}
+                className="absolute right-3 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors"
+                title="Clear Search"
               >
-                Clear Filters [×]
+                <X size={13} />
               </button>
             )}
           </div>
 
-          {/* Mobile: clear filters link (below search row, only when active) */}
+          {/* Desktop: Region/Prefecture dropdowns */}
+          {[
+            { id: "region" as const, label: "Region", list: REGIONS_LIST },
+            { id: "prefecture" as const, label: "Prefecture", list: PREFECTURES_LIST },
+          ].map(dropdown => {
+            const activeOptionsCount = filters[dropdown.id].length;
+            const isOpen = activeFilterDropdown === dropdown.id;
+            return (
+              <div key={dropdown.id} className="relative select-none hidden md:block">
+                <button
+                  onClick={() => setActiveFilterDropdown(isOpen ? null : dropdown.id)}
+                  className={`h-full px-4 border rounded-xl text-xs tracking-wide flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                    activeOptionsCount > 0
+                      ? "border-torii bg-torii/5 text-torii font-extrabold"
+                      : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
+                  }`}
+                >
+                  <span className="font-sans whitespace-nowrap">
+                    {activeOptionsCount > 0
+                      ? `${dropdown.label}: ${activeOptionsCount}`
+                      : dropdown.label
+                    }
+                  </span>
+                  {isOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
+                </button>
+
+                {/* Droplist flyout */}
+                <AnimatePresence>
+                  {isOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setActiveFilterDropdown(null)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute left-0 mt-2 w-56 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50 max-h-[280px] overflow-y-auto"
+                      >
+                        <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
+                          Select {dropdown.label}
+                        </span>
+                        <div className="space-y-0.5">
+                          {dropdown.list.map((option) => {
+                            const checked = filters[dropdown.id].includes(option);
+                            return (
+                              <label key={option} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => handleToggleFilter(dropdown.id, option)}
+                                  className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
+                                />
+                                <span className={`transition-colors truncate font-sans font-medium ${checked ? 'text-torii font-bold' : 'text-stone/72'}`}>
+                                  {option}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+
+          {/* Desktop: clear filters */}
           {hasActiveFilters && (
-            <div className="md:hidden flex justify-end">
-              <button
-                onClick={handleClearAllFilters}
-                className="text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer"
-              >
-                Clear Filters [×]
-              </button>
-            </div>
+            <button
+              onClick={handleClearAllFilters}
+              className="hidden md:flex items-center text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Clear [×]
+            </button>
           )}
+
+          {/* Mobile: filter icon button */}
+          <button
+            onClick={() => setMobileFilterOpen(true)}
+            className="md:hidden relative shrink-0 flex items-center justify-center w-11 rounded-xl border border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45 transition-all cursor-pointer"
+          >
+            <Filter size={16} className={hasActiveFilters ? "text-torii" : ""} />
+            {hasActiveFilters && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-torii" />
+            )}
+          </button>
         </div>
+
+        {/* Mobile: clear filters link */}
+        {hasActiveFilters && (
+          <div className="md:hidden flex justify-end">
+            <button
+              onClick={handleClearAllFilters}
+              className="text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer"
+            >
+              Clear Filters [×]
+            </button>
+          </div>
+        )}
 
       </section>
 
@@ -669,8 +666,8 @@ export default function ShrineListing({
         <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-moss/15 shrink-0">
 
           <div className="flex items-center gap-2 select-none">
-            <span className="hidden sm:inline text-stone font-display font-black tracking-widest text-base" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-              神域 (Sanctuaries)
+            <span className="hidden sm:inline text-stone font-serif font-black tracking-widest text-base">
+              Sanctuaries (神域)
             </span>
             <span className="text-moss font-sans tracking-wide text-[10px] bg-bamboo-light/50 border border-moss/10 px-2.5 py-0.5 rounded-full font-bold uppercase">
               {filteredShrines.length} {filteredShrines.length === 1 ? "Listed" : "Listed"}
