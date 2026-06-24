@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import type { EditCatalogs } from "@/lib/types";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
-import { ToastProvider } from "@/components/ui/Toast";
 import { useShrineSave } from "@/components/admin/useShrineSave";
 import { ShrineEditContext, type ShrineEditApi } from "@/components/shrineEdit/context";
 
@@ -40,12 +39,7 @@ interface Props {
 }
 
 export default function ShrineEditProvider(props: Props) {
-  // ToastProvider must wrap the subtree that calls useToast (via useShrineSave).
-  return (
-    <ToastProvider>
-      <EditFrame {...props} />
-    </ToastProvider>
-  );
+  return <EditFrame {...props} />;
 }
 
 function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, children }: Props) {
