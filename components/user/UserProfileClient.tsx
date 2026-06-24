@@ -118,7 +118,7 @@ function MilestoneCard({
   const active = unlocked || inProgress;
   return (
     <div
-      className={`wabi-sabi-card rounded-2xl p-4.5 flex gap-4 h-full transition-all relative overflow-hidden ${
+      className={`wabi-sabi-card rounded-xl md:rounded-2xl p-3 md:p-4.5 flex gap-2.5 md:gap-4 h-full transition-all relative overflow-hidden ${
         unlocked
           ? "bg-washi/90 border-bamboo/25 text-stone"
           : inProgress
@@ -130,7 +130,7 @@ function MilestoneCard({
         <div className="absolute -right-8 -top-8 w-16 h-16 bg-bamboo/10 rotate-45 border border-dashed border-bamboo/20 pointer-events-none" />
       )}
       <div
-        className={`w-12 min-h-12 rounded-xl flex items-center justify-center shrink-0 border ${
+        className={`w-9 min-h-9 md:w-12 md:min-h-12 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 border ${
           unlocked
             ? "border-bamboo/30 bg-bamboo-light text-bamboo"
             : inProgress
@@ -138,19 +138,19 @@ function MilestoneCard({
               : "border-moss/15 bg-stone/5 text-stone/40"
         }`}
       >
-        <Icon size={20} />
+        <Icon size={18} className="md:w-5 md:h-5" />
       </div>
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2">
-          <h4 className={`font-sans text-xs font-bold uppercase tracking-wider ${active ? "text-stone" : "text-stone/60"}`}>
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:gap-1">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+          <h4 className={`font-sans text-[11px] md:text-xs font-bold uppercase tracking-wider ${active ? "text-stone" : "text-stone/60"}`}>
             {def.title_en}
           </h4>
           <span className="font-serif text-[10px] text-torii">({def.title_ja})</span>
         </div>
-        <p className="text-[11px] text-stone/75 leading-relaxed">{def.description}</p>
+        <p className="text-[10px] md:text-[11px] text-stone/75 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{def.description}</p>
 
-        {/* Progress bar — fills as the milestone nears completion */}
-        <div className="pt-1.5 space-y-1">
+        {/* Progress bar — fills as the milestone nears completion; pinned to card foot */}
+        <div className="mt-auto pt-1 md:pt-1.5 space-y-1">
           <div className="flex items-center justify-between gap-1 text-[9px] font-mono tracking-widest">
             {unlocked ? (
               <span className="text-bamboo font-bold flex items-center gap-0.5">
@@ -364,6 +364,15 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+// On mobile (<768px) force a hard navigation so the (.)shrines interceptor is bypassed and
+// shrine links open the full detail page; iPad and desktop keep the soft-nav side modal.
+function openShrineDirectOnMobile(e: React.MouseEvent, slug: string) {
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+    e.preventDefault();
+    window.location.href = `/shrines/${slug}`;
+  }
+}
+
 interface UserProfileClientProps {
   user: CurrentUser;
   stamped: StampEntry[];
@@ -483,6 +492,7 @@ export default function UserProfileClient({
 
   // Sign out handle
   const [signingOut, setSigningOut] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   async function handleSignOut() {
     setSigningOut(true);
     try {
@@ -532,7 +542,7 @@ export default function UserProfileClient({
   }
 
   return (
-    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl py-12 md:py-16">
+    <div className="mx-auto w-[calc(100%-2.5rem)] max-w-7xl pt-6 md:pt-16 pb-16">
       {/* =======================================================================
           PILGRIM SANCTUARY PASS (HEADER CARD)
           ======================================================================= */}
@@ -540,24 +550,35 @@ export default function UserProfileClient({
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="wabi-sabi-card washi-paper sumi-shadow rounded-3xl p-6 md:p-8 relative overflow-hidden"
+        className="wabi-sabi-card washi-paper sumi-shadow rounded-3xl p-5 sm:p-6 md:p-8 relative overflow-hidden"
       >
         {/* Japanese Shinto Sanctuary aesthetic corners */}
         <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-torii/30 pointer-events-none" />
-        <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-torii/30 pointer-events-none" />
+        <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-torii/30 pointer-events-none hidden md:block" />
         <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-torii/30 pointer-events-none" />
         <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-torii/30 pointer-events-none" />
 
         {/* Soft torii glow, top-right corner */}
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-torii/5 blur-2xl pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+        {/* Mobile sign-out — caps the top-right corner; opens the confirmation popup */}
+        <button
+          type="button"
+          disabled={signingOut}
+          onClick={() => setConfirmSignOut(true)}
+          aria-label={signingOut ? "Signing out" : "Sign out"}
+          className="md:hidden absolute top-3.5 right-3.5 z-20 p-2 rounded-full border border-moss/20 bg-washi/90 text-moss-light shadow-xs hover:text-torii hover:border-torii/40 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+        >
+          <LogOut size={14} className={signingOut ? "animate-pulse" : ""} />
+        </button>
+
+        <div className="flex flex-col md:flex-row items-center gap-3 md:gap-8 relative z-10">
           {/* Avatar Octagon Frame */}
           <div className="relative group shrink-0">
             <motion.div
               whileHover={{ scale: 1.03, rotate: 1.5 }}
               transition={{ type: "spring", stiffness: 300, damping: 15 }}
-              className="w-28 h-28 md:w-36 md:h-36 bg-moss/5 flex items-center justify-center relative shadow-xs transition-all border border-moss/15 cursor-pointer hover:border-torii/40"
+              className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 bg-moss/5 flex items-center justify-center relative shadow-xs transition-all border border-moss/15 cursor-pointer hover:border-torii/40"
               style={{
                 clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
               }}
@@ -577,7 +598,7 @@ export default function UserProfileClient({
                     clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
                   }}
                 />
-                <div className="w-16 h-16 md:w-24 md:h-24 opacity-85 transition-transform group-hover:scale-105 group-hover:opacity-100 relative z-10">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 opacity-85 transition-transform group-hover:scale-105 group-hover:opacity-100 relative z-10">
                   {activeCrest.render("w-full h-full")}
                 </div>
               </div>
@@ -596,9 +617,9 @@ export default function UserProfileClient({
           {/* Profile Pass details */}
           <div className="flex-1 w-full space-y-4">
             <div className="space-y-1">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-                <div className="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
-                  <h1 className="font-display text-3xl font-black tracking-wide text-stone">
+              <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 md:gap-4 w-full">
+                <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 text-center md:text-left">
+                  <h1 className="font-display text-2xl md:text-3xl font-black tracking-wide text-stone">
                     {user.name || "Anonymous Pilgrim"}
                   </h1>
                   <span
@@ -612,11 +633,11 @@ export default function UserProfileClient({
                   </span>
                 </div>
 
-                {/* Inline Action Row - Smaller and placed next to name */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Inline Action Row — desktop only; on mobile sign-out lives at the card foot */}
+                <div className="hidden md:flex items-center gap-2 shrink-0">
                   <button
                     disabled={signingOut}
-                    onClick={handleSignOut}
+                    onClick={() => setConfirmSignOut(true)}
                     className="flex items-center gap-1.5 rounded-lg border border-dashed border-moss/25 hover:bg-torii/5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-moss-light hover:text-torii hover:border-torii/40 transition-colors cursor-pointer"
                   >
                     <LogOut size={11} />
@@ -631,14 +652,14 @@ export default function UserProfileClient({
 
             {/* Pilgrim Level Badge */}
             <div className="w-full">
-              <div className="flex flex-col items-center md:items-start gap-2 p-5 rounded-2xl border border-bamboo/15 bg-bamboo-light/20 w-full">
+              <div className="flex flex-col items-center md:items-start gap-1.5 md:gap-2 p-3.5 md:p-5 rounded-xl md:rounded-2xl border border-bamboo/15 bg-bamboo-light/20 w-full">
                 <div className="flex items-center gap-2">
                   <Award size={15} className="text-torii" />
                   <span className="font-sans text-sm font-bold uppercase text-stone tracking-wide">
                     {statusNameEn} <span className="font-serif text-xs text-torii ml-1">({statusNameJa})</span>
                   </span>
                 </div>
-                <p className="text-[11px] text-stone/75 leading-normal text-center md:text-left mb-2">
+                <p className="hidden md:block text-[11px] text-stone/75 leading-normal text-center md:text-left mb-2">
                   {statusDesc}
                 </p>
 
@@ -646,7 +667,10 @@ export default function UserProfileClient({
                 {rank.next && (
                   <div className="w-full space-y-1.5">
                     <div className="flex justify-between text-[9px] font-mono tracking-widest text-moss-light/80">
-                      <span>PROGRESS TO NEXT RANK</span>
+                      <span>
+                        <span className="md:hidden">NEXT RANK</span>
+                        <span className="hidden md:inline">PROGRESS TO NEXT RANK</span>
+                      </span>
                       <span>{stampCount} / {nextGoal} STAMPS</span>
                     </div>
                     <div className="h-1.5 w-full bg-washi rounded-full border border-moss/5 overflow-hidden">
@@ -665,12 +689,12 @@ export default function UserProfileClient({
         </div>
 
         {/* Statistics Grid */}
-        <div className="grid grid-cols-3 gap-3 border-t border-moss/10 pt-6 mt-8">
+        <div className="grid grid-cols-3 gap-2 md:gap-3 border-t border-moss/10 pt-4 md:pt-6 mt-4 md:mt-8">
           <div className="text-center p-3 rounded-xl bg-washi/50 border border-moss/5">
             <div className="flex justify-center text-torii mb-1">
               <Stamp size={16} />
             </div>
-            <div className="font-sans text-2xl font-extrabold text-stone">{stampCount}</div>
+            <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{stampCount}</div>
             <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Stamps</div>
           </div>
 
@@ -678,7 +702,7 @@ export default function UserProfileClient({
             <div className="flex justify-center text-torii mb-1">
               <Heart size={16} />
             </div>
-            <div className="font-sans text-2xl font-extrabold text-stone">{wishlistCount}</div>
+            <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{wishlistCount}</div>
             <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Wishlist</div>
           </div>
 
@@ -686,17 +710,23 @@ export default function UserProfileClient({
             <div className="flex justify-center text-torii mb-1">
               <Award size={16} />
             </div>
-            <div className="font-sans text-2xl font-extrabold text-stone">{coveragePercentage}%</div>
+            <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{coveragePercentage}%</div>
             <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Coverage</div>
           </div>
         </div>
+
       </motion.div>
 
       {/* =======================================================================
           TABBED CONTENTS SELECTOR (EMA TABLETS)
           ======================================================================= */}
-      <div className="mt-12">
-        <div className="flex justify-center border-b border-moss/15 gap-4 md:gap-8 select-none overflow-x-auto pb-px">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
+        className="mt-10 md:mt-12"
+      >
+        <div className="flex justify-around md:justify-center border-b border-moss/15 gap-1 md:gap-8 select-none pb-px">
           {([
             { id: "stamps", label: "御朱印帳", sub: "Stamp Book", count: stampCount },
             { id: "saved", label: "お気に入り", sub: "Wishlist", count: wishlistCount },
@@ -705,7 +735,7 @@ export default function UserProfileClient({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="relative pb-3 flex flex-col items-center group cursor-pointer"
+              className="relative pb-3 flex flex-col items-center group cursor-pointer flex-1 md:flex-none"
             >
               <span
                 className={`font-serif text-sm tracking-wider transition-colors ${
@@ -738,7 +768,7 @@ export default function UserProfileClient({
         {/* =======================================================================
             TAB CONTENTS
             ======================================================================= */}
-        <div className="mt-8">
+        <div className="mt-6 md:mt-8">
           <AnimatePresence mode="wait">
             {activeTab === "stamps" && (
               <motion.div
@@ -791,7 +821,7 @@ export default function UserProfileClient({
 
                           {/* Right: Shrine Details */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/shrines/${item.slug}`} className="group-hover:text-torii transition-colors">
+                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
                               <h4 className="font-serif text-sm font-bold text-stone truncate leading-snug tracking-wide">
                                 {item.name_en}
                               </h4>
@@ -821,6 +851,7 @@ export default function UserProfileClient({
                           {/* Small hover arrow */}
                           <Link
                             href={`/shrines/${item.slug}`}
+                            onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="p-1 rounded-full border border-moss/10 bg-washi opacity-0 group-hover:opacity-100 group-hover:text-torii hover:scale-110 transition-all ml-2"
                             aria-label={`View ${item.name_en}`}
                           >
@@ -867,7 +898,7 @@ export default function UserProfileClient({
                       >
                         <div>
                           <div className="flex justify-between items-start gap-2">
-                            <Link href={`/shrines/${item.slug}`} className="group-hover:text-torii transition-colors min-w-0">
+                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
                               <h4 className="font-serif text-sm font-bold text-stone leading-snug group-hover:text-torii truncate tracking-wide">
                                 {item.name_en}
                               </h4>
@@ -897,6 +928,7 @@ export default function UserProfileClient({
                           </span>
                           <Link
                             href={`/shrines/${item.slug}`}
+                            onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="text-[10px] font-mono font-black uppercase tracking-widest text-stone hover:text-torii inline-flex items-center gap-0.5"
                           >
                             VISIT <ChevronRight size={10} />
@@ -944,7 +976,9 @@ export default function UserProfileClient({
                   </div>
 
                   <p className="flex items-center justify-end gap-1 text-[10px] font-mono uppercase tracking-widest text-moss-light/60">
-                    Drag or shift + scroll to reveal more <span aria-hidden>→</span>
+                    <span className="sm:hidden">Swipe to reveal more</span>
+                    <span className="hidden sm:inline">Drag or shift + scroll to reveal more</span>
+                    <span aria-hidden>→</span>
                   </p>
                 </div>
 
@@ -960,7 +994,7 @@ export default function UserProfileClient({
                       Your chronicle is unwritten. Visit a sanctuary and collect a seal to begin.
                     </div>
                   ) : (
-                    <div className="relative pl-6 border-l border-moss/15 ml-3 space-y-8">
+                    <div className="relative pl-4 md:pl-6 border-l border-moss/15 ml-2 md:ml-3 space-y-8">
                       {Object.entries(
                         stamped.reduce((acc, stamp) => {
                           const pref = stamp.prefecture;
@@ -977,7 +1011,7 @@ export default function UserProfileClient({
                         return (
                           <div key={prefName} className="relative space-y-4">
                             {/* Timeline dot */}
-                            <div className="absolute -left-[31px] top-1.5 w-4.5 h-4.5 rounded-full border border-torii bg-washi flex items-center justify-center">
+                            <div className="absolute -left-[23px] md:-left-[31px] top-1.5 w-4.5 h-4.5 rounded-full border border-torii bg-washi flex items-center justify-center">
                               <div className="w-2.5 h-2.5 rounded-full bg-torii" />
                             </div>
 
@@ -992,14 +1026,14 @@ export default function UserProfileClient({
                                   isCollapsed ? "" : "rotate-90"
                                 }`}
                               />
-                              <h4 className="font-display text-lg font-black text-stone flex items-baseline gap-2 select-none">
+                              <h4 className="font-display text-base md:text-lg font-black text-stone flex items-baseline gap-2 select-none min-w-0 flex-1 truncate">
                                 {prefName}
-                                <span className="font-serif text-xs text-torii font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                <span className="font-serif text-xs text-torii font-bold shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                                   {prefStamps[0]?.region || ""}
                                 </span>
                               </h4>
-                              <span className="text-[9px] font-mono tracking-widest text-moss-light/60 uppercase font-bold ml-auto group-hover:text-torii transition-colors select-none">
-                                {isCollapsed ? "Expand" : "Collapse"} ({prefStamps.length} visits)
+                              <span className="text-[9px] font-mono tracking-widest text-moss-light/60 uppercase font-bold shrink-0 group-hover:text-torii transition-colors select-none">
+                                {isCollapsed ? "Expand" : "Collapse"} ({prefStamps.length})
                               </span>
                             </button>
 
@@ -1018,6 +1052,7 @@ export default function UserProfileClient({
                                       <Link
                                         key={stamp.slug}
                                         href={`/shrines/${stamp.slug}`}
+                                        onClick={(e) => openShrineDirectOnMobile(e, stamp.slug)}
                                         className="wabi-sabi-card washi-paper rounded-lg px-3 py-2.5 flex items-center gap-2.5 shadow-3xs group hover:border-torii/30 transition-all"
                                       >
                                         <div className="min-w-0 flex-1">
@@ -1068,7 +1103,7 @@ export default function UserProfileClient({
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {/* =======================================================================
           EDIT PROFILE MODAL
@@ -1086,7 +1121,7 @@ export default function UserProfileClient({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="wabi-sabi-card washi-paper sumi-shadow rounded-2xl w-full max-w-lg p-6 md:p-8 relative overflow-hidden"
+              className="wabi-sabi-card washi-paper sumi-shadow rounded-2xl w-full max-w-lg max-h-[calc(100dvh-2rem)] flex flex-col relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Corner boundaries */}
@@ -1095,6 +1130,7 @@ export default function UserProfileClient({
               <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-torii/20 pointer-events-none" />
               <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-torii/20 pointer-events-none" />
 
+              <div className="p-6 md:p-8 overflow-y-auto flex-1 min-h-0">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="font-display text-xl font-black text-stone">Edit Pilgrimage Record</h2>
                 <button
@@ -1195,6 +1231,92 @@ export default function UserProfileClient({
                   </button>
                 </div>
               </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* =======================================================================
+          SIGN-OUT CONFIRMATION POPUP — shared by mobile icon + desktop "Leave".
+          A small ceremonial farewell card: washi paper, the pilgrim's own crest as
+          a parting seal, and a torii-toned glow.
+          ======================================================================= */}
+      <AnimatePresence>
+        {confirmSignOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone/50 backdrop-blur-md"
+            onClick={() => !signingOut && setConfirmSignOut(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ type: "spring", stiffness: 320, damping: 26 }}
+              className="wabi-sabi-card washi-paper sumi-shadow relative w-full max-w-[17rem] rounded-2xl p-4 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Soft torii glow behind the seal */}
+              <div className="absolute -left-6 -top-8 w-28 h-28 rounded-full bg-torii/10 blur-2xl pointer-events-none" />
+
+              {/* Heading row — crest seal + title, kept on one line to stay compact */}
+              <div className="relative z-10 flex items-center gap-3">
+                <div className="relative shrink-0 w-11 h-11">
+                  <div className="absolute inset-0 rounded-full bg-bamboo-light/30 border border-moss/15" />
+                  <div className="absolute inset-1 rounded-full border border-dashed border-torii/25 pointer-events-none" />
+                  <div className="absolute inset-0 flex items-center justify-center text-torii/80">
+                    <div className="w-6 h-6">{activeCrest.render("w-full h-full")}</div>
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-base font-black tracking-wide text-stone leading-tight">
+                    Leave the sanctuary?
+                  </h3>
+                  <p
+                    className="font-serif text-[10px] tracking-[0.2em] text-torii"
+                    style={{ fontFamily: "'Noto Serif JP', serif" }}
+                  >
+                    またのお参りを
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close sign-out confirmation"
+                  onClick={() => setConfirmSignOut(false)}
+                  disabled={signingOut}
+                  className="ml-auto -mt-1 -mr-1 shrink-0 self-start rounded-full p-1 text-stone/35 hover:text-stone hover:bg-stone/5 transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <p className="relative z-10 mt-2.5 text-[11px] text-stone/65 leading-relaxed">
+                You&rsquo;ll be signed out. Stamps and saved shrines stay safe — return anytime.
+              </p>
+
+              {/* Actions — side by side to keep the card short */}
+              <div className="relative z-10 mt-3.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmSignOut(false)}
+                  disabled={signingOut}
+                  className="flex-1 rounded-lg border border-dashed border-moss/30 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-moss-light hover:text-stone hover:border-moss/50 hover:bg-stone/5 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Stay
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-torii px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-washi hover:bg-torii-dark transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  <LogOut size={12} className={signingOut ? "animate-pulse" : ""} />
+                  {signingOut ? "Leaving…" : "Sign out"}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

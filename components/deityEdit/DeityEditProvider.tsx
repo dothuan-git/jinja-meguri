@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import type { DeityInput } from "@/lib/admin/deityContract";
-import { ToastProvider } from "@/components/ui/Toast";
 import { useDeitySave } from "@/components/admin/useDeitySave";
 import { DeityEditContext, type DeityEditApi } from "@/components/deityEdit/context";
 
@@ -19,12 +18,7 @@ interface Props {
 }
 
 export default function DeityEditProvider(props: Props) {
-  // ToastProvider must wrap the subtree that calls useToast (via useDeitySave).
-  return (
-    <ToastProvider>
-      <EditFrame {...props} />
-    </ToastProvider>
-  );
+  return <EditFrame {...props} />;
 }
 
 function EditFrame({ initialData, deityId, mode = "update", onCancel, onSaved, children }: Props) {

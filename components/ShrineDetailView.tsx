@@ -134,50 +134,31 @@ function toView(shrine: ShrineDetail) {
 
 type View = ReturnType<typeof toView>;
 
-// Collapses a long lore passage to a preview with a "Read more" toggle.
-// Truncation cuts after a whole number of words, preserving the original
-// whitespace (newlines) so the preview keeps the passage's formatting.
+// Collapses a long lore passage with a "Read more"/"Show less" toggle on mobile,
+// clamped by line count via CSS line-clamp (full text on md+, matching the
+// deities page). whitespace-pre-line at the call site preserves the newlines.
 function CollapsibleLore({
   text,
   className,
-  collapsedWords = 260,
 }: {
   text: string;
   className?: string;
-  collapsedWords?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const trimmed = text.trim();
-
-  let count = 0;
-  let sliceEnd = trimmed.length;
-  const wordRe = /\S+/g;
-  let match: RegExpExecArray | null;
-  while ((match = wordRe.exec(trimmed)) !== null) {
-    count += 1;
-    if (count === collapsedWords) {
-      sliceEnd = match.index + match[0].length;
-      break;
-    }
-  }
-
-  if (sliceEnd >= trimmed.length) {
-    return <p className={className}>{trimmed}</p>;
-  }
-
-  const preview = trimmed.slice(0, sliceEnd).replace(/[\s.,;:—-]+$/, "");
 
   return (
-    <p className={className}>
-      {expanded ? trimmed : <>{preview}… </>}
+    <>
+      <p className={`${className ?? ""} ${expanded ? "" : "line-clamp-[8] md:line-clamp-none"}`}>
+        {text.trim()}
+      </p>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="inline whitespace-normal font-sans font-normal italic text-torii hover:text-torii-dark hover:underline underline-offset-2 transition-colors cursor-pointer"
+        className="md:hidden mt-2 text-[10px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
       >
-        {expanded ? "Read less" : "Read more"}
+        {expanded ? "Show less ↑" : "Read more ↓"}
       </button>
-    </p>
+    </>
   );
 }
 
@@ -358,7 +339,7 @@ function PageBody({
       ref={containerRef}
       className="w-full flex-1 flex flex-col bg-transparent relative pb-16"
     >
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-4 shrink-0 z-10">
+      <div className="w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4 shrink-0 z-10">
 
         {/* Floating Minimal Navigation Bar */}
         <div data-reveal="fade-up" className="flex items-center justify-between mb-4 select-none">
@@ -407,19 +388,35 @@ function PageBody({
         </div>
 
         {/* Fast Facts Row (Subtle layout with typography blocks, no frames) */}
-        <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 flex flex-col md:flex-row justify-between items-start gap-6 select-text">
-          <div className="flex-1 space-y-2 max-w-2xl">
-            <EditableChips kind="ranks" label="Ranks">
-              <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
-                {shrine.ranks.map((rank, i) => (
-                  <span key={rank} className="inline-flex items-center gap-1">
-                    {i > 0 && <span className="opacity-30">|</span>}
-                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                    <span>{rank}</span>
-                  </span>
-                ))}
-              </div>
-            </EditableChips>
+        <div data-reveal="fade-up" className="py-4 md:py-6 border-b border-moss/10 select-text">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <EditableChips kind="ranks" label="Ranks">
+                <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
+                  {shrine.ranks.map((rank, i) => (
+                    <span key={rank} className="inline-flex items-center gap-1">
+                      {i > 0 && <span className="opacity-30">|</span>}
+                      {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                      <span>{rank}</span>
+                    </span>
+                  ))}
+                </div>
+              </EditableChips>
+              {isSignedIn && !creating && (
+                <button
+                  onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
+                  disabled={marks.pending}
+                  aria-pressed={isSaved}
+                  title={isSaved ? "Remove from saved" : "Save to your list"}
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
+                    isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
+                  }`}
+                >
+                  <Heart size={11} className={isSaved ? "fill-torii" : ""} />
+                  <span>{isSaved ? "Saved" : "Save"}</span>
+                </button>
+              )}
+            </div>
 
             <h2 className="text-xl md:text-2xl font-serif font-black text-stone select-text">
               <EditableText
@@ -512,26 +509,12 @@ function PageBody({
               </EditableProse>
             )}
           </div>
-          {isSignedIn && !creating && (
-            <button
-              onClick={() => marks.toggleSave(shrine.slug, shrine.name)}
-              disabled={marks.pending}
-              aria-pressed={isSaved}
-              title={isSaved ? "Remove from saved" : "Save to your list"}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-wait shrink-0 ${
-                isSaved ? "border-torii/40 text-torii" : "border-moss/20 text-stone/55 hover:border-torii/40 hover:text-torii"
-              }`}
-            >
-              <Heart size={11} className={isSaved ? "fill-torii" : ""} />
-              <span>{isSaved ? "Saved" : "Save"}</span>
-            </button>
-          )}
         </div>
 
       </div>
 
       {/* Main Responsive Storytelling Block (Minimal, floating sidebar navigation, white spacing) */}
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
+      <div className="w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-6 flex flex-col lg:flex-row gap-10 lg:gap-14 select-text">
 
         {/* Floating Sidebar Directory (Simple hover items, no borders, no boxes) */}
         <nav data-reveal="slide-left" className="w-full lg:w-48 shrink-0 lg:sticky lg:top-14 h-fit hidden lg:block select-none z-10">
@@ -596,7 +579,7 @@ function PageBody({
         </nav>
 
         {/* Flowing Text Canvas */}
-        <div className="flex-1 min-w-0 space-y-12">
+        <div className="flex-1 min-w-0 space-y-14 md:space-y-18">
 
           {/* SECTION 1: OVERVIEW */}
           <section
@@ -610,7 +593,7 @@ function PageBody({
               福
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>福 — Chapter I</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
@@ -666,7 +649,7 @@ function PageBody({
               神
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>神 — Chapter II</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
@@ -744,7 +727,7 @@ function PageBody({
 
                 {/* Redesigned Secondary/Companion Deities Section based on user specification */}
                 {shrine.secondaryDeities && shrine.secondaryDeities.length > 0 && (
-                  <div className="pt-6 space-y-4">
+                  <div className="pt-1 md:pt-2 space-y-4">
                     <span className="text-[9px] font-mono tracking-widest text-stone/40 uppercase font-bold bg-stone/[0.02] border border-stone/10 px-2.5 py-0.5 rounded-full inline-block select-none">
                       Companion Spirits (配祀神)
                     </span>
@@ -845,7 +828,7 @@ function PageBody({
               史
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>史 — Chapter III</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
@@ -870,7 +853,7 @@ function PageBody({
 
               {/* References citations segment */}
               {(editing || (shrine.sources && shrine.sources.length > 0)) && (
-                <div className="pt-4 border-t border-stone/10 select-none">
+                <div className="pt-4 select-none">
                   <span className={`${typo.fieldLabel} block mb-1.5`}>HISTORICAL REFERENCES</span>
                   <EditableSources>
                     <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
@@ -898,7 +881,7 @@ function PageBody({
               祭
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>祭 — Chapter IV</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
@@ -907,7 +890,7 @@ function PageBody({
               </div>
 
               {/* Festival listings - elegant box-free editorial design */}
-              <div className="space-y-16">
+              <div className="space-y-6 md:space-y-16">
                 {creating ? (
                   <FestivalCreateEditor />
                 ) : (
@@ -925,13 +908,13 @@ function PageBody({
             id="pilgrimage"
             ref={sectionRefs.pilgrimage}
             data-reveal="stamp"
-            className="relative scroll-mt-14 pt-2"
+            className="relative scroll-mt-14"
           >
             <div className="absolute top-0 right-0 text-moss/5 text-7xl font-serif font-black select-none pointer-events-none translate-x-4 -translate-y-4">
               印
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>印 — Chapter V</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
@@ -945,7 +928,7 @@ function PageBody({
                   A traditional vermillion ink imprint (御朱印) acting as official sacred receipt of your personal communion at {shrine.name}.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center gap-8 pt-2">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 pt-2">
                   {/* Visual representation of the stamp */}
                   <div className="relative w-40 h-56 bg-washi shadow-xs flex flex-col justify-between items-center p-3.5 border border-moss/10 rounded-xs select-none">
                     <div className="absolute inset-1.5 border border-dashed border-torii/10 pointer-events-none" />
@@ -1043,7 +1026,7 @@ function PageBody({
               地
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>地 — Chapter VI</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>

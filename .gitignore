@@ -17,3 +17,10 @@ next-env.d.ts
 /*.png
 
 front-end/
+
+# Design sync (generated/machine state — not committed)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

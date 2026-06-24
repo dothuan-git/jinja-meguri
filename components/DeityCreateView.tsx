@@ -23,7 +23,7 @@ export default function DeityCreateView() {
   const router = useRouter();
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-24 flex flex-col items-center">
+    <div className="relative w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 pb-16 flex flex-col items-center">
       <div className="mb-8 text-center select-none">
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs">
           <span>New Kami Chronicle</span>

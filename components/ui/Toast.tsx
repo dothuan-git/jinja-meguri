@@ -74,18 +74,18 @@ const VARIANT_STYLES: Record<
   { accent: string; icon: React.ReactNode; role: "status" | "alert" }
 > = {
   success: {
-    accent: "border-l-green-500",
-    icon: <CheckCircle2 size={18} className="text-green-600" />,
+    accent: "border-l-bamboo",
+    icon: <CheckCircle2 size={18} className="text-bamboo" />,
     role: "status",
   },
   error: {
-    accent: "border-l-red-500",
-    icon: <AlertTriangle size={18} className="text-red-600" />,
+    accent: "border-l-torii",
+    icon: <AlertTriangle size={18} className="text-torii" />,
     role: "alert",
   },
   info: {
-    accent: "border-l-stone-400",
-    icon: <Info size={18} className="text-stone-500" />,
+    accent: "border-l-moss-light",
+    icon: <Info size={18} className="text-moss-light" />,
     role: "status",
   },
 };
@@ -112,14 +112,14 @@ function ToastViewport({
               transition={{ type: "spring", damping: 26, stiffness: 320 }}
               role={style.role}
               aria-live={t.variant === "error" ? "assertive" : "polite"}
-              className={`pointer-events-auto flex items-start gap-2.5 rounded-lg border border-l-4 ${style.accent} border-gray-200 bg-white px-4 py-3 shadow-lg`}
+              className={`pointer-events-auto flex items-start gap-2.5 rounded-lg border border-l-4 ${style.accent} border-stone/12 bg-washi px-4 py-3 shadow-sm`}
             >
               <span className="mt-0.5 shrink-0">{style.icon}</span>
-              <p className="flex-1 break-words text-sm text-gray-700">{t.message}</p>
+              <p className="flex-1 break-words text-sm text-stone">{t.message}</p>
               <button
                 onClick={() => onDismiss(t.id)}
                 aria-label="Dismiss notification"
-                className="-mr-1 shrink-0 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-700"
+                className="-mr-1 shrink-0 rounded p-0.5 text-stone/40 transition-colors hover:text-stone"
               >
                 <X size={15} />
               </button>

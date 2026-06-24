@@ -77,6 +77,7 @@ export default function DeityListing({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
   useEntranceReveal(containerRef);
 
   // 2. Keyboard listeners for carousel navigation (disabled while editing).
@@ -119,6 +120,17 @@ export default function DeityListing({
     if (editing) return;
     setSlideDirection("left");
     setCurrentIndex((prev) => (prev - 1 + deitiesList.length) % deitiesList.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(delta) > 50) delta > 0 ? handleNext() : handlePrev();
+    touchStartX.current = null;
   };
 
   const handleSelectPortfolio = (targetIndex: number) => {
@@ -175,10 +187,10 @@ export default function DeityListing({
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full max-w-7xl mx-auto px-4 md:px-8 mt-4 pb-20 z-10 flex flex-col items-center">
+    <div ref={containerRef} className="relative min-h-[calc(100vh-140px)] w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 pb-16 z-10 flex flex-col items-center">
 
       {/* Editorial Watermarked Title (matching Sancturary Archives structure) */}
-      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-6 mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
+      <div data-reveal="fade-up-blur" className="text-center max-w-xl mx-auto mt-4 md:mt-6 mb-4 md:mb-8 relative flex flex-col items-center justify-center overflow-visible py-2 w-full select-none">
 
         {/* Sacred Kanji Calligraphy Watermark - "神" (Kami / Deity) */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none select-none z-0">
@@ -204,7 +216,7 @@ export default function DeityListing({
       </div>
 
       {/* SEARCH AND DIRECT SELECTOR REGION */}
-      <div data-reveal="fade-up" className="w-full max-w-xl mb-12 relative z-30 px-2">
+      <div data-reveal="fade-up" className="w-full max-w-xl mb-6 md:mb-12 relative z-30 px-2">
         <div className="relative flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
           <Search className="absolute left-3 text-stone/40" size={14} />
 
@@ -287,22 +299,32 @@ export default function DeityListing({
         </AnimatePresence>
       </div>
 
-      {/* Decorative prompt for keyboard usage */}
+      {/* Navigation tip — swipe on touch devices, keyboard on desktop */}
       {!editing && (
-        <div className="mb-5 text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center hidden md:block select-none">
-          Tip: Press left ← or right → arrow key to cycle deities
+        <div data-reveal="fade-up" className="mb-5 select-none">
+          <div className="text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center block xl:hidden">
+            Tip: Swipe left or right to cycle deities
+          </div>
+          <div className="text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center hidden xl:block">
+            Tip: Press left ← or right → arrow key to cycle deities
+          </div>
         </div>
       )}
 
       {/* THE MAIN IMMERSIVE PORTFOLIO CAROUSEL CONTAINER */}
-      <div data-reveal="rise" className="relative w-full md:w-[calc(100%+4rem)] md:-mx-8 select-text z-10">
+      <div
+        data-reveal="rise"
+        className="relative w-full select-text z-10"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
 
-        {/* Floating Left Controller Button */}
+        {/* Floating Left Controller Button (desktop xl+ only, outside card) */}
         {!editing && (
           <button
             onClick={handlePrev}
             aria-label="Previous Deity Portfolio"
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            className="hidden xl:flex absolute top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1.5rem)] left-0 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
             <ChevronLeft size={18} />
@@ -346,10 +368,18 @@ export default function DeityListing({
 
                   <DeityCardBody
                     deity={activeDeity}
-                    onShrineClick={(slug) => router.push(`/shrines/${slug}`)}
+                    onShrineClick={(slug) => {
+                      // On mobile (< sm) the intercepted side modal is cramped —
+                      // hard-navigate so the full shrine page renders instead.
+                      if (window.matchMedia("(max-width: 639.98px)").matches) {
+                        window.location.assign(`/shrines/${slug}`);
+                      } else {
+                        router.push(`/shrines/${slug}`);
+                      }
+                    }}
                   />
 
-                  {/* Lower Card Control bar for Mobile navigation */}
+                  {/* Lower Card Control bar — counter + dot nav */}
                   <div className="mt-8 pt-4 border-t border-stone/10 flex items-center justify-between text-xs font-mono select-none">
                     <span className="text-stone/40 font-bold">
                       Kami {currentIndex + 1} of {deitiesList.length}
@@ -367,21 +397,6 @@ export default function DeityListing({
                         />
                       ))}
                     </div>
-
-                    <div className="flex items-center gap-1.5 md:hidden">
-                      <button
-                        onClick={handlePrev}
-                        className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
-                      >
-                        <ChevronLeft size={14} />
-                      </button>
-                      <button
-                        onClick={handleNext}
-                        className="w-8 h-8 rounded-full border border-stone/10 bg-white shadow-3xs flex items-center justify-center text-stone/50 hover:text-torii hover:border-torii transition-colors cursor-pointer"
-                      >
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
                   </div>
 
                 </motion.div>
@@ -390,12 +405,12 @@ export default function DeityListing({
           )}
         </div>
 
-        {/* Floating Right Controller Button */}
+        {/* Floating Right Controller Button (desktop xl+ only, outside card) */}
         {!editing && (
           <button
             onClick={handleNext}
             aria-label="Next Deity Portfolio"
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
+            className="hidden xl:flex absolute top-1/2 -translate-y-1/2 translate-x-[calc(100%+1.5rem)] right-0 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
             <ChevronRight size={18} />

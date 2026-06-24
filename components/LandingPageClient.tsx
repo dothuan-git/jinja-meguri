@@ -615,7 +615,7 @@ export default function LandingPageClient() {
       </div>
 
       {/* Main Structural Canvas: Flows traditional Right-to-Left on Desktop */}
-      <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col md:flex-row-reverse items-center justify-center gap-6 sm:gap-8 lg:gap-16 xl:gap-20 z-10 my-auto py-4 overflow-hidden">
+      <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row-reverse items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16 xl:gap-20 z-10 my-auto py-4 overflow-hidden">
         
         {/* RIGHT ZONE: Divine Calligraphy Title & Vermilion Seal */}
         <div className="flex flex-row-reverse items-start gap-3 sm:gap-4 shrink-0">
@@ -652,11 +652,11 @@ export default function LandingPageClient() {
         </div>
 
         {/* MIDDLE ZONE: Elegant Vertical-RL Prose Columns */}
-        <div className="flex flex-col md:flex-row-reverse items-center md:items-start gap-4 sm:gap-6 md:gap-10 max-w-2xl px-2 text-left overflow-hidden">
-          
-          {/* Vertical-RL Japanese Poetry */}
-          <div 
-            className={`hidden md:block font-serif text-sm lg:text-base tracking-[0.25em] leading-[2.4] shrink-0 transition-colors duration-1000 ${seasonStyles.proseText}`}
+        <div className="flex flex-col lg:flex-row-reverse items-center lg:items-start gap-4 sm:gap-6 lg:gap-10 max-w-2xl px-2 text-left overflow-hidden">
+
+          {/* Vertical-RL Japanese Poetry (desktop / iPad landscape only) */}
+          <div
+            className={`hidden lg:block font-serif text-sm lg:text-base tracking-[0.25em] leading-[2.4] shrink-0 transition-colors duration-1000 ${seasonStyles.proseText}`}
             style={{ 
               writingMode: 'vertical-rl',
               textOrientation: 'upright'
@@ -673,27 +673,27 @@ export default function LandingPageClient() {
             </p>
           </div>
 
-          {/* Simple alternative layout optimized for small mobile screens (since vertical scroll gets cramped) */}
-          <div className={`block md:hidden text-center space-y-1 sm:space-y-2 font-serif text-xs sm:text-sm italic tracking-wide leading-relaxed transition-colors duration-1000 ${seasonStyles.proseText}`}>
+          {/* Horizontal italic prose for mobile + iPad portrait (vertical-RL gets cramped below lg) */}
+          <div className={`block lg:hidden text-center space-y-1 sm:space-y-2 font-serif text-xs sm:text-sm md:text-base italic tracking-wide leading-relaxed transition-colors duration-1000 ${seasonStyles.proseText}`}>
             <p>"朱色の鳥居をくぐりて、悠久なる静寂の森へ。"</p>
             <p>"苔むす古石、微かなる葉音に八百万の神が宿る。"</p>
             <p>"境界を越え、澄み切る風に旅路の平安を祈る。"</p>
           </div>
 
           {/* Vertical Separator Line */}
-          <div className={`divider-line hidden md:block w-[1px] h-32 self-center shrink-0 origin-center transition-colors duration-1000 ${seasonStyles.dividerBg}`} />
+          <div className={`divider-line hidden lg:block w-[1px] h-32 self-center shrink-0 origin-center transition-colors duration-1000 ${seasonStyles.dividerBg}`} />
 
           {/* English Narrative and Ema Plaques Column */}
-          <div className="flex flex-col items-center md:items-start gap-5 select-none shrink-0 max-w-xs sm:max-w-sm md:max-w-md my-auto py-2">
-            
+          <div className="flex flex-col items-center lg:items-start gap-5 md:gap-7 select-none shrink-0 max-w-xs sm:max-w-sm lg:max-w-md my-auto py-2">
+
             {/* English Narrative in modern thin typography */}
-            <div className={`prose-col-eng max-w-xs space-y-3 text-center md:text-left text-[11px] sm:text-xs font-display italic leading-relaxed transition-colors duration-1000 ${seasonStyles.engText}`}>
-              <p className="border-l-2 md:border-l-0 md:border-r-2 border-torii px-3 md:px-0 md:pr-3">
+            <div className={`prose-col-eng max-w-xs md:max-w-sm space-y-3 text-center lg:text-left text-[11px] sm:text-xs md:text-sm font-display italic leading-relaxed transition-colors duration-1000 ${seasonStyles.engText}`}>
+              <p className="border-l-2 lg:border-l-0 lg:border-r-2 border-torii px-3 lg:px-0 lg:pr-3">
                 "Ma (間) specifies that beauty remains in empty space while light dances. 
                 Step beyond the vermilion gateway, where centuries of silence, moss garden spirits, 
                 and traditional ritual fires breathe."
               </p>
-              <div className="flex items-center justify-center md:justify-start gap-2.5 opacity-45">
+              <div className="flex items-center justify-center lg:justify-start gap-2.5 opacity-45">
                 <span className="w-1 h-1 rounded-full bg-torii" />
                 <span className="w-1.2 h-1.2 rounded-full bg-moss opacity-80" />
                 <span className="w-1 h-1 rounded-full bg-torii" />
@@ -701,12 +701,12 @@ export default function LandingPageClient() {
             </div>
 
             {/* EMA PLAQUES ZONE (Side-by-side Wooden Plaques) */}
-            <div className="flex flex-row gap-5 sm:gap-6 items-center justify-center md:justify-start w-full pt-2">
+            <div className="flex flex-row gap-5 sm:gap-6 md:gap-8 items-center justify-center lg:justify-start w-full pt-2">
               
               {/* Ema 1 (Explore Button) */}
               <MotionLink
                 href="/shrines"
-                className="talisman-btn-1 group relative w-36 sm:w-40 md:w-44 h-28 sm:h-32 md:h-34 cursor-pointer flex flex-col items-center justify-between p-3"
+                className="talisman-btn-1 group relative w-[clamp(6rem,27vw,11rem)] aspect-[9/7] cursor-pointer flex flex-col items-center justify-between p-3"
                 style={{ transformOrigin: "center top" }}
                 animate={{
                   rotate: [-1.2, 1.2, -1.2],
@@ -766,7 +766,7 @@ export default function LandingPageClient() {
               {/* Ema 2 (Calendar Button) */}
               <MotionLink
                 href="/calendar"
-                className="talisman-btn-2 group relative w-36 sm:w-40 md:w-44 h-28 sm:h-32 md:h-34 cursor-pointer flex flex-col items-center justify-between p-3"
+                className="talisman-btn-2 group relative w-[clamp(6rem,27vw,11rem)] aspect-[9/7] cursor-pointer flex flex-col items-center justify-between p-3"
                 style={{ transformOrigin: "center top" }}
                 animate={{
                   rotate: [1.2, -1.2, 1.2],

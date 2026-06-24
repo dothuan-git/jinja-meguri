@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { MapPin, ArrowRight } from "lucide-react";
 import { DEITY_TYPE_LABEL } from "@/lib/labels";
 import { getDeityTypeTextColor } from "@/lib/facetColors";
@@ -15,6 +16,115 @@ export interface DeityCardShrine {
   slug: string;
   isPrimary: boolean;
   regionalLore: string;
+}
+
+function ShrineItem({
+  shrine,
+  onShrineClick,
+}: {
+  shrine: DeityCardShrine;
+  onShrineClick?: (slug: string) => void;
+}) {
+  const [loreExpanded, setLoreExpanded] = useState(false);
+  const { name: shrineName, location, prefecture, region, slug, isPrimary, regionalLore } = shrine;
+
+  const cardBase = `rounded-xl border transition-all text-left group cursor-pointer ${
+    isPrimary
+      ? "bg-white border-torii/15 hover:border-torii shadow-3xs"
+      : "bg-stone/[0.01] border-stone/10 hover:border-moss shadow-4xs"
+  }`;
+
+  const iconBase = `w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${
+    isPrimary ? "bg-torii/10 text-torii border-torii/10" : "bg-stone/10 text-stone/60 border-stone/5"
+  }`;
+
+  const badgeMobile = `text-[8px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-sm shrink-0 font-bold ${
+    isPrimary ? "text-torii bg-torii/5" : "text-stone/40 bg-stone/5"
+  }`;
+
+  const fileLink = (size: number) => (
+    <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0">
+      File <ArrowRight size={size} className="group-hover:translate-x-0.5 transition-transform" />
+    </span>
+  );
+
+  return (
+    <div
+      onClick={() => onShrineClick?.(slug)}
+      className={`w-[280px] snap-start shrink-0 sm:w-[380px] md:w-[560px] ${cardBase}`}
+    >
+      {/* ── Mobile layout (< sm) ── */}
+      <div className="sm:hidden p-3">
+        <div className="flex items-center gap-2">
+          <div className={iconBase}>
+            <MapPin size={9} className={isPrimary ? "animate-pulse" : ""} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-serif font-black text-stone leading-tight truncate">{shrineName}</h4>
+            <span className="text-[9px] font-sans text-stone/40 truncate block">
+              {location} · {prefecture} ({region})
+            </span>
+          </div>
+          <span className={badgeMobile}>{isPrimary ? "Primary" : "Companion"}</span>
+        </div>
+
+        {regionalLore ? (
+          <div className="mt-2.5 pt-2.5 border-t border-dashed border-stone/10">
+            <p className={`font-quote italic text-[11px] text-stone/70 leading-relaxed whitespace-pre-line ${loreExpanded ? "" : "line-clamp-2"}`}>
+              "{regionalLore}"
+            </p>
+            <div className="flex items-center justify-between mt-1.5">
+              <button
+                onClick={(e) => { e.stopPropagation(); setLoreExpanded((v) => !v); }}
+                className="text-[9px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
+              >
+                {loreExpanded ? "Show less ↑" : "Read more ↓"}
+              </button>
+              {fileLink(9)}
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end mt-2">{fileLink(9)}</div>
+        )}
+      </div>
+
+      {/* ── Desktop / tablet layout (sm+) ── */}
+      <div className="hidden sm:block p-5">
+        <div className="flex flex-row items-center justify-between gap-2.5">
+          <div className="flex items-start gap-2.5">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
+              isPrimary ? "bg-torii/10 text-torii border-torii/10" : "bg-stone/10 text-stone/60 border-stone/5"
+            }`}>
+              <MapPin size={11} className={isPrimary ? "animate-pulse" : ""} />
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-serif font-black text-stone leading-tight">{shrineName}</h4>
+              <span className="text-[9px] font-sans text-stone/40 block mt-0.5">
+                {location} • {prefecture} Prefecture ({region} Region)
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0 scale-95 font-bold ${
+              isPrimary ? "text-torii bg-torii/5" : "text-stone/40 bg-stone/5"
+            }`}>
+              {isPrimary ? "Primary Enshrined" : "Companion Spirit"}
+            </span>
+            <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0 pl-1.5 border-l border-stone/10">
+              File <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </div>
+        </div>
+
+        {regionalLore && (
+          <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-quote italic text-xs md:text-sm text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-text flex gap-2">
+            <span className="text-torii text-base leading-none font-sans font-black select-none">"</span>
+            <div className="flex-1 text-justify whitespace-pre-line">{regionalLore}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export interface DeityCardData {
@@ -50,6 +160,7 @@ export default function DeityCardBody({
 }) {
   const edit = useDeityEdit();
   const editing = edit?.editing ?? false;
+  const [loreExpanded, setLoreExpanded] = useState(false);
 
   // Display values: from the draft while editing, from the prop on the read path.
   const name = editing ? edit!.draft.name_en : deity.name;
@@ -177,7 +288,7 @@ export default function DeityCardBody({
       </div>
 
       {/* ZONE 2 — Canonical Chronicle */}
-      <div className="space-y-3 pt-8 mt-8 border-t border-moss/10">
+      <div className="space-y-3 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
           Canonical Chronicle
         </span>
@@ -191,20 +302,28 @@ export default function DeityCardBody({
             className={`${areaBase} text-xs md:text-sm font-sans text-stone/80 leading-relaxed`}
           />
         ) : (
-          <p className="text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify select-text whitespace-pre-line lg:columns-2 lg:gap-10 lg:[column-rule:1px_solid_rgba(0,0,0,0.05)]">
-            {canonicalLore}
-          </p>
+          <>
+            <p className={`text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify select-text whitespace-pre-line lg:columns-2 lg:gap-10 lg:[column-rule:1px_solid_rgba(0,0,0,0.05)] ${loreExpanded ? "" : "line-clamp-[8] md:line-clamp-none"}`}>
+              {canonicalLore}
+            </p>
+            <button
+              onClick={() => setLoreExpanded((v) => !v)}
+              className="md:hidden mt-2 text-[10px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
+            >
+              {loreExpanded ? "Show less ↑" : "Read more ↓"}
+            </button>
+          </>
         )}
       </div>
 
       {/* ZONE 3 — Enshrined Sites (read-only, derived) */}
-      <div className="space-y-4 pt-8 mt-8 border-t border-moss/10">
+      <div className="space-y-4 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[9px] font-bold tracking-widest text-[#782c1a] uppercase block select-none">
             Enshrined Sites & Regional Lore
           </span>
           {deity.shrines.length > 0 && (
-            <span className="text-[10px] font-mono text-stone/35 select-none hidden sm:block">
+            <span className="text-[10px] font-mono text-stone/35 select-none block">
               Scroll for more →
             </span>
           )}
@@ -213,61 +332,16 @@ export default function DeityCardBody({
         {deity.shrines.length === 0 ? (
           <div className="p-6 rounded-xl border border-dashed border-stone/15 bg-stone/[0.015] text-center flex flex-col items-center gap-2">
             <MapPin size={16} className="text-stone/25" />
-            <p className="text-xs font-serif text-stone/45 italic">
-              No shrine linked yet
-            </p>
+            <p className="text-xs font-serif text-stone/45 italic">No shrine linked yet</p>
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x select-none">
-            {deity.shrines.map(({ id, name: shrineName, location, prefecture, region, slug, isPrimary, regionalLore }) => (
-              <div
-                key={id}
-                onClick={() => onShrineClick?.(slug)}
-                className={`snap-start shrink-0 w-[380px] md:w-[560px] p-5 rounded-xl border transition-all text-left group cursor-pointer hover:bg-stone/[0.015] ${
-                  isPrimary
-                    ? "bg-white border-torii/15 hover:border-torii shadow-3xs"
-                    : "bg-stone/[0.01] border-stone/10 hover:border-moss shadow-4xs"
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
-                      isPrimary ? "bg-torii/10 text-torii border-torii/10" : "bg-stone/10 text-stone/60 border-stone/5"
-                    }`}>
-                      <MapPin size={11} className={isPrimary ? "animate-pulse" : ""} />
-                    </div>
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-serif font-black text-stone leading-tight flex items-center gap-1.5">
-                        {shrineName}
-                      </h4>
-                      <span className="text-[9px] font-sans text-stone/40 block mt-0.5">
-                        {location} • {prefecture} Prefecture ({region} Region)
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0 scale-95 font-bold ${
-                      isPrimary ? "text-torii bg-torii/5" : "text-stone/40 bg-stone/5"
-                    }`}>
-                      {isPrimary ? "Primary Enshrined" : "Companion Spirit"}
-                    </span>
-                    <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0 pl-1.5 border-l border-stone/10">
-                      File
-                      <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                    </span>
-                  </div>
-                </div>
-
-                {regionalLore && (
-                  <div className="mt-3.5 pt-3 border-t border-dashed border-stone/10 font-quote italic text-xs md:text-sm text-stone/75 leading-relaxed bg-[#fbfaf6] p-3 rounded-lg border border-stone/5 relative select-text flex gap-2">
-                    <span className="text-torii text-base leading-none font-sans font-black select-none">“</span>
-                    <div className="flex-1 text-justify whitespace-pre-line">
-                      {regionalLore}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            className="flex flex-row gap-2 sm:gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x select-none"
+          >
+            {deity.shrines.map((shrine) => (
+              <ShrineItem key={shrine.id} shrine={shrine} onShrineClick={onShrineClick} />
             ))}
           </div>
         )}

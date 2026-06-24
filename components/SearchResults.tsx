@@ -31,7 +31,7 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
   useEntranceReveal(containerRef);
 
   return (
-    <main ref={containerRef} className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <main ref={containerRef} className="mx-auto w-full md:w-[calc(100%-2.5rem)] max-w-7xl px-4 md:px-6 lg:px-8 pt-12 pb-16">
       <div data-reveal="fade-up">
         <p className="kicker">Find a shrine</p>
         <h1 className="mt-2 font-display text-5xl font-semibold">Search</h1>
