@@ -11,6 +11,7 @@ const EMPTY_CARD: DeityCardData = {
   deityType: "mythological",
   titles: [],
   canonicalLore: "",
+  mythicSphere: null,
   shrines: [],
 };
 

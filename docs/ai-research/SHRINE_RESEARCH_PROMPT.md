@@ -34,9 +34,11 @@ research worksheet transcribed field-by-field into the site's in-place create ed
    copied **character-for-character** from the Controlled Vocabulary lists. A value not on the list
    makes the import fail. If unsure whether a rank/category applies, **leave that entry out of the
    array** (the array itself still stays present — see Completeness) rather than guess.
-4. **Never hallucinate** dates, ritual names, coordinates, founding years, or deity facts. If a fact
-   can't be verified from a real source, set that field to its **empty value** (see Completeness) —
-   never guess. If a *required* field is uncertain, put your best value.
+4. **Never hallucinate** dates, ritual names, coordinates, founding years, or deity facts, and **never
+   fill a field from your own training-data recollection alone.** Every fact must be cross-checked
+   against real, retrievable sources before you write it. If a fact can't be verified from a real source,
+   set that field to its **empty value** (see Completeness) — never guess. If a *required* field is
+   uncertain, put your best value.
 5. Every claim of substance should be backed by an entry in `sources` (real, working URLs only).
 6. Prose fields (`details.*`, deity `*_lore`, festival fields) are **full flowing prose**, not bullet
    summaries (see **Prose voice & length**). Write in natural English but **preserve Japanese terms
@@ -93,6 +95,22 @@ Use the type-correct empty value — never `"-"`, never `""`:
 Array *lengths* vary by shrine, so the grand total varies — verify the **key set per object**, not one global number.
 
 ### Research method
+- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
+  starting point only. Every fact you output (dates, coordinates, ritual names, deity genealogy, festival
+  details) must be **confirmed against real, retrievable sources** during this task, not recalled from
+  training. If you cannot consult sources for a given fact, use the type-correct empty value (see
+  Completeness) rather than filling it from memory.
+- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
+  key fact across multiple sources (e.g. the official shrine site **and** `ja.wikipedia.org` or an
+  academic source).
+- **When sources disagree on lore or facts, follow the majority.** Present the version that is **most
+  common — the one that appears in the most sources** — as the canonical reading in the relevant prose
+  field, and note the variant within that field or in `details.history`. Only if the count is genuinely
+  tied, fall back to the older/primary, Japanese-language source.
+  - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
+    purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
+    produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
+    account the bulk of sources carry, and note the variant.
 - Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese
   academic / cultural articles and local-tourism sources; `en.wikipedia.org` is a secondary cross-check.
 - **Translate, don't transcribe**: gather in Japanese, then write the output in clear, natural English.
@@ -247,6 +265,7 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - [ ] `occurrences` is `[]` (concrete yearly dates are added separately).
 - [ ] All `sources[].url` and any `image_urls[]` are real, valid URLs.
 - [ ] No invented facts; claims are covered by `sources`.
+- [ ] **Every fact was cross-checked against real sources during this task** — nothing was written from memory alone; unverifiable fields use the type-correct empty value and source conflicts are noted in the relevant prose field.
 
 If the user names a shrine that is ambiguous (several shrines share the name), ask one brief
 clarifying question (which prefecture/city) before researching. Otherwise, research and output the JSON.

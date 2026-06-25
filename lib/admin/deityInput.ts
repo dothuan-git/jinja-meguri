@@ -12,6 +12,7 @@ export function emptyDeityInput(): DeityInput {
     deity_type: "mythological",
     titles: [],
     canonical_lore: null,
+    mythic_sphere: null,
   };
 }
 
@@ -28,5 +29,6 @@ export function deityListItemToInput(d: DeityListItem): DeityInput {
     deity_type: d.deity_type as DeityInput["deity_type"],
     titles: d.titles,
     canonical_lore: d.canonical_lore,
+    mythic_sphere: d.mythic_sphere,
   };
 }

@@ -133,6 +133,7 @@ Canonical, one row per kami. Deduped on `name_ja` at ingest.
 | `titles`         | `text[]` | Yes      | —                       | Domain/role epithets (sphere of patronage); empty for primordial kami. |
 | `deity_type`     | `text`   | No       | CHECK (enum)            | Current official status only (not historical syncretism).              |
 | `canonical_lore` | `text`   | Yes      | —                       | Kojiki/Nihon Shoki narrative.                                          |
+| `mythic_sphere`  | `text`   | Yes      | —                       | Free-text domain label shown in the deity card (e.g. "Agriculture & Commerce"). |
 
 > `deity_type` ∈ `mythological` | `deified_human` | `syncretic`.
 

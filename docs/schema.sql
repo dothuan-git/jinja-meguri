@@ -50,7 +50,8 @@ CREATE TABLE deities (
     titles         text[],                       -- domain/role epithets (sphere of patronage)
     deity_type     text NOT NULL
         CHECK (deity_type IN ('mythological','deified_human','syncretic')),
-    canonical_lore text                          -- Kojiki/Nihon Shoki fallback narrative
+    canonical_lore text,                         -- Kojiki/Nihon Shoki fallback narrative
+    mythic_sphere  text                          -- free-text domain label, e.g. "Agriculture & Commerce"
 );
 
 -- ------------------------------------------------------------

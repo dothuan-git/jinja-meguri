@@ -30,6 +30,7 @@ export interface Deity {
   titles: string[] | null;
   deity_type: string;
   canonical_lore: string | null;
+  mythic_sphere: string | null;
 }
 export interface Coordinates {
   lat: number;
@@ -131,6 +132,7 @@ export interface EditCatalogs {
     deity_type: string;
     titles: string[];
     canonical_lore: string | null;
+    mythic_sphere: string | null;
   }[];
 }
 
@@ -238,6 +240,7 @@ export interface DeityListItem {
   titles: string[];
   deity_type: string;
   canonical_lore: string | null;
+  mythic_sphere: string | null;
   shrines: DeityShrineLink[];
 }
 

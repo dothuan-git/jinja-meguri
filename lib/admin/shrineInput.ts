@@ -102,6 +102,7 @@ export function buildEditCatalogs(store: Store): EditCatalogs {
         deity_type: d.deity_type,
         titles: d.titles ?? [],
         canonical_lore: d.canonical_lore,
+        mythic_sphere: d.mythic_sphere,
       })),
   };
 }

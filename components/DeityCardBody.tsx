@@ -133,6 +133,7 @@ export interface DeityCardData {
   deityType: string;
   titles: string[];
   canonicalLore: string;
+  mythicSphere: string | null;
   shrines: DeityCardShrine[];
 }
 
@@ -168,6 +169,7 @@ export default function DeityCardBody({
   const deityType = editing ? edit!.draft.deity_type : deity.deityType;
   const titles = editing ? edit!.draft.titles ?? [] : deity.titles;
   const canonicalLore = editing ? edit!.draft.canonical_lore ?? "" : deity.canonicalLore;
+  const mythicSphere = editing ? edit!.draft.mythic_sphere ?? "" : deity.mythicSphere ?? "";
 
   return (
     <div className="relative z-10">
@@ -270,18 +272,26 @@ export default function DeityCardBody({
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-3 lg:w-72 shrink-0 select-none">
+          <div className="grid grid-cols-2 gap-3 shrink-0 select-none">
             <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
               <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Enshrined Sites</span>
               <span className="text-xs font-serif font-bold text-torii leading-none mt-1 block">{deity.shrines.length} Sanctuaries</span>
             </div>
             <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
               <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Mythic Sphere</span>
-              <span className="text-xs font-serif font-bold text-moss-light leading-none mt-1 block">
-                {name.includes("Inari") ? "Agriculture & Commerce" :
-                 name.includes("Amaterasu") ? "Solar & Imperial" :
-                 name.includes("Susanoo") ? "Storm & Gion" : "Natural Forces"}
-              </span>
+              {editing ? (
+                <input
+                  value={mythicSphere}
+                  onChange={(e) => edit!.update({ mythic_sphere: e.target.value || null })}
+                  placeholder="e.g. Agriculture & Commerce"
+                  aria-label="Mythic sphere"
+                  className={`${inputBase} text-xs font-serif font-bold text-moss-light w-full mt-1`}
+                />
+              ) : (
+                <span className="text-xs font-serif font-bold text-moss-light leading-none mt-1 block">
+                  {mythicSphere || "—"}
+                </span>
+              )}
             </div>
           </div>
         </div>
