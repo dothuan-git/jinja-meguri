@@ -51,7 +51,7 @@ export default function DeleteShrinePopup({
     <AnimatePresence>
       {open && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone/60 backdrop-blur-xs"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div

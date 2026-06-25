@@ -854,7 +854,7 @@ export default function ShrineListing({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone/60 backdrop-blur-xs md:hidden"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md md:hidden"
             onClick={() => setMobileFilterOpen(false)}
           >
             <motion.div
