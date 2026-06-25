@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -395,6 +396,11 @@ export default function UserProfileClient({
   const router = useRouter();
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
+
+  // Modals portal to document.body so they escape the page's stacking context
+  // and paint above the site chrome (nav/footer). Render only after mount (SSR-safe).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"stamps" | "saved" | "journey">("stamps");
@@ -1108,13 +1114,14 @@ export default function UserProfileClient({
       {/* =======================================================================
           EDIT PROFILE MODAL
           ======================================================================= */}
-      <AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
         {isEditOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-stone/40 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }}
@@ -1235,20 +1242,22 @@ export default function UserProfileClient({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body,
+      )}
 
       {/* =======================================================================
           SIGN-OUT CONFIRMATION POPUP — shared by mobile icon + desktop "Leave".
-          A small ceremonial farewell card: washi paper, the pilgrim's own crest as
-          a parting seal, and a torii-toned glow.
+          Mobile: compact row card. Tablet/desktop: centered column with larger crest.
           ======================================================================= */}
-      <AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
         {confirmSignOut && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone/50 backdrop-blur-md"
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md"
             onClick={() => !signingOut && setConfirmSignOut(false)}
           >
             <motion.div
@@ -1256,54 +1265,62 @@ export default function UserProfileClient({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="wabi-sabi-card washi-paper sumi-shadow relative w-full max-w-[17rem] rounded-2xl p-4 overflow-hidden"
+              className="wabi-sabi-card washi-paper sumi-shadow relative w-full max-w-[17rem] md:max-w-sm rounded-2xl md:rounded-3xl p-4 md:p-8 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Soft torii glow behind the seal */}
-              <div className="absolute -left-6 -top-8 w-28 h-28 rounded-full bg-torii/10 blur-2xl pointer-events-none" />
+              {/* Soft torii glow */}
+              <div className="absolute -left-6 -top-8 w-28 h-28 md:w-56 md:h-56 rounded-full bg-torii/10 blur-2xl pointer-events-none" />
 
-              {/* Heading row — crest seal + title, kept on one line to stay compact */}
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="relative shrink-0 w-11 h-11">
+              {/* Corner marks — desktop only */}
+              <div className="hidden md:block absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-torii/20 pointer-events-none" />
+              <div className="hidden md:block absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-torii/20 pointer-events-none" />
+              <div className="hidden md:block absolute bottom-4 left-4 w-5 h-5 border-b-2 border-l-2 border-torii/20 pointer-events-none" />
+              <div className="hidden md:block absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-torii/20 pointer-events-none" />
+
+              {/* Close button — absolute top-right on all sizes */}
+              <button
+                type="button"
+                aria-label="Close sign-out confirmation"
+                onClick={() => setConfirmSignOut(false)}
+                disabled={signingOut}
+                className="absolute top-3.5 right-3.5 z-10 rounded-full p-1 text-stone/35 hover:text-stone hover:bg-stone/5 transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+
+              {/* Crest + heading — inline row on mobile, centered column on md+ */}
+              <div className="relative z-10 flex items-center gap-3 pr-6 md:flex-col md:items-center md:text-center md:gap-5 md:pr-0">
+                <div className="relative shrink-0 w-11 h-11 md:w-20 md:h-20">
                   <div className="absolute inset-0 rounded-full bg-bamboo-light/30 border border-moss/15" />
                   <div className="absolute inset-1 rounded-full border border-dashed border-torii/25 pointer-events-none" />
                   <div className="absolute inset-0 flex items-center justify-center text-torii/80">
-                    <div className="w-6 h-6">{activeCrest.render("w-full h-full")}</div>
+                    <div className="w-6 h-6 md:w-12 md:h-12">{activeCrest.render("w-full h-full")}</div>
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-display text-base font-black tracking-wide text-stone leading-tight">
+                  <h3 className="font-display text-base md:text-xl font-black tracking-wide text-stone leading-tight">
                     Leave the sanctuary?
                   </h3>
                   <p
-                    className="font-serif text-[10px] tracking-[0.2em] text-torii"
+                    className="font-serif text-[10px] md:text-sm tracking-[0.2em] text-torii md:mt-1"
                     style={{ fontFamily: "'Noto Serif JP', serif" }}
                   >
                     またのお参りを
                   </p>
                 </div>
-                <button
-                  type="button"
-                  aria-label="Close sign-out confirmation"
-                  onClick={() => setConfirmSignOut(false)}
-                  disabled={signingOut}
-                  className="ml-auto -mt-1 -mr-1 shrink-0 self-start rounded-full p-1 text-stone/35 hover:text-stone hover:bg-stone/5 transition-colors disabled:opacity-40 cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
               </div>
 
-              <p className="relative z-10 mt-2.5 text-[11px] text-stone/65 leading-relaxed">
+              <p className="relative z-10 mt-2.5 md:mt-4 text-[11px] md:text-sm text-stone/65 leading-relaxed md:text-center">
                 You&rsquo;ll be signed out. Stamps and saved shrines stay safe — return anytime.
               </p>
 
-              {/* Actions — side by side to keep the card short */}
-              <div className="relative z-10 mt-3.5 flex gap-2">
+              {/* Actions */}
+              <div className="relative z-10 mt-3.5 md:mt-6 flex gap-2 md:gap-3">
                 <button
                   type="button"
                   onClick={() => setConfirmSignOut(false)}
                   disabled={signingOut}
-                  className="flex-1 rounded-lg border border-dashed border-moss/30 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-moss-light hover:text-stone hover:border-moss/50 hover:bg-stone/5 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex-1 rounded-lg md:rounded-xl border border-dashed border-moss/30 px-3 md:px-4 py-2 md:py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-moss-light hover:text-stone hover:border-moss/50 hover:bg-stone/5 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Stay
                 </button>
@@ -1311,7 +1328,7 @@ export default function UserProfileClient({
                   type="button"
                   onClick={handleSignOut}
                   disabled={signingOut}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-torii px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-washi hover:bg-torii-dark transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg md:rounded-xl bg-torii px-3 md:px-4 py-2 md:py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-washi hover:bg-torii-dark transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   <LogOut size={12} className={signingOut ? "animate-pulse" : ""} />
                   {signingOut ? "Leaving…" : "Sign out"}
@@ -1320,7 +1337,9 @@ export default function UserProfileClient({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }
