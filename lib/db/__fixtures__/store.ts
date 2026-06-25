@@ -50,8 +50,8 @@ export function makeStore(): Store {
       { shrine_id: "shrine-b", category_id: 1 },
     ],
     shrine_details: [
-      { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a" },
-      { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b" },
+      { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a", geographic_notes: null },
+      { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b", geographic_notes: null },
     ],
     festivals: [
       { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },

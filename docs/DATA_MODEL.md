@@ -213,12 +213,13 @@ One row per shrine; topical narrative prose.
 
 | Column         | Type   | Nullable | Constraints                               | Description                                     |
 | -------------- | ------ | -------- | ----------------------------------------- | ----------------------------------------------- |
-| `shrine_id`    | `uuid` | No       | **PK**, → `shrines(id)` ON DELETE CASCADE | Owning shrine (1:1).                            |
-| `history`      | `text` | Yes      | —                                         | Founding, legendary events, syncretic layers.  |
-| `description`  | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
-| `prayer_focus` | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
-| `best_time`    | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
-| `quote`        | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
+| `shrine_id`         | `uuid` | No       | **PK**, → `shrines(id)` ON DELETE CASCADE | Owning shrine (1:1).                            |
+| `history`           | `text` | Yes      | —                                         | Founding, legendary events, syncretic layers.  |
+| `description`       | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
+| `prayer_focus`      | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
+| `best_time`         | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
+| `quote`             | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
+| `geographic_notes`  | `text` | Yes      | —                                         | Natural setting, landscape, terrain, and access notes shown in the Transit & Geography section. |
 
 ### `festivals` (definition + optional dated occurrence)
 
