@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -395,6 +396,11 @@ export default function UserProfileClient({
   const router = useRouter();
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
+
+  // Modals portal to document.body so they escape the page's stacking context
+  // and paint above the site chrome (nav/footer). Render only after mount (SSR-safe).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"stamps" | "saved" | "journey">("stamps");
@@ -1108,7 +1114,8 @@ export default function UserProfileClient({
       {/* =======================================================================
           EDIT PROFILE MODAL
           ======================================================================= */}
-      <AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
         {isEditOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1235,13 +1242,16 @@ export default function UserProfileClient({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body,
+      )}
 
       {/* =======================================================================
           SIGN-OUT CONFIRMATION POPUP — shared by mobile icon + desktop "Leave".
           Mobile: compact row card. Tablet/desktop: centered column with larger crest.
           ======================================================================= */}
-      <AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
         {confirmSignOut && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1327,7 +1337,9 @@ export default function UserProfileClient({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }

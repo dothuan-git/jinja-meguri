@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
@@ -109,6 +110,11 @@ export default function ShrineListing({
   const PREFECTURES_LIST = Object.values(facets.prefecturesByRegion)
     .flat()
     .map((p) => p.name_en);
+
+  // Modals portal to document.body so they escape the page's stacking context
+  // and paint above the site chrome. Render only after mount (SSR-safe).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // View toggling; hydrate from localStorage after mount (SSR-safe)
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -848,7 +854,8 @@ export default function ShrineListing({
       </main>
 
       {/* ==================== MOBILE FILTER POPUP (centered, themed) ==================== */}
-      <AnimatePresence>
+      {mounted && createPortal(
+        <AnimatePresence>
         {mobileFilterOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -947,7 +954,9 @@ export default function ShrineListing({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body,
+      )}
 
       {/* User Controls — personal collection filters for signed-in non-admin users */}
       {isSignedIn && !isAdmin && (
