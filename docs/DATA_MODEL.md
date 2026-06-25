@@ -133,6 +133,7 @@ Canonical, one row per kami. Deduped on `name_ja` at ingest.
 | `titles`         | `text[]` | Yes      | —                       | Domain/role epithets (sphere of patronage); empty for primordial kami. |
 | `deity_type`     | `text`   | No       | CHECK (enum)            | Current official status only (not historical syncretism).              |
 | `canonical_lore` | `text`   | Yes      | —                       | Kojiki/Nihon Shoki narrative.                                          |
+| `mythic_sphere`  | `text`   | Yes      | —                       | Free-text domain label shown in the deity card (e.g. "Agriculture & Commerce"). |
 
 > `deity_type` ∈ `mythological` | `deified_human` | `syncretic`.
 
@@ -212,12 +213,13 @@ One row per shrine; topical narrative prose.
 
 | Column         | Type   | Nullable | Constraints                               | Description                                     |
 | -------------- | ------ | -------- | ----------------------------------------- | ----------------------------------------------- |
-| `shrine_id`    | `uuid` | No       | **PK**, → `shrines(id)` ON DELETE CASCADE | Owning shrine (1:1).                            |
-| `history`      | `text` | Yes      | —                                         | Founding, legendary events, syncretic layers.  |
-| `description`  | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
-| `prayer_focus` | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
-| `best_time`    | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
-| `quote`        | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
+| `shrine_id`         | `uuid` | No       | **PK**, → `shrines(id)` ON DELETE CASCADE | Owning shrine (1:1).                            |
+| `history`           | `text` | Yes      | —                                         | Founding, legendary events, syncretic layers.  |
+| `description`       | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
+| `prayer_focus`      | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
+| `best_time`         | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
+| `quote`             | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
+| `geographic_notes`  | `text` | Yes      | —                                         | Natural setting, landscape, terrain, and access notes shown in the Transit & Geography section. |
 
 ### `festivals` (definition + optional dated occurrence)
 

@@ -46,6 +46,7 @@ export default function DeityListing({
         deityType: d.deity_type,
         titles: d.titles,
         canonicalLore: d.canonical_lore ?? "",
+        mythicSphere: d.mythic_sphere,
         shrines: d.shrines.map((s) => ({
           id: s.slug,
           name: s.name_en,

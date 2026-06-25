@@ -63,6 +63,7 @@ export const ShrineInputSchema = z.object({
     prayer_focus: z.string().nullable().optional(),
     best_time: z.string().nullable().optional(),
     quote: z.string().nullable().optional(),
+    geographic_notes: z.string().nullable().optional(),
   }).optional(),
   ranks: z.array(z.string()).optional(),
   prayer_categories: z.array(z.string()).optional(),

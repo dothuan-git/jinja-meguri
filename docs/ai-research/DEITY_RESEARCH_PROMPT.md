@@ -34,8 +34,10 @@ as a research worksheet transcribed field-by-field into the in-place deity edito
 1. Output **exactly one** JSON object for **one deity**, inside a single ```json code block, with
    **no text before or after it**. No comments, no trailing commas (must be valid `JSON.parse`).
 2. Use the field names, types, and enums **verbatim** as specified. Do not invent new fields.
-3. **Never hallucinate** divine genealogy, epithets, or mythological facts. If a fact can't be verified
-   from a real source, set that field to its **empty value** (see Completeness) — never guess.
+3. **Never hallucinate** divine genealogy, epithets, or mythological facts, and **never fill a field from
+   your own training-data recollection alone.** Every fact must be cross-checked against real, retrievable
+   sources before you write it. If a fact can't be verified from a real source, set that field to its
+   **empty value** (see Completeness) — never guess.
 4. `deity_type` must be **exactly one** of the three allowed enum values, copied character-for-character.
    A value not on the list makes the import fail.
 5. `name_ja` is the **kanji dedup key** the whole site matches on — it must be the deity's name in
@@ -62,19 +64,34 @@ as a research worksheet transcribed field-by-field into the in-place deity edito
 - **Call the god/goddess as kami.** Use term "kami" instead "god/goddess".
 
 ### Completeness — fill every field
-Always output **all 5 keys**, even when empty, so the shape is fixed and verifiable. Use the
+Always output **all 6 keys**, even when empty, so the shape is fixed and verifiable. Use the
 type-correct empty value — never `"-"`, never `""`:
-- **Text** empty (`canonical_lore`) → `null`
+- **Text** empty (`canonical_lore`, `mythic_sphere`) → `null`
 - **Array** empty (`titles`) → `[]` (it rejects `null` — use `[]`)
 - **Required fields are never empty**: `name_en`, `name_ja`, `deity_type`.
 
-**Key count** — verify the pasted JSON carries exactly these 5 keys:
+**Key count** — verify the pasted JSON carries exactly these 6 keys:
 
 | Object | Keys | Count |
 |---|---|---|
-| deity (top level) | name_en, name_ja, deity_type, titles, canonical_lore | **5** |
+| deity (top level) | name_en, name_ja, deity_type, titles, canonical_lore, mythic_sphere | **6** |
 
 ### Research method
+- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
+  starting point only. Every fact you output (genealogy, epithets, episodes, domains, syncretic
+  identifications, deity type) must be **confirmed against real, retrievable sources** during this task,
+  not recalled from training. If you cannot consult sources for a given fact, use the type-correct empty
+  value (see Completeness) rather than filling it from memory.
+- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
+  key fact across multiple sources (e.g. `ja.wikipedia.org` **and** a primary text or academic source).
+- **When sources disagree on lore, follow the majority.** Present the version that is **most common —
+  the one that appears in the most sources** — as the canonical reading in `canonical_lore`, and note the
+  variant within `canonical_lore` itself. Only if the count is genuinely tied, fall back to the
+  older/primary, Japanese-language text (Kojiki/Nihon Shoki).
+  - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
+    purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
+    produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
+    account the bulk of sources carry, and note the variant.
 - Research **Japanese-first**: prefer `ja.wikipedia.org`, the Kojiki (古事記) and Nihon Shoki (日本書紀),
   Engishiki, and Japanese academic / cultural sources; `en.wikipedia.org` is a secondary cross-check.
 - **Translate, don't transcribe**: gather in Japanese, then write the output in clear, natural English.
@@ -107,6 +124,10 @@ Required keys are marked **(req)**.
   roles into one string with a semicolon — split each role into its own entry. Empty → `[]`.
 - `canonical_lore` — the standard mythological narrative as flowing prose (see Research method), or
   `null` if genuinely unknown.
+- `mythic_sphere` — a concise Title Case phrase (2–5 words) labelling the deity's primary mythological
+  domain as it appears in the Kojiki/Nihon Shoki (e.g. `"Agriculture & Commerce"`,
+  `"Solar & Imperial"`, `"Storm & Seas"`, `"Death & Underworld"`). This is **not** a title epithet —
+  it is a category label for the card display. Use `null` if no clear domain can be sourced.
 
 ### Example (shape only — research your own values)
 
@@ -116,18 +137,20 @@ Required keys are marked **(req)**.
   "name_ja": "天宇受売命",
   "deity_type": "mythological",
   "titles": ["Goddess of Dawn and Mirth", "Patroness of the Performing Arts", "Bringer of Laughter and Revelry"],
-  "canonical_lore": "Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the kami who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the kami of the sun hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers."
+  "canonical_lore": "Ame-no-Uzume-no-Mikoto is the kami of dawn, mirth, and the performing arts. In the Kojiki and Nihon Shoki she is the kami who lured Amaterasu Ōmikami (天照大神) from the Heavenly Rock Cave (天岩戸): when the kami of the sun hid and plunged the world into darkness, Uzume overturned a tub, danced upon it in sacred frenzy, and so delighted the assembled kami that their laughter drew Amaterasu out to restore light. She later guided the heavenly grandson Ninigi during the descent to earth, confronting the earthly kami Sarutahiko (猿田彦), whom she afterward married — and her line is regarded as the ancestor of the Sarume clan of ritual dancers.",
+  "mythic_sphere": "Dawn & Performing Arts"
 }
 ```
 
 ### Pre-output validation checklist (run before you answer)
 - [ ] Output is a single valid JSON object inside one ```json block, nothing else.
-- [ ] All **5** keys are present; `titles` is `[]` (never `null`) when empty; `canonical_lore` is `null` when empty — never `"-"`/`""`.
+- [ ] All **6** keys are present; `titles` is `[]` (never `null`) when empty; `canonical_lore` and `mythic_sphere` are `null` when empty — never `"-"`/`""`.
 - [ ] `name_en` and `name_ja` are filled; `name_ja` is canonical **kanji**.
 - [ ] `deity_type` is exactly one of `"mythological"`, `"deified_human"`, `"syncretic"`.
 - [ ] `titles` are English domain/role epithets (sphere of patronage), one per entry — no romaji name-aliases, no kanji, no semicolon-joined roles.
 - [ ] `canonical_lore` is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
 - [ ] `canonical_lore` reads as a told myth, length scaled to the legend — not a one-line summary, not padded — see **Prose voice & length**.
+- [ ] **Every fact was cross-checked against real sources during this task** — nothing was written from memory alone; unverifiable fields use the type-correct empty value (`null` / `[]`).
 
 If the user names a deity that is ambiguous (several kami share a reading, or a name maps to multiple
 distinct deities), ask one brief clarifying question (which kanji / which tradition) before researching.

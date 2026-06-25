@@ -186,6 +186,7 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
           prayer_focus: detailRow.prayer_focus,
           best_time: detailRow.best_time,
           quote: detailRow.quote,
+          geographic_notes: detailRow.geographic_notes,
         }
       : null,
     festivals,
@@ -262,6 +263,7 @@ export function getDeityList(store: Store): DeityListItem[] {
       titles: d.titles ?? [],
       deity_type: d.deity_type,
       canonical_lore: d.canonical_lore,
+      mythic_sphere: d.mythic_sphere,
       shrines: links,
     };
   });

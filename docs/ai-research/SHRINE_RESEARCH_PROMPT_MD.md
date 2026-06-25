@@ -28,8 +28,9 @@ exactly, so each value can be copied straight into its field.
 2. Reproduce **every field**, even when empty. For an empty field write `—` (an em dash) on the value
    line so it's obvious nothing was found; never omit a label. (This is a form sheet for humans, not
    JSON — `—` here is fine.)
-3. **Never hallucinate** dates, ritual names, coordinates, founding years, or deity facts. If a fact
-   can't be verified from a real source, leave that field `—`.
+3. **Never hallucinate** dates, ritual names, coordinates, founding years, or deity facts, and **never fill
+   a field from your own training-data recollection alone.** Every fact must be cross-checked against real,
+   retrievable sources before you write it. If a fact can't be verified from a real source, leave that field `—`.
 4. `Region`, `Prefecture`, and every listed **Rank** / **Prayer Category** must be one of the exact
    values from the Controlled Vocabulary below — copied character-for-character. List only what applies;
    if unsure, leave it out.
@@ -45,8 +46,9 @@ exactly, so each value can be copied straight into its field.
 ### Prose voice & length
 Write the prose like a **told story**, storytelling voice, not an encyclopedia entry — narrative momentum, vivid turning points, a sense of place.
 - **Size to the field.** Lore and History / Description are the long-form fields (a focused paragraph,
-  more when the story warrants). Prayer focus, Best time, and festival Origin / Meaning / Ritual /
-  Prayer / Visitor notes are naturally shorter — a few vivid, specific sentences that paint the scene.
+  more when the story warrants). Prayer focus, Best time, Geographic notes, and festival Origin /
+  Meaning / Ritual / Prayer / Visitor notes are naturally shorter — a few vivid, specific sentences
+  that paint the scene.
 - **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and
   History you may separate distinct episodes with a **blank line** (press Enter in
   the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin /
@@ -60,6 +62,22 @@ Write the prose like a **told story**, storytelling voice, not an encyclopedia e
 - **Call the god/goddess as kami.** Use term "kami" instead "god/goddess".
 
 ### Research method
+- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
+  starting point only. Every fact you output (dates, coordinates, ritual names, deity genealogy, festival
+  details) must be **confirmed against real, retrievable sources** during this task, not recalled from
+  training. If you cannot consult sources for a given fact, leave its field `—` rather than filling it
+  from memory.
+- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
+  key fact across multiple sources (e.g. the official shrine site **and** `ja.wikipedia.org` or an
+  academic source).
+- **When sources disagree on lore or facts, follow the majority.** Present the version that is **most
+  common — the one that appears in the most sources** — as the canonical reading in the relevant field,
+  then flag the disagreement (and the minority/alternate version) under **Notes**. Only if the count is
+  genuinely tied, fall back to the older/primary, Japanese-language source.
+  - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
+    purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
+    produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
+    account the bulk of sources carry, and note the variant.
 - Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese
   academic / cultural articles and local-tourism sources; `en.wikipedia.org` is a secondary cross-check.
 - Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under
@@ -116,6 +134,9 @@ Prayer focus:
 
 Best time to visit:
 <prose — nature, atmosphere, and timing>
+
+Geographic notes:
+<prose — natural setting, surrounding landscape, terrain, and access notes — or — if unknown>
 
 Ranks (tick all that apply; if none, write "none"):
 [x] <Rank value>
@@ -213,6 +234,7 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 - At most 2 festivals are `pilgrimage`.
 - Festival `Start date` / `End date` are `YYYY-MM-DD` (current year as placeholder) for fixed-Gregorian events, `—` for lunar / shifting dates.
 - No invented facts; claims are covered by **Sources**.
+- **Every fact was cross-checked against real sources during this task** — nothing was written from memory alone; unverifiable fields are left `—` and source conflicts are flagged in **Notes**.
 - Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded.
 
 If the shrine name is ambiguous (several shrines share it), ask one brief clarifying question

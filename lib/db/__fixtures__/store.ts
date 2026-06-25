@@ -26,9 +26,9 @@ export function makeStore(): Store {
       { id: 2, name_en: "Victory", name_ja: "勝運", group_label: "Fortune & Success" },
     ],
     deities: [
-      { id: "deity-1", name_en: "Deity One", name_ja: "神一", titles: ["Lord of the Sun", "Divine Ancestor"], deity_type: "mythological", canonical_lore: "canon-1" },
-      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", titles: ["Guardian of the Sea"], deity_type: "mythological", canonical_lore: "canon-2" },
-      { id: "deity-3", name_en: "Deity Three", name_ja: "神三", titles: ["Unenshrined Spirit"], deity_type: "mythological", canonical_lore: "canon-3" },
+      { id: "deity-1", name_en: "Deity One", name_ja: "神一", titles: ["Lord of the Sun", "Divine Ancestor"], deity_type: "mythological", canonical_lore: "canon-1", mythic_sphere: null },
+      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", titles: ["Guardian of the Sea"], deity_type: "mythological", canonical_lore: "canon-2", mythic_sphere: null },
+      { id: "deity-3", name_en: "Deity Three", name_ja: "神三", titles: ["Unenshrined Spirit"], deity_type: "mythological", canonical_lore: "canon-3", mythic_sphere: null },
     ],
     shrines: [
       { id: "shrine-a", slug: "a", name_en: "Shrine A", name_ja: "甲社", prefecture_id: 1, region_id: 1, city: "Saitama", address: "addr-a", coordinates: { lat: 35.9, lng: 139.6 }, image_urls: null },
@@ -50,8 +50,8 @@ export function makeStore(): Store {
       { shrine_id: "shrine-b", category_id: 1 },
     ],
     shrine_details: [
-      { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a" },
-      { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b" },
+      { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a", geographic_notes: null },
+      { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b", geographic_notes: null },
     ],
     festivals: [
       { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },

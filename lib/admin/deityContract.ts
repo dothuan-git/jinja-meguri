@@ -10,6 +10,7 @@ export const DeityInputSchema = z.object({
   deity_type: z.enum(DEITY_TYPES),
   titles: z.array(z.string()).nullable().optional(),
   canonical_lore: z.string().nullable().optional(),
+  mythic_sphere: z.string().nullable().optional(),
 });
 
 export type DeityInput = z.infer<typeof DeityInputSchema>;

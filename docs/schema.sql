@@ -50,7 +50,8 @@ CREATE TABLE deities (
     titles         text[],                       -- domain/role epithets (sphere of patronage)
     deity_type     text NOT NULL
         CHECK (deity_type IN ('mythological','deified_human','syncretic')),
-    canonical_lore text                          -- Kojiki/Nihon Shoki fallback narrative
+    canonical_lore text,                         -- Kojiki/Nihon Shoki fallback narrative
+    mythic_sphere  text                          -- free-text domain label, e.g. "Agriculture & Commerce"
 );
 
 -- ------------------------------------------------------------
@@ -114,12 +115,13 @@ CREATE INDEX idx_shrine_prayer_categories_cat ON shrine_prayer_categories(catego
 -- SHRINE DETAILS (1:1 topical prose)
 -- ------------------------------------------------------------
 CREATE TABLE shrine_details (
-    shrine_id    uuid    PRIMARY KEY REFERENCES shrines(id) ON DELETE CASCADE,
-    history      text,    -- founding, legendary events, syncretic layers
-    description  text,    -- significance + visitor experience (why visit)
-    prayer_focus text,    -- prayer purposes w/ JP terms
-    best_time    text,    -- nature / atmosphere / timing
-    quote        text     -- short 1-2 sentence quote about the shrine
+    shrine_id         uuid    PRIMARY KEY REFERENCES shrines(id) ON DELETE CASCADE,
+    history           text,    -- founding, legendary events, syncretic layers
+    description       text,    -- significance + visitor experience (why visit)
+    prayer_focus      text,    -- prayer purposes w/ JP terms
+    best_time         text,    -- nature / atmosphere / timing
+    quote             text,    -- short 1-2 sentence quote about the shrine
+    geographic_notes  text     -- natural setting, landscape, terrain, access notes
 );
 
 -- ------------------------------------------------------------

@@ -23,6 +23,7 @@ export function shrineDetailToInput(detail: ShrineDetail): ShrineInput {
       prayer_focus: detail.details?.prayer_focus,
       best_time: detail.details?.best_time,
       quote: detail.details?.quote,
+      geographic_notes: detail.details?.geographic_notes,
     },
     ranks: detail.ranks.map((r) => r.name_en),
     prayer_categories: detail.categories.map((c) => c.name_en),
@@ -65,7 +66,7 @@ export function emptyShrineInput(): ShrineInput {
     address: null,
     coordinates: null,
     image_urls: [],
-    details: { history: null, description: null, prayer_focus: null, best_time: null, quote: null },
+    details: { history: null, description: null, prayer_focus: null, best_time: null, quote: null, geographic_notes: null },
     ranks: [],
     prayer_categories: [],
     deities: [{ name_ja: "", is_primary: true, sort_order: 0, regional_lore: null }],
@@ -102,6 +103,7 @@ export function buildEditCatalogs(store: Store): EditCatalogs {
         deity_type: d.deity_type,
         titles: d.titles ?? [],
         canonical_lore: d.canonical_lore,
+        mythic_sphere: d.mythic_sphere,
       })),
   };
 }

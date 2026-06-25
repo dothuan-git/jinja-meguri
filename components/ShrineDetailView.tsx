@@ -97,6 +97,7 @@ function toView(shrine: ShrineDetail) {
     quote: shrine.details?.quote ?? "",
     about: shrine.details?.history ?? "",
     bestTime: shrine.details?.best_time ?? "",
+    geographicNotes: shrine.details?.geographic_notes ?? "",
     primaryDeity: {
       name: primary?.name_en ?? "",
       japaneseName: primary?.name_ja ?? "",
@@ -1034,12 +1035,20 @@ function PageBody({
                 </h3>
               </div>
 
-              {!creating && (
+              {(editing || shrine.geographicNotes) && (
                 <div className="space-y-2 select-text">
                   <span className={`${typo.fieldLabel} block select-none`}>GEOGRAPHIC LANDMARKS</span>
-                  <p className={typo.prose}>
-                    Nesting in the old-growth forests of {shrine.location}, {shrine.prefecture} Prefecture ({shrine.region} Region). Accessible via municipal transportation lines or national scenic routes. Recommended morning arrival for a peaceful and crisp mountain climate experience.
-                  </p>
+                  <EditableProse
+                    path="details.geographic_notes"
+                    rows={4}
+                    ariaLabel="Geographic landmarks / natural setting"
+                    placeholder="Natural setting, surrounding landscape, terrain, access notes…"
+                    editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
+                  >
+                    <p className={typo.prose}>
+                      {shrine.geographicNotes}
+                    </p>
+                  </EditableProse>
                 </div>
               )}
 

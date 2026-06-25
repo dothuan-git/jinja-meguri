@@ -28,8 +28,9 @@ exactly, so each value can be copied straight into its field.
 2. Reproduce **every field**, even when empty. For an empty field write `—` (an em dash) on the value
    line so it's obvious nothing was found; never omit a label. (This is a form sheet for humans —
    `—` here is fine; in the editor an empty optional field just stays blank.)
-3. **Never hallucinate** divine genealogy, epithets, or mythological facts. If a fact can't be verified
-   from a real source, leave that field `—`.
+3. **Never hallucinate** divine genealogy, epithets, or mythological facts, and **never fill a field from
+   your own training-data recollection alone.** Every fact must be cross-checked against real, retrievable
+   sources before you write it. If a fact can't be verified from a real source, leave that field `—`.
 4. **Deity type** must be one of the exact values `mythological` / `deified_human` / `syncretic`.
 5. **Canonical lore** is **full flowing prose**, not bullet points (see **Prose voice & length**).
    Write in clear, natural English but **keep Japanese terms inline with kanji/kana** (e.g. "the spirit
@@ -53,6 +54,21 @@ exactly, so each value can be copied straight into its field.
 - **Call the god/goddess as kami.** Use term "kami" instead "god/goddess"
 
 ### Research method
+- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
+  starting point only. Every fact you output (genealogy, epithets, episodes, domains, syncretic
+  identifications, deity type) must be **confirmed against real, retrievable sources** during this task,
+  not recalled from training. If you cannot consult sources for a given fact, leave its field `—` rather
+  than filling it from memory.
+- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
+  key fact across multiple sources (e.g. `ja.wikipedia.org` **and** a primary text or academic source).
+- **When sources disagree on lore, follow the majority.** Present the version that is **most common —
+  the one that appears in the most sources** — as the canonical reading in `canonical_lore`, then flag
+  the disagreement (and the minority/alternate version) under **Notes**. Only if the count is genuinely
+  tied, fall back to the older/primary, Japanese-language text (Kojiki/Nihon Shoki).
+  - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
+    purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
+    produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
+    account the bulk of sources carry, and note the variant.
 - Research **Japanese-first**: prefer `ja.wikipedia.org`, the Kojiki (古事記) and Nihon Shoki (日本書紀),
   Engishiki, and Japanese academic / cultural sources; `en.wikipedia.org` is a secondary cross-check.
 - **Canonical lore** is the **standard, shrine-independent** narrative — the deity's place in the
@@ -80,6 +96,7 @@ Canonical deity
 Name (English): <romaji name, macrons where standard>
 Name (kanji): <kanji — the global dedup key>
 Deity type: <mythological | deified_human | syncretic>
+Mythic sphere: <concise 2–5 word Title Case domain label, e.g. "Agriculture & Commerce" — or — if unknown>
 
 Titles (one English domain epithet per line — the deity's roles / sphere of patronage; no romaji names, no kanji):
 <English domain epithet>
@@ -103,6 +120,10 @@ facts — or —>
   patronage*), **one per line**, in natural Title Case (e.g. "Goddess of the Sun", "Divine Ancestor of
   the Imperial Family"). Not romaji name-aliases and not kanji; don't join several roles with a semicolon
   — split them onto separate lines. Leave as "none" if there are none.
+- **Mythic sphere** — a concise Title Case phrase (2–5 words) labelling the deity's primary mythological
+  domain as it appears in the Kojiki/Nihon Shoki (e.g. "Agriculture & Commerce", "Solar & Imperial",
+  "Storm & Seas", "Death & Underworld"). **Not** a title epithet — it's a category label for the card
+  display. Use `—` if no clear domain can be sourced.
 - **Canonical lore** — the standard mythological narrative as flowing prose, or `—` if genuinely unknown.
 
 ### Example (shape only — research your own values)
@@ -114,6 +135,7 @@ Canonical deity
 Name (English): Ame-no-Uzume
 Name (kanji): 天宇受売命
 Deity type: mythological
+Mythic sphere: Dawn & Performing Arts
 
 Titles:
 Goddess of Dawn and Mirth
@@ -130,9 +152,12 @@ Notes:
 ### Before you answer
 - **Name (English)** and **Name (kanji)** are both filled; the kanji is canonical.
 - **Deity type** is exactly one of the three allowed values.
+- **Mythic sphere** is a concise 2–5 word Title Case domain label, or `—` if unknown.
 - **Titles** are English domain/role epithets (sphere of patronage), one per line — no romaji name-aliases, no kanji, no semicolon-joined roles.
 - **Canonical lore** is flowing prose with Japanese terms paired to kanji/kana; no invented genealogy or facts.
 - **Canonical lore** reads as a told myth, length scaled to the legend — not a one-line summary, not padded.
+- **Every fact was cross-checked against real sources during this task** — nothing was written from memory alone;
+  unverifiable fields are left `—` and source conflicts are flagged in **Notes**.
 
 If the deity name is ambiguous (several kami share a reading, or a name maps to multiple distinct
 deities), ask one brief clarifying question (which kanji / which tradition) before researching.

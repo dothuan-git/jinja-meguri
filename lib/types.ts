@@ -30,6 +30,7 @@ export interface Deity {
   titles: string[] | null;
   deity_type: string;
   canonical_lore: string | null;
+  mythic_sphere: string | null;
 }
 export interface Coordinates {
   lat: number;
@@ -69,6 +70,7 @@ export interface ShrineDetailRow {
   prayer_focus: string | null;
   best_time: string | null;
   quote: string | null;
+  geographic_notes: string | null;
 }
 export interface FestivalRow {
   id: string;
@@ -131,6 +133,7 @@ export interface EditCatalogs {
     deity_type: string;
     titles: string[];
     canonical_lore: string | null;
+    mythic_sphere: string | null;
   }[];
 }
 
@@ -208,6 +211,7 @@ export interface ShrineDetail extends ShrineCard {
     prayer_focus: string | null;
     best_time: string | null;
     quote: string | null;
+    geographic_notes: string | null;
   } | null;
   festivals: FestivalView[];
   sources: SourceRow[];
@@ -238,6 +242,7 @@ export interface DeityListItem {
   titles: string[];
   deity_type: string;
   canonical_lore: string | null;
+  mythic_sphere: string | null;
   shrines: DeityShrineLink[];
 }
 
