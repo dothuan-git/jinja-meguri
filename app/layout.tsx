@@ -6,6 +6,8 @@ import AmbientByRoute from "@/components/AmbientByRoute";
 import { ToastProvider } from "@/components/ui/Toast";
 import { getCurrentUser } from "@/lib/auth/server";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Jinja Meguri — 神社巡り",
   description:
