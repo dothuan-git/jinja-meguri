@@ -288,7 +288,7 @@ export default function DeityCardBody({
                   className={`${inputBase} text-xs font-serif font-bold text-moss-light w-full mt-1`}
                 />
               ) : (
-                <span className="text-xs font-serif font-bold text-moss-light leading-none mt-1 block">
+                <span className="text-xs font-serif font-bold text-moss-light leading-snug mt-1 block">
                   {mythicSphere || "—"}
                 </span>
               )}
