@@ -46,8 +46,9 @@ exactly, so each value can be copied straight into its field.
 ### Prose voice & length
 Write the prose like a **told story**, storytelling voice, not an encyclopedia entry — narrative momentum, vivid turning points, a sense of place.
 - **Size to the field.** Lore and History / Description are the long-form fields (a focused paragraph,
-  more when the story warrants). Prayer focus, Best time, and festival Origin / Meaning / Ritual /
-  Prayer / Visitor notes are naturally shorter — a few vivid, specific sentences that paint the scene.
+  more when the story warrants). Prayer focus, Best time, Geographic notes, and festival Origin /
+  Meaning / Ritual / Prayer / Visitor notes are naturally shorter — a few vivid, specific sentences
+  that paint the scene.
 - **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and
   History you may separate distinct episodes with a **blank line** (press Enter in
   the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin /
@@ -133,6 +134,9 @@ Prayer focus:
 
 Best time to visit:
 <prose — nature, atmosphere, and timing>
+
+Geographic notes:
+<prose — natural setting, surrounding landscape, terrain, and access notes — or — if unknown>
 
 Ranks (tick all that apply; if none, write "none"):
 [x] <Rank value>

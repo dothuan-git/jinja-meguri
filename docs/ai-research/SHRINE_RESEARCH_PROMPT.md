@@ -85,7 +85,7 @@ Use the type-correct empty value — never `"-"`, never `""`:
 | Object | Keys | Count |
 |---|---|---|
 | top level | slug, name_en, name_ja, region, prefecture, city, address, coordinates, image_urls, details, ranks, prayer_categories, deities, festivals, sources | **15** |
-| `details` | history, description, prayer_focus, best_time, quote | **5** |
+| `details` | history, description, prayer_focus, best_time, quote, geographic_notes | **6** |
 | each `deities[]` | name_ja, is_primary, sort_order, regional_lore, canonical | **5** |
 | each `canonical` | name_en, name_ja, deity_type, titles | **4** |
 | each `festivals[]` | name_en, name_ja, time_prose, start_date, end_date, origin, meaning, ritual, prayer, festival_type, visitor_notes, occurrences | **12** |
@@ -152,6 +152,9 @@ Top level:
   - `best_time` — season / atmosphere / timing advice.
   - `quote` — a short (1–2 sentence) evocative epigraph capturing the shrine's spirit; shown as
     the detail-view quote. Keep it tight and vivid, not a summary.
+  - `geographic_notes` — natural setting, surrounding landscape, terrain, and access notes shown
+    in the Transit & Geography section. A few vivid sentences describing the shrine's physical
+    environment (forest, mountain, coastal, urban, etc.) and how to reach it.
 - `ranks` — array of strings, each from **Ranks** below. Include **all** that apply (a shrine can hold
   several across the classical and modern systems). Omit the array if none apply.
 - `prayer_categories` — array of strings, each from **Prayer Categories** below ("strong for" facet).
