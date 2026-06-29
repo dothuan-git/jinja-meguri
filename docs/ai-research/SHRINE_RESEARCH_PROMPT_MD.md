@@ -38,28 +38,22 @@ exactly, so each value can be copied straight into its field.
    **Prose voice & length**). Write in clear, natural English but **keep Japanese terms inline with
    kanji/kana** (e.g. "the first Day of the Horse (初午)"). Only surface Japanese where it carries
    meaning — names, key terms, quotes.
-6. Every substantive claim should be backed by a real, working URL under **Sources**.
+6. Every substantive claim should be backed by a real, working URL under **Sources**. If multiple pages from the same site were used, consolidate them into a **single entry** — list the site once with an English title; do not repeat the same domain across multiple numbered lines.
 7. Flag anything I should or need my decision know under **Notes** before compile information: 
    ambiguous or conflicting sources, judgment calls you made, low-confidence fields, or anything else 
    worth double-checking.
 
 ### Prose voice & length
-Write the prose like a **told story**, storytelling voice, not an encyclopedia entry — narrative momentum, vivid turning points, a sense of place.
-- **Size to the field.** Lore and History / Description are the long-form fields (a focused paragraph,
-  more when the story warrants). Prayer focus, Best time, Geographic notes, and festival Origin /
-  Meaning / Ritual / Prayer / Visitor notes are naturally shorter — a few vivid, specific sentences
-  that paint the scene.
-- **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and
-  History you may separate distinct episodes with a **blank line** (press Enter in
-  the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin /
-  Meaning / Ritual / Prayer / Visitor notes) to a **single paragraph** — breaks there are not rendered.
-- **Tight, not thin.** Cut *filler* — hedging, repetition, throat-clearing, meta-commentary ("this
-  shrine is notable for…") — **not** story.
-- **Don't over-compress.** Never flatten a myth or a festival into a one-line factual summary; that
-  strips the story feeling this site exists to convey.
-- **Vivid retelling, never embellishment.** Don't add drama, invented dialogue, or detail beyond the
-  sources — concision and length alike must never become fabrication.
-- **Call the god/goddess as kami.** Use term "kami" instead "god/goddess".
+Write each prose field like a **told story** — the voice of someone recounting the tale aloud, not an encyclopedia summarizing it. Favor a clear narrative sequence: this happened, then this, and here is how it turned. Prefer declarative sentences with momentum over long compound or complex sentences that stack several clauses into one breath. Vary sentence length for rhythm, but when a sentence turns heavy, break it in two.
+
+- **Size to the field.** Regional lore and History are the long-form fields (a focused paragraph, more when the story warrants). Prayer focus, Best time to visit, and Geographic notes must be **concise** — direct and specific, 2–3 sentences at most. Festival Origin / Meaning / Ritual / Prayer / Visitor notes sit in between — a few vivid sentences that paint the scene, never padded.
+- **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and History you may separate distinct episodes with a **blank line** (press Enter in the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin / Meaning / Ritual / Prayer / Visitor notes) to a **single paragraph** — breaks there are not rendered.
+- **Explain events, don't just name them.** Wherever a myth, founding story, or festival has a defining moment — a conflict, a feat, a transformation, a key relationship — give the reader enough to understand what was at stake and how it resolved, not just a label for it.
+- **Introduce named characters with their role.** The first time any kami or historical figure is named in a prose field, append a brief role identifier — e.g. "Takemikazuchi (建御雷之男神), kami of thunder" or "Fujiwara no Nagate (藤原永手), court minister." Subsequent mentions need no elaboration.
+- **Cut filler ruthlessly.** Remove hedging ("it is said that…"), repetition, throat-clearing, ornamental adjectives, and meta-commentary ("this shrine is notable for…"). The test for every sentence: does it add something the reader needs? If it only adds weight, cut it.
+- **Don't over-compress.** Never flatten a myth or festival into a one-line factual summary; that strips the storytelling this site exists to convey.
+- **Vivid retelling, never embellishment.** Don't add drama, invented dialogue, or detail beyond the sources. The hard limits hold throughout — no invented detail may enter the text regardless of how it would compress or expand the narrative.
+- **Call the kami as kami.** Use "kami" instead of "god" or "goddess."
 
 ### Research method
 - **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
@@ -70,10 +64,7 @@ Write the prose like a **told story**, storytelling voice, not an encyclopedia e
 - **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
   key fact across multiple sources (e.g. the official shrine site **and** `ja.wikipedia.org` or an
   academic source).
-- **When sources disagree on lore or facts, follow the majority.** Present the version that is **most
-  common — the one that appears in the most sources** — as the canonical reading in the relevant field,
-  then flag the disagreement (and the minority/alternate version) under **Notes**. Only if the count is
-  genuinely tied, fall back to the older/primary, Japanese-language source.
+- **When sources disagree on lore or facts, follow the majority** — lead with the most common version in the relevant field, flag the disagreement and minority reading under **Notes**. If genuinely tied, defer to the older Japanese-language source.
   - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
     purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
     produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
@@ -83,9 +74,7 @@ Write the prose like a **told story**, storytelling voice, not an encyclopedia e
 - Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under
   **Regional lore** (see **Lore guidance** below). The canonical narrative is added beforehand on the
   deity itself, so this sheet never re-gathers it.
-- Festivals: include **only major / uniquely significant** ones (skip daily/monthly rites). Pick `Type`
-  = `pilgrimage` only for participatory pilgrimage festivals (**max 2 per shrine**), `spectacle` for
-  visible ceremonies/processions, otherwise leave `—`.
+- Festivals: include **all major / uniquely significant** ones (skip daily/monthly rites). `spectacle` — visible ceremonies and processions — has **no cap**; collect every one that qualifies. `pilgrimage` — participatory pilgrimage festivals — is capped at **max 2 per shrine**. Leave `Type` = `—` if neither applies.
 - Festival dates: for events with **fixed Gregorian dates** (e.g. "15 May every year"), fill
   `Start date` and `End date` as `YYYY-MM-DD` using the current year as a placeholder — only the
   month + day carry meaning. Leave both `—` for lunar, Nth-weekday, or otherwise shifting dates;
@@ -165,7 +154,7 @@ Regional lore:
 Festival 1
 Name (English): <name>
 Name (Japanese): <kanji, or —>
-Type: <spectacle | pilgrimage | —>
+Type: <spectacle (no limit) | pilgrimage (max 2 per shrine) | —>
 Time (display): <human-readable timing, e.g. "First Day of the Horse in February">
 Start date: <YYYY-MM-DD for fixed Gregorian, — for lunar/shifting>
 End date: <YYYY-MM-DD for fixed Gregorian multi-day, — for single-day/lunar/shifting>
@@ -185,11 +174,11 @@ Prayer:
 Visitor notes:
 <prose — practical notes / guidance for visitors>
 
-<repeat "Festival N" for each; omit the whole section if none>
+<repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none>
 
-Sources
-1. URL: <url> — Title: <title>
-2. URL: <url> — Title: <title>
+Sources (one entry per site — consolidate multiple pages from the same domain into one):
+1. URL: <url> — Title: <English site title>
+2. URL: <url> — Title: <English site title>
 
 Notes:
 <anything worth flagging — ambiguous/conflicting sources, judgment calls, low-confidence
@@ -225,17 +214,6 @@ Note: suffixes like *Jingū*, *Taisha*, *Gū* in a shrine's name are **not** ran
 `Business Prosperity` · `Wealth` · `Bountiful Harvest` ·
 `Warding off Evil` · `Purification` · `Disaster Prevention` · `Traffic Safety` · `Maritime Safety` ·
 `Academic Success` · `Exam Success` · `National Peace` · `National Protection`
-
-### Before you answer
-- One deity is marked **Primary: Yes**, all others **No**.
-- Deity **Titles** are English domain/role epithets (sphere of patronage), one per line — no romaji name-aliases, no kanji; "none" if there are none.
-- Region and Prefecture are on the lists and consistent (prefecture belongs to its region).
-- Every Rank / Prayer Category line is spelled exactly as listed.
-- At most 2 festivals are `pilgrimage`.
-- Festival `Start date` / `End date` are `YYYY-MM-DD` (current year as placeholder) for fixed-Gregorian events, `—` for lunar / shifting dates.
-- No invented facts; claims are covered by **Sources**.
-- **Every fact was cross-checked against real sources during this task** — nothing was written from memory alone; unverifiable fields are left `—` and source conflicts are flagged in **Notes**.
-- Prose reads as told story, length scaled to the material per field — not one-line summaries, not padded.
 
 If the shrine name is ambiguous (several shrines share it), ask one brief clarifying question
 (which prefecture/city) before researching.
