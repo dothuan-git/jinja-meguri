@@ -108,6 +108,14 @@ Address: <full address; Japanese in parentheses ok>
 Latitude: <decimal, e.g. 34.9671>
 Longitude: <decimal, e.g. 135.7727>
 
+Ranks (tick all that apply; if none, write "none"):
+[x] <Rank value>
+[x] <Rank value>
+
+Prayer Categories (tick all that apply):
+[x] <Category value>
+[x] <Category value>
+
 Details
 Quote:
 <short 1–2 sentence evocative epigraph capturing the shrine's spirit, or —>
@@ -126,14 +134,6 @@ Best time to visit:
 
 Geographic notes:
 <prose — natural setting, surrounding landscape, terrain, and access notes — or — if unknown>
-
-Ranks (tick all that apply; if none, write "none"):
-[x] <Rank value>
-[x] <Rank value>
-
-Prayer Categories (tick all that apply):
-[x] <Category value>
-[x] <Category value>
 
 Deity 1
 Primary: Yes
