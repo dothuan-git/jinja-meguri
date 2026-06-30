@@ -18,8 +18,10 @@ import {
   Map,
   MapPin,
   Pencil,
+  Plus,
   Sparkles,
   Trash2,
+  X,
 } from "lucide-react";
 import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
 import { useShrineMarks } from "@/components/user/useShrineMark";
@@ -270,6 +272,28 @@ function PageBody({
   // Locate the deity in the draft by its canonical kanji (the dedup key) — never the
   // displayed name, which may be the shrine's alternate (enshrined) name.
   const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.canonicalNameJa) : -1;
+
+  // Draft-based companion management for update/edit mode.
+  const draftDeities: ShrineInput["deities"] = (editing && !creating && edit)
+    ? ((edit.getValue("deities") as ShrineInput["deities"]) ?? [])
+    : [];
+  const draftCompanionsWithIdx = draftDeities
+    .map((d, i) => ({ d, globalIdx: i }))
+    .filter(({ d }) => !d.is_primary);
+  const deityOptions = edit?.catalogs.deities ?? [];
+  const addDraftCompanion = () =>
+    edit!.setValue("deities", [
+      ...draftDeities,
+      { name_ja: "", is_primary: false, sort_order: draftDeities.length, regional_lore: null, alter_name_en: null, alter_name_ja: null },
+    ]);
+  const removeDraftDeityAt = (globalIdx: number) =>
+    edit!.setValue("deities", draftDeities.filter((_, i) => i !== globalIdx));
+  const selectCompanionDeity = (globalIdx: number, deityId: string) => {
+    const picked = deityOptions.find((o) => o.id === deityId);
+    edit!.setValue("deities", draftDeities.map((d, i) =>
+      i === globalIdx ? { ...d, name_ja: picked?.name_ja ?? "" } : d
+    ));
+  };
 
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -765,99 +789,168 @@ function PageBody({
                   )}
                 </div>
 
-                {/* Redesigned Secondary/Companion Deities Section based on user specification */}
-                {shrine.secondaryDeities && shrine.secondaryDeities.length > 0 && (
+                {/* Secondary/Companion Deities Section */}
+                {(shrine.secondaryDeities.length > 0 || (editing && !creating)) && (
                   <div className="pt-1 md:pt-2 space-y-4">
                     <span className="text-[9px] font-mono tracking-widest text-stone/40 uppercase font-bold bg-stone/[0.02] border border-stone/10 px-2.5 py-0.5 rounded-full inline-block select-none">
                       Companion Spirits (配祀神)
                     </span>
 
                     <div className="bg-stone/[0.015] border border-stone/5 rounded-xl p-5 md:p-6 space-y-5">
-                      {/* Name and titles aligned with main deity but significantly smaller */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {shrine.secondaryDeities.map((deity, idx) => {
-                          const di = edit ? edit.findDeityIndex(deity.canonicalNameJa) : -1;
-                          return (
-                          <div key={deity.canonicalNameJa + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
-                            <div className="space-y-1">
-                              <span className={`${typo.fieldLabel} block select-none`}>
-                                COMPANION SPIRIT
-                              </span>
-                              <EditableText
-                                path={`deities.${di}.alter_name_en`}
-                                ariaLabel={`Companion deity enshrined (alternate) romaji name for ${deity.canonicalName}`}
-                                placeholder={deity.canonicalName || "Enshrined name (romaji)"}
-                                editClassName="text-sm font-serif font-black text-stone leading-tight w-full"
-                              >
-                                <h4 className="text-sm font-serif font-black text-stone leading-tight">
-                                  {deity.name}
-                                </h4>
-                              </EditableText>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <EditableText
-                                  path={`deities.${di}.alter_name_ja`}
-                                  ariaLabel={`Companion deity enshrined (alternate) kanji name for ${deity.canonicalName}`}
-                                  placeholder={deity.canonicalNameJa || "別名 (kanji)"}
-                                  editClassName="text-[10px] font-serif text-moss-light"
-                                >
-                                  <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                    {deity.japaneseName}
-                                  </span>
-                                </EditableText>
-                                <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
-                                  {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
-                                </span>
-                              </div>
-                              {(editing || deity.hasAlter) && (
-                                <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
-                                  Enshrined form of {deity.canonicalName}
-                                  {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Companion Deity Epithets in smaller subtle text */}
-                            {deity.titles && deity.titles.length > 0 && (
-                              <div className="pt-1.5 border-t border-stone/5">
-                                <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
-                                  {deity.titles.slice(0, 2).map((title, tIdx) => (
-                                    <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
-                                      <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
-                                      <span>{title}</span>
+                      {/* Cards grid — driven by draft in edit mode, view model in read mode */}
+                      {(editing && !creating ? draftCompanionsWithIdx.length > 0 : shrine.secondaryDeities.length > 0) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {editing && !creating ? (
+                            draftCompanionsWithIdx.map(({ d, globalIdx }) => {
+                              const catalogDeity = d.name_ja ? deityOptions.find((o) => o.name_ja === d.name_ja) : undefined;
+                              const selectValue = catalogDeity?.id ?? "";
+                              return (
+                                <div key={globalIdx} className="space-y-2.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className={`${typo.fieldLabel} select-none`}>COMPANION SPIRIT</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeDraftDeityAt(globalIdx)}
+                                      className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-red-500 hover:text-red-700"
+                                    >
+                                      <X size={12} /> Remove
+                                    </button>
+                                  </div>
+                                  <select
+                                    value={selectValue}
+                                    onChange={(e) => selectCompanionDeity(globalIdx, e.target.value)}
+                                    aria-label={`Companion deity ${globalIdx + 1}`}
+                                    className="bg-torii/[0.04] outline-none rounded-sm border border-dashed border-torii/40 focus:border-torii px-1.5 py-1 text-xs w-full"
+                                  >
+                                    <option value="">— select a deity —</option>
+                                    {deityOptions.map((o) => (
+                                      <option key={o.id} value={o.id}>
+                                        {o.name_en}{o.name_ja ? ` (${o.name_ja})` : ""}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {d.name_ja && (
+                                    <div className="space-y-1.5">
+                                      {catalogDeity && (
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                            {catalogDeity.name_ja}
+                                          </span>
+                                          <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(catalogDeity.deity_type)}`}>
+                                            {DEITY_TYPE_LABEL[catalogDeity.deity_type] ?? catalogDeity.deity_type}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <input
+                                        value={edit!.getField(`deities.${globalIdx}.alter_name_en`)}
+                                        onChange={(e) => edit!.setField(`deities.${globalIdx}.alter_name_en`, e.target.value)}
+                                        placeholder={catalogDeity?.name_en ?? "Enshrined name (romaji)"}
+                                        aria-label="Companion deity enshrined name (romaji)"
+                                        className="bg-torii/[0.04] outline-none rounded-sm border-b border-dashed border-torii/40 focus:border-torii px-1 text-sm w-full placeholder:text-stone/30"
+                                      />
+                                      <input
+                                        value={edit!.getField(`deities.${globalIdx}.alter_name_ja`)}
+                                        onChange={(e) => edit!.setField(`deities.${globalIdx}.alter_name_ja`, e.target.value)}
+                                        placeholder={catalogDeity?.name_ja ?? "別名 (kanji)"}
+                                        aria-label="Companion deity enshrined name (kanji)"
+                                        className="bg-torii/[0.04] outline-none rounded-sm border-b border-dashed border-torii/40 focus:border-torii px-1 text-xs font-serif w-full placeholder:text-stone/30"
+                                      />
+                                      {catalogDeity?.titles && catalogDeity.titles.length > 0 && (
+                                        <div className="pt-1.5 border-t border-stone/5">
+                                          <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
+                                            {catalogDeity.titles.slice(0, 2).map((title, tIdx) => (
+                                              <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
+                                                <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
+                                                <span>{title}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  ))}
+                                  )}
                                 </div>
+                              );
+                            })
+                          ) : (
+                            shrine.secondaryDeities.map((deity, idx) => (
+                              <div key={deity.canonicalNameJa + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
+                                <div className="space-y-1">
+                                  <span className={`${typo.fieldLabel} block select-none`}>
+                                    COMPANION SPIRIT
+                                  </span>
+                                  <h4 className="text-sm font-serif font-black text-stone leading-tight">
+                                    {deity.name}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                      {deity.japaneseName}
+                                    </span>
+                                    <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
+                                      {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
+                                    </span>
+                                  </div>
+                                  {deity.hasAlter && (
+                                    <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
+                                      Enshrined form of {deity.canonicalName}
+                                      {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
+                                    </p>
+                                  )}
+                                </div>
+                                {deity.titles && deity.titles.length > 0 && (
+                                  <div className="pt-1.5 border-t border-stone/5">
+                                    <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
+                                      {deity.titles.slice(0, 2).map((title, tIdx) => (
+                                        <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
+                                          <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
+                                          <span>{title}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Unified Single Lore for all Companion Deities */}
-                      {editing ? (
-                        <div className="pt-4 border-t border-dashed border-stone/10 space-y-3">
-                          <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
-                          {shrine.secondaryDeities.map((d) => {
-                            const di = edit!.findDeityIndex(d.canonicalNameJa);
-                            if (di < 0) return null;
-                            return (
-                              <div key={d.canonicalNameJa} className="space-y-1">
-                                <span className="text-[10px] font-serif text-stone/60 block">
-                                  {d.name}{d.japaneseName ? ` (${d.japaneseName})` : ""}
-                                </span>
-                                <textarea
-                                  value={edit!.getField(`deities.${di}.regional_lore`)}
-                                  onChange={(e) => edit!.setField(`deities.${di}.regional_lore`, e.target.value)}
-                                  rows={4}
-                                  placeholder="Regional lore for this companion deity…"
-                                  aria-label={`Regional lore for ${d.name}`}
-                                  className="block w-full bg-torii/[0.03] outline-none border border-dashed border-torii/30 focus:border-torii rounded-md p-2 resize-y text-xs md:text-sm font-quote italic text-stone/75"
-                                />
-                              </div>
-                            );
-                          })}
+                            ))
+                          )}
                         </div>
+                      )}
+
+                      {/* Add companion button — only in edit mode */}
+                      {editing && !creating && (
+                        <button
+                          type="button"
+                          onClick={addDraftCompanion}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-torii/40 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider text-torii transition-colors hover:bg-torii/5"
+                        >
+                          <Plus size={13} /> Add companion deity
+                        </button>
+                      )}
+
+                      {/* Lore section */}
+                      {editing && !creating ? (
+                        draftCompanionsWithIdx.length > 0 && (
+                          <div className="pt-4 border-t border-dashed border-stone/10 space-y-3">
+                            <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
+                            {draftCompanionsWithIdx.map(({ d, globalIdx }) => {
+                              const label = deityOptions.find((o) => o.name_ja === d.name_ja)?.name_en ?? d.name_ja;
+                              return (
+                                <div key={globalIdx} className="space-y-1">
+                                  <span className="text-[10px] font-serif text-stone/60 block">
+                                    {label}{d.name_ja ? ` (${d.name_ja})` : ""}
+                                  </span>
+                                  <textarea
+                                    value={edit!.getField(`deities.${globalIdx}.regional_lore`)}
+                                    onChange={(e) => edit!.setField(`deities.${globalIdx}.regional_lore`, e.target.value)}
+                                    rows={4}
+                                    placeholder="Regional lore for this companion deity…"
+                                    aria-label={`Regional lore for ${label}`}
+                                    className="block w-full bg-torii/[0.03] outline-none border border-dashed border-torii/30 focus:border-torii rounded-md p-2 resize-y text-xs md:text-sm font-quote italic text-stone/75"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )
                       ) : (
                         shrine.secondaryDeities.some(d => d.regionalLore) && (
                           <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
