@@ -44,7 +44,7 @@ export default function ShrineEditProvider(props: Props) {
 
 function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, children }: Props) {
   const [draft, setDraft] = useState<ShrineInput>(initialData);
-  const { save, saving, error } = useShrineSave({ mode, onSaved });
+  const { save, saving } = useShrineSave({ mode, onSaved });
   const creating = mode === "create";
   // Slug is immutable when editing an existing shrine, editable when creating.
   const slugLocked = !creating;
@@ -85,11 +85,6 @@ function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, 
             {creating ? "New shrine" : "Editing"}
           </span>
           <span className="text-stone/25 font-mono select-none text-xs">|</span>
-          {error && (
-            <span className="max-w-xs truncate text-xs text-red-600" title={error}>
-              {error}
-            </span>
-          )}
           <button
             onClick={onCancel}
             disabled={saving}
