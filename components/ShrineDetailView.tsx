@@ -507,7 +507,7 @@ function PageBody({
                 editClassName="w-full text-base font-quote italic text-stone/85"
               >
                 <p className={typo.quote}>
-                  “{shrine.quote}”
+                  &#x201C;{shrine.quote}&#x201D;
                 </p>
               </EditableProse>
             )}
@@ -527,7 +527,7 @@ function PageBody({
 
           <ul className="space-y-1.5 font-sans">
             {[
-              { id: "overview", label: "Sanctuary Blessing", kanji: "福" },
+              { id: "overview", label: "Sanctuary Portrait", kanji: "福" },
               { id: "deities", label: "Enshrined Pantheon", kanji: "神" },
               { id: "chronicles", label: "Historical Records", kanji: "史" },
               { id: "festivals", label: "Sacred Festivals", kanji: "祭" },
@@ -600,7 +600,7 @@ function PageBody({
               <div className="space-y-1">
                 <span className={`${typo.eyebrow} block select-none`}>福 — Chapter I</span>
                 <h3 className={`${typo.sectionTitle} select-text`}>
-                  Sanctuary Blessing
+                  Sanctuary Portrait
                 </h3>
               </div>
 
@@ -623,7 +623,7 @@ function PageBody({
                 editClassName="w-full text-base font-quote italic text-stone/85"
               >
                 <div className={`${typo.quote} py-4 select-text`}>
-                  "{shrine.prayerFocusText}"
+                  &#x201C;{shrine.prayerFocusText}&#x201D;
                 </div>
               </EditableProse>
 
@@ -850,7 +850,7 @@ function PageBody({
                   placeholder="Historical background of the shrine…"
                   editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
                 >
-                  <p className={`${typo.prose} first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1`}>
+                  <p className={`${typo.prose} whitespace-pre-line first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:line-height-1`}>
                     {shrine.about}
                   </p>
                 </EditableProse>
@@ -1239,10 +1239,22 @@ function ModalBody({
 
           {shrine.quote && (
             <p className={typo.quote}>
-              “{shrine.quote}”
+              &#x201C;{shrine.quote}&#x201D;
             </p>
           )}
         </div>
+
+        {/* Description & Highlights */}
+        {(shrine.description || shrine.highlights.length > 0) && (
+          <div className="space-y-4">
+            {shrine.description && (
+              <p className={`${typo.prose} whitespace-pre-line select-text`}>
+                {shrine.description}
+              </p>
+            )}
+            <HighlightsEditor highlights={shrine.highlights} />
+          </div>
+        )}
 
         {/* Enshrined Pantheon */}
         <div className="space-y-5">

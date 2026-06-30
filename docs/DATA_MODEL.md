@@ -224,7 +224,7 @@ One row per shrine; topical narrative prose.
 
 ### `shrine_highlights` (1:N "don't-miss" points of interest)
 Scannable list of concrete on-site features a visitor can walk up to or do (sacred trees, a unique
-omikuji custom, a signature torii). Rendered under `description` in Chapter I (Sanctuary Blessing).
+omikuji custom, a signature torii). Rendered under `description` in Chapter I (Sanctuary Portrait).
 Intentionally **may overlap** the `description` prose — no deduplication.
 
 | Column       | Type   | Nullable | Constraints                          | Description                                                  |

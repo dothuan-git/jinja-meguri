@@ -154,11 +154,11 @@ Time (display): <human-readable timing, e.g. "First Day of the Horse in February
 Start date: <YYYY-MM-DD for fixed Gregorian, — for lunar/shifting>
 End date: <YYYY-MM-DD for fixed Gregorian multi-day, — for single-day/lunar/shifting>
 
-Origin:
-<prose — the historical cause, crisis, myth, or founding moment>
-
 Meaning:
 <prose — cultural / religious meaning to the deity and community>
+
+Origin:
+<prose — the historical cause, crisis, myth, or founding moment>
 
 Ritual:
 <prose — concrete actions, ceremonies, sequence of events, performances>

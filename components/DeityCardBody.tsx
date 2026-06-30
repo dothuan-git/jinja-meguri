@@ -313,7 +313,7 @@ export default function DeityCardBody({
           />
         ) : (
           <>
-            <p className={`text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify select-text whitespace-pre-line lg:columns-2 lg:gap-10 lg:[column-rule:1px_solid_rgba(0,0,0,0.05)] ${loreExpanded ? "" : "line-clamp-[8] md:line-clamp-none"}`}>
+            <p className={`text-xs md:text-sm font-sans text-stone/80 leading-relaxed text-justify select-text whitespace-pre-line lg:columns-2 lg:gap-10 lg:[column-rule:1px_solid_rgba(0,0,0,0.05)] first-letter:text-4xl first-letter:font-serif first-letter:font-bold first-letter:text-torii first-letter:float-left first-letter:mr-2.5 first-letter:leading-none ${loreExpanded ? "" : "line-clamp-[8] md:line-clamp-none"}`}>
               {canonicalLore}
             </p>
             <button
