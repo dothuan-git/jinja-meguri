@@ -129,7 +129,10 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
     city: s.city,
     prefecture: pref?.name_en ?? "",
     region: region?.name_en ?? "",
-    primary_deity: primary ? { name_en: primary.name_en, name_ja: primary.name_ja } : null,
+    // Lead with the shrine's alternate (enshrined) name when set, else canonical.
+    primary_deity: primary
+      ? { name_en: primary.alter_name_en || primary.name_en, name_ja: primary.alter_name_ja || primary.name_ja }
+      : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
     region_id: s.region_id,

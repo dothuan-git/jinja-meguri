@@ -74,7 +74,7 @@ async function fetchStore(): Promise<Store> {
     pool.query("SELECT * FROM shrine_prayer_categories"),
     pool.query("SELECT * FROM shrine_details"),
     pool.query("SELECT * FROM shrine_highlights"),
-    pool.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes FROM festivals"),
+    pool.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes, sort_order FROM festivals ORDER BY sort_order"),
     pool.query("SELECT * FROM sources"),
     pool.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
   ]);
