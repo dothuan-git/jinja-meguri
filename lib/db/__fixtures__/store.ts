@@ -58,8 +58,8 @@ export function makeStore(): Store {
       { id: "hl-2", shrine_id: "shrine-a", title: "Ōmigokoro Poem-Slips (大御心)", body: null, sort_order: 1 },
     ],
     festivals: [
-      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },
-      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2" },
+      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v", sort_order: 0 },
+      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2", sort_order: 0 },
     ],
     sources: [
       { id: "source-1", shrine_id: "shrine-a", url: "https://example.com/a", title: "A official" },

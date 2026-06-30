@@ -169,21 +169,22 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       "DELETE FROM festivals WHERE shrine_id = $1 AND name_en <> ALL($2)",
       [shrineId, inputFestivalNames],
     );
-    for (const f of input.festivals ?? []) {
+    for (const [i, f] of (input.festivals ?? []).entries()) {
       const fRes = await client.query(
-        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
          ON CONFLICT (shrine_id,name_en) DO UPDATE SET
            name_ja=EXCLUDED.name_ja, time_prose=EXCLUDED.time_prose,
            start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
            origin=EXCLUDED.origin, meaning=EXCLUDED.meaning, ritual=EXCLUDED.ritual,
-           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes
+           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes,
+           sort_order=EXCLUDED.sort_order
          RETURNING id`,
         [
           shrineId, f.name_en, f.name_ja ?? null, f.time_prose ?? null,
           f.start_date ?? null, f.end_date ?? null,
           f.origin ?? null, f.meaning ?? null, f.ritual ?? null,
-          f.prayer ?? null, f.festival_type ?? null, f.visitor_notes ?? null,
+          f.prayer ?? null, f.festival_type ?? null, f.visitor_notes ?? null, i,
         ],
       );
       const festivalId = fRes.rows[0].id as string;

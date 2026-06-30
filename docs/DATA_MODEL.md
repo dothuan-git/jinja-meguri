@@ -256,10 +256,11 @@ Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-re
 | `prayer`        | `text` | Yes      | —                                          | What participants hope for. The specific human need or aspiration the event addresses.  |
 | `festival_type` | `text` | Yes      | CHECK (enum)                               | Visitor access / experience type.                            |
 | `visitor_notes` | `text` | Yes      | —                                          | Practical notes/ guidance for visitors.                      |
+| `sort_order`    | `int`  | No       | DEFAULT 0                                  | Display order within a shrine; set to the array index at upsert time. |
 
 > `festival_type` ∈ `spectacle` | `pilgrimage`.
 
-Index `idx_festivals_shrine`. UNIQUE `(shrine_id, name_en)`. The festival row holds the definition and,
+Index `idx_festivals_shrine (shrine_id, sort_order)`. UNIQUE `(shrine_id, name_en)`. The festival row holds the definition and,
 for fixed-Gregorian events, its own (year-agnostic) default dates; lunar / "Nth-weekday" events leave
 dates null and rely on `festival_occurrences`. The UNIQUE constraint gives festivals a **stable identity**:
 `upsertShrine` upserts festivals by `(shrine_id, name_en)` rather than delete-and-reinsert, so a

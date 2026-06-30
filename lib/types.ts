@@ -93,6 +93,7 @@ export interface FestivalRow {
   prayer: string | null;
   festival_type: string | null;
   visitor_notes: string | null;
+  sort_order: number;
 }
 export interface SourceRow {
   id: string;

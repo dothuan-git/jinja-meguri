@@ -158,6 +158,7 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
   const detailRow = idx.detailByShrine.get(s.id) ?? null;
   const festivals: FestivalView[] = store.festivals
     .filter((f) => f.shrine_id === s.id)
+    .sort((a, b) => a.sort_order - b.sort_order)
     .map((f) => ({
       id: f.id,
       name_en: f.name_en,

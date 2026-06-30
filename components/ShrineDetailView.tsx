@@ -129,7 +129,7 @@ function toView(shrine: ShrineDetail) {
         notes: f.visitor_notes ?? "",
       },
     })),
-    sources: shrine.sources.map((s) => s.title ?? s.url),
+    sources: shrine.sources.map((s) => ({ label: s.title ?? s.url, url: s.url })),
     coordinates: shrine.coordinates,
     address: shrine.address,
   };
@@ -863,9 +863,9 @@ function PageBody({
                   <EditableSources>
                     <div className={`${typo.meta} space-y-1 pl-0.5 select-text`}>
                       {shrine.sources.map(source => (
-                        <div key={source} className="flex items-center gap-1.5">
+                        <div key={source.url} className="flex items-center gap-1.5">
                           <FileText size={11} className="text-torii/40 shrink-0" />
-                          <span>{source}</span>
+                          <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:text-torii transition-colors">{source.label}</a>
                         </div>
                       ))}
                     </div>
@@ -1419,7 +1419,12 @@ function ModalBody({
           <div className="pt-4 border-t border-moss/5 text-center sm:text-left">
             <span className={`${typo.fieldLabel} block mb-2 select-none`}>Historical References</span>
             <p className={`${typo.meta} leading-relaxed`}>
-              {shrine.sources.join(" • ")}
+              {shrine.sources.map((source, i) => (
+                <span key={source.url}>
+                  {i > 0 && " • "}
+                  <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:text-torii transition-colors">{source.label}</a>
+                </span>
+              ))}
             </p>
           </div>
         )}

@@ -46,7 +46,7 @@ exactly, so each value can be copied straight into its field.
 ### Prose voice & length
 Write each prose field like a **told story** — the voice of someone recounting the tale aloud, not an encyclopedia summarizing it. Favor a clear narrative sequence: this happened, then this, and here is how it turned. Prefer declarative sentences with momentum over long compound or complex sentences that stack several clauses into one breath. Vary sentence length for rhythm, but when a sentence turns heavy, break it in two.
 
-- **Size to the field.** Regional lore and History are the long-form fields (a focused paragraph, more when the story warrants). Prayer focus, Best time to visit, and Geographic notes must be **concise** — direct and specific, 2–3 sentences at most. A Highlight's Body is **one short line** (a single sentence). Festival Origin / Meaning / Ritual / Prayer / Visitor notes sit in between — a few vivid sentences that paint the scene, never padded.
+- **Size to the field.** Regional lore and History are the long-form fields (a focused paragraph, more when the story warrants). Prayer focus, Best time to visit, and Geographic notes must be **concise** — direct and specific, 2–3 sentences at most. A Highlight's Body is **one short concise line** (a single sentence). Festival Origin / Meaning / Ritual / Prayer / Visitor notes sit in between — a few vivid sentences that paint the scene, never padded.
 - **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and History you may separate distinct episodes with a **blank line** (press Enter in the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin / Meaning / Ritual / Prayer / Visitor notes) to a **single paragraph** — breaks there are not rendered.
 - **Explain events, don't just name them.** Wherever a myth, founding story, or festival has a defining moment — a conflict, a feat, a transformation, a key relationship — give the reader enough to understand what was at stake and how it resolved, not just a label for it.
 - **Introduce named characters with their role.** The first time any kami or historical figure is named in a prose field, append a brief role identifier — e.g. "Takemikazuchi (建御雷之男神), kami of thunder" or "Fujiwara no Nagate (藤原永手), court minister." Subsequent mentions need no elaboration.
@@ -67,6 +67,7 @@ Write each prose field like a **told story** — the voice of someone recounting
 - Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under **Regional lore** (see **Lore guidance** below). The canonical narrative is added beforehand on the deity itself, so this sheet never re-gathers it.
 - **Highlights:** list the concrete, on-site "don't-miss" features a visitor can walk up to, point at, or do — e.g. a signature torii, sacred trees (夫婦楠), a unique omikuji/fortune custom, a famous power spot or carving. Title goes **English first with kanji in parens**; Body is **one short line**, or `—` when the Description already explains it. Overlap with the Description is fine — **do not deduplicate.** Skip generic features common to most shrines.
 - Festivals: include **all major / uniquely significant** ones (skip daily/monthly rites). `spectacle` — visible ceremonies and processions — has **no cap**; collect every one that qualifies. `pilgrimage` — participatory pilgrimage festivals — is capped at **max 2 per shrine**. Leave `Type` = `—` if neither applies.
+- **Each festival is a self-contained, standalone entry.** Research and write every festival on its own, as if it were the only one on the page. Its prose fields (Origin / Meaning / Ritual / Prayer / Visitor notes) must be fully understandable in isolation, with no cross-references to other festivals ("unlike the X festival above…", "the same procession as…", "see Festival 1") and no reliance on the shrine's History or Description for context — restate whatever the reader needs. Do **not** compare, contrast, or chain festivals together; if two festivals share a ritual or origin, explain it in full within each. Repetition across festivals is acceptable; cross-dependence is not.
 - Festival dates: for events with **fixed Gregorian dates** (e.g. "15 May every year"), fill `Start date` and `End date` as `YYYY-MM-DD` using the current year as a placeholder — only the month + day carry meaning. Leave both `—` for lunar, Nth-weekday, or otherwise shifting dates; describe the timing under `Time (display)` instead.
 
 ### Lore guidance (Regional lore)
@@ -168,7 +169,7 @@ Prayer:
 Visitor notes:
 <prose — practical notes / guidance for visitors>
 
-<repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none>
+<repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none. Write each one standalone — no cross-references to other festivals or shrine fields.>
 
 Sources (one entry per site — consolidate multiple pages from the same domain into one):
 1. URL: <url> — Title: <English site title>
