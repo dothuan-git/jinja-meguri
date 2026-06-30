@@ -105,6 +105,8 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
         deity_type: d.deity_type,
         canonical_lore: d.canonical_lore,
         regional_lore: sd.regional_lore,
+        alter_name_en: sd.alter_name_en,
+        alter_name_ja: sd.alter_name_ja,
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,
       };

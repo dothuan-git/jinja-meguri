@@ -101,19 +101,33 @@ function toView(shrine: ShrineDetail) {
     geographicNotes: shrine.details?.geographic_notes ?? "",
     highlights: shrine.highlights,
     primaryDeity: {
-      name: primary?.name_en ?? "",
-      japaneseName: primary?.name_ja ?? "",
+      // Displayed name leads with the shrine's alternate (enshrined) name when set,
+      // falling back to the canonical deity name.
+      name: primary?.alter_name_en || primary?.name_en || "",
+      japaneseName: primary?.alter_name_ja || primary?.name_ja || "",
       deityType: primary?.deity_type ?? "",
       titles: primary?.titles ?? [],
       canonicalLore: primary?.canonical_lore ?? "",
       regionalLore: primary?.regional_lore ?? "",
+      // Raw alter values (for edit inputs) + canonical identity (shown as a subtitle
+      // when an alter name is present, and used to locate the deity in the draft).
+      alterNameEn: primary?.alter_name_en ?? "",
+      alterNameJa: primary?.alter_name_ja ?? "",
+      canonicalName: primary?.name_en ?? "",
+      canonicalNameJa: primary?.name_ja ?? "",
+      hasAlter: Boolean(primary?.alter_name_en || primary?.alter_name_ja),
     },
     secondaryDeities: companionsOf(shrine).map((d) => ({
-      name: d.name_en,
-      japaneseName: d.name_ja ?? "",
+      name: d.alter_name_en || d.name_en,
+      japaneseName: d.alter_name_ja || d.name_ja || "",
       deityType: d.deity_type,
       titles: d.titles,
       regionalLore: d.regional_lore ?? "",
+      alterNameEn: d.alter_name_en ?? "",
+      alterNameJa: d.alter_name_ja ?? "",
+      canonicalName: d.name_en,
+      canonicalNameJa: d.name_ja ?? "",
+      hasAlter: Boolean(d.alter_name_en || d.alter_name_ja),
     })),
     festivals: shrine.festivals.map((f) => ({
       id: f.id,
@@ -254,7 +268,9 @@ function PageBody({
   const edit = useShrineEdit();
   const editing = Boolean(edit?.editing);
   const creating = edit?.mode === "create";
-  const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.japaneseName) : -1;
+  // Locate the deity in the draft by its canonical kanji (the dedup key) — never the
+  // displayed name, which may be the shrine's alternate (enshrined) name.
+  const primaryDeityIndex = edit ? edit.findDeityIndex(shrine.primaryDeity.canonicalNameJa) : -1;
 
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -674,17 +690,37 @@ function PageBody({
                     <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                       Primary Enshrined Spirit
                     </span>
-                    <h4 className={typo.subheading}>
-                      {shrine.primaryDeity.name}
-                    </h4>
+                    <EditableText
+                      path={`deities.${primaryDeityIndex}.alter_name_en`}
+                      ariaLabel="Primary deity enshrined (alternate) romaji name"
+                      placeholder={shrine.primaryDeity.canonicalName || "Enshrined name (romaji)"}
+                      editClassName={`${typo.subheading} w-full`}
+                    >
+                      <h4 className={typo.subheading}>
+                        {shrine.primaryDeity.name}
+                      </h4>
+                    </EditableText>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                        {shrine.primaryDeity.japaneseName}
-                      </span>
+                      <EditableText
+                        path={`deities.${primaryDeityIndex}.alter_name_ja`}
+                        ariaLabel="Primary deity enshrined (alternate) kanji name"
+                        placeholder={shrine.primaryDeity.canonicalNameJa || "別名 (kanji)"}
+                        editClassName="text-xs font-serif text-moss font-medium"
+                      >
+                        <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                          {shrine.primaryDeity.japaneseName}
+                        </span>
+                      </EditableText>
                       <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
                         {DEITY_TYPE_LABEL[shrine.primaryDeity.deityType] ?? shrine.primaryDeity.deityType}
                       </span>
                     </div>
+                    {(editing || shrine.primaryDeity.hasAlter) && (
+                      <p className="mt-1.5 text-[10px] font-mono tracking-wide text-stone/40 select-none">
+                        Enshrined form of {shrine.primaryDeity.canonicalName}
+                        {shrine.primaryDeity.canonicalNameJa ? ` (${shrine.primaryDeity.canonicalNameJa})` : ""}
+                      </p>
+                    )}
                   </div>
 
                   {/* Primary Deity Epithets */}
@@ -740,23 +776,45 @@ function PageBody({
                     <div className="bg-stone/[0.015] border border-stone/5 rounded-xl p-5 md:p-6 space-y-5">
                       {/* Name and titles aligned with main deity but significantly smaller */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {shrine.secondaryDeities.map((deity, idx) => (
-                          <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
+                        {shrine.secondaryDeities.map((deity, idx) => {
+                          const di = edit ? edit.findDeityIndex(deity.canonicalNameJa) : -1;
+                          return (
+                          <div key={deity.canonicalNameJa + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 border border-stone/5 shadow-3xs flex flex-col justify-between">
                             <div className="space-y-1">
                               <span className={`${typo.fieldLabel} block select-none`}>
                                 COMPANION SPIRIT
                               </span>
-                              <h4 className="text-sm font-serif font-black text-stone leading-tight">
-                                {deity.name}
-                              </h4>
+                              <EditableText
+                                path={`deities.${di}.alter_name_en`}
+                                ariaLabel={`Companion deity enshrined (alternate) romaji name for ${deity.canonicalName}`}
+                                placeholder={deity.canonicalName || "Enshrined name (romaji)"}
+                                editClassName="text-sm font-serif font-black text-stone leading-tight w-full"
+                              >
+                                <h4 className="text-sm font-serif font-black text-stone leading-tight">
+                                  {deity.name}
+                                </h4>
+                              </EditableText>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                  {deity.japaneseName}
-                                </span>
+                                <EditableText
+                                  path={`deities.${di}.alter_name_ja`}
+                                  ariaLabel={`Companion deity enshrined (alternate) kanji name for ${deity.canonicalName}`}
+                                  placeholder={deity.canonicalNameJa || "別名 (kanji)"}
+                                  editClassName="text-[10px] font-serif text-moss-light"
+                                >
+                                  <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                                    {deity.japaneseName}
+                                  </span>
+                                </EditableText>
                                 <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
                                   {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
                                 </span>
                               </div>
+                              {(editing || deity.hasAlter) && (
+                                <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
+                                  Enshrined form of {deity.canonicalName}
+                                  {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
+                                </p>
+                              )}
                             </div>
 
                             {/* Companion Deity Epithets in smaller subtle text */}
@@ -773,7 +831,8 @@ function PageBody({
                               </div>
                             )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Unified Single Lore for all Companion Deities */}
@@ -781,10 +840,10 @@ function PageBody({
                         <div className="pt-4 border-t border-dashed border-stone/10 space-y-3">
                           <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
                           {shrine.secondaryDeities.map((d) => {
-                            const di = edit!.findDeityIndex(d.japaneseName);
+                            const di = edit!.findDeityIndex(d.canonicalNameJa);
                             if (di < 0) return null;
                             return (
-                              <div key={d.japaneseName} className="space-y-1">
+                              <div key={d.canonicalNameJa} className="space-y-1">
                                 <span className="text-[10px] font-serif text-stone/60 block">
                                   {d.name}{d.japaneseName ? ` (${d.japaneseName})` : ""}
                                 </span>
@@ -1279,6 +1338,12 @@ function ModalBody({
                     {DEITY_TYPE_LABEL[shrine.primaryDeity.deityType] ?? shrine.primaryDeity.deityType}
                   </span>
                 </div>
+                {shrine.primaryDeity.hasAlter && (
+                  <p className="mt-1.5 text-[10px] font-mono tracking-wide text-stone/40 select-none">
+                    Enshrined form of {shrine.primaryDeity.canonicalName}
+                    {shrine.primaryDeity.canonicalNameJa ? ` (${shrine.primaryDeity.canonicalNameJa})` : ""}
+                  </p>
+                )}
               </div>
 
               {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
@@ -1314,7 +1379,7 @@ function ModalBody({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {shrine.secondaryDeities.map((deity, idx) => (
-                      <div key={deity.name + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 shadow-3xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between">
+                      <div key={deity.canonicalNameJa + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 shadow-3xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between">
                         <div className="space-y-1">
                           <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -1325,6 +1390,12 @@ function ModalBody({
                               {DEITY_TYPE_LABEL[deity.deityType] ?? deity.deityType}
                             </span>
                           </div>
+                          {deity.hasAlter && (
+                            <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
+                              Enshrined form of {deity.canonicalName}
+                              {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
+                            </p>
+                          )}
                         </div>
                         {deity.titles && deity.titles.length > 0 && (
                           <div className="pt-1.5 border-t border-stone/5">

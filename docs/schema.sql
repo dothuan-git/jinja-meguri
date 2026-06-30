@@ -85,6 +85,8 @@ CREATE TABLE shrine_deities (
     is_primary    boolean  NOT NULL DEFAULT false,
     sort_order    smallint NOT NULL DEFAULT 0,
     regional_lore text,                          -- shrine-specific lore; null = use deities.canonical_lore
+    alter_name_en text,                          -- shrine-specific alternate (enshrined) romaji name; null = use deities.name_en
+    alter_name_ja text,                          -- shrine-specific alternate (enshrined) kanji name; null = use deities.name_ja
     PRIMARY KEY (shrine_id, deity_id)
 );
 

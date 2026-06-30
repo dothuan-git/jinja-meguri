@@ -65,6 +65,7 @@ Write each prose field like a **told story** — the voice of someone recounting
     account the bulk of sources carry, and note the variant.
 - Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese academic / cultural articles and local-tourism sources; `en.wikipedia.org` is a secondary cross-check.
 - Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under **Regional lore** (see **Lore guidance** below). The canonical narrative is added beforehand on the deity itself, so this sheet never re-gathers it.
+- **Enshrined-as (alternate) name:** if this shrine enshrines a deity under a *different* name than the canonical one (a 別名/alternate name), record it under **Enshrined as**. The site then displays that name here (with the canonical name shown as a subtitle) while still pulling lore and titles from the canonical deity record. Leave `—` when the shrine uses the canonical name.
 - **Highlights:** list the concrete, on-site "don't-miss" features a visitor can walk up to, point at, or do — e.g. a signature torii, sacred trees (夫婦楠), a unique omikuji/fortune custom, a famous power spot or carving. Title goes **English first with kanji in parens**; Body is **one short line**, or `—` when the Description already explains it. Overlap with the Description is fine — **do not deduplicate.** Skip generic features common to most shrines.
 - Festivals: include **all major / uniquely significant** ones (skip daily/monthly rites). `spectacle` — visible ceremonies and processions — has **no cap**; collect every one that qualifies. `pilgrimage` — participatory pilgrimage festivals — is capped at **max 2 per shrine**. Leave `Type` = `—` if neither applies.
 - **Each festival is a self-contained, standalone entry.** Research and write every festival on its own, as if it were the only one on the page. Its prose fields (Origin / Meaning / Ritual / Prayer / Visitor notes) must be fully understandable in isolation, with no cross-references to other festivals ("unlike the X festival above…", "the same procession as…", "see Festival 1") and no reliance on the shrine's History or Description for context — restate whatever the reader needs. Do **not** compare, contrast, or chain festivals together; if two festivals share a ritual or origin, explain it in full within each. Repetition across festivals is acceptable; cross-dependence is not.
@@ -134,6 +135,8 @@ Deity 1
 Primary: Yes
 Name (romaji): <romaji>
 Name (kanji): <kanji — dedup key>
+Enshrined as (romaji): <this shrine's alternate/enshrined name in romaji, or — if same as canonical>
+Enshrined as (kanji): <this shrine's alternate/enshrined name in kanji (別名), or — if same as canonical>
 Deity type: <mythological | deified_human | syncretic>
 
 Titles (one English domain epithet per line — the deity's roles / sphere of patronage; no romaji names, no kanji):

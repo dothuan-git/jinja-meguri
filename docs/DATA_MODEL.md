@@ -180,10 +180,15 @@ Shrine ↔ deity, carrying shrine-specific deity data.
 | `is_primary`    | `boolean`  | No       | DEFAULT false                         | Whether this is the shrine's main enshrined kami.           |
 | `sort_order`    | `smallint` | No       | DEFAULT 0                             | Display order of deities on the shrine.                     |
 | `regional_lore` | `text`     | Yes      | —                                     | Shrine or region-specific lore; `null` if the shrine use canonical lore.|
+| `alter_name_en` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) romaji name; `null` = use `deities.name_en`.|
+| `alter_name_ja` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) kanji name; `null` = use `deities.name_ja`.|
 
 PK `(shrine_id, deity_id)`. Index `idx_shrine_deities_deity`.
 The UI shows the primary deity's `canonical_lore` (with `regional_lore` as a supplementary note)
-and `regional_lore` for secondary deities.
+and `regional_lore` for secondary deities. When `alter_name_en`/`alter_name_ja` are set, the shrine
+detail/modal display **leads with the alternate (enshrined) name** and shows the canonical deity
+name as a subtitle ("Enshrined form of …") — but lore and titles are always sourced canonically from
+`deities`. These alternate names are part of the `DeityView` view model assembled in `lib/db/repo.ts`.
 
 ### `shrine_ranks`
 Shrine ↔ rank. All applicable ranks stored as rows.
@@ -419,6 +424,8 @@ Key derivations done in `repo.ts`, not in SQL:
 - **Highest rank** — `pickHighestRankId` (min `rank_order`) flags `is_highest` on a `RankView`.
 - **Primary deity** — the `shrine_deities` row with `is_primary = true`.
 - **Lore fallback** — `regional_lore ?? canonical_lore` for display.
+- **Enshrined-name fallback** — `alter_name_en ?? name_en` / `alter_name_ja ?? name_ja`: the shrine's
+  alternate (enshrined) name is shown when present, otherwise the canonical deity name.
 - **Calendar date resolution** — occurrence date wins over the festival's own date;
   `is_fallback = true` when neither exists (display `time_prose` only).
 

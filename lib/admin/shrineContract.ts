@@ -35,6 +35,9 @@ const DeitySchema = z.object({
   is_primary: z.boolean(),
   sort_order: z.number().int().min(0).default(0),
   regional_lore: z.string().nullable().optional(),
+  // Shrine-specific alternate (enshrined) name; null/absent = use the canonical deity name.
+  alter_name_en: z.string().nullable().optional(),
+  alter_name_ja: z.string().nullable().optional(),
   // Only required when the deity doesn't exist in the DB yet
   canonical: DeityCanonicalSchema.optional(),
 });

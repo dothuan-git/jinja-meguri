@@ -54,6 +54,11 @@ export interface ShrineDeityRow {
   is_primary: boolean;
   sort_order: number;
   regional_lore: string | null;
+  // Shrine-specific alternate (enshrined) name. When set, the UI displays this in
+  // place of the canonical deity name at this shrine; canonical lore/titles are
+  // still sourced from the deities table. null = fall back to deities.name_en/name_ja.
+  alter_name_en: string | null;
+  alter_name_ja: string | null;
 }
 export interface ShrineRankRow {
   shrine_id: string;
@@ -167,6 +172,8 @@ export interface DeityView {
   deity_type: string;
   canonical_lore: string | null;
   regional_lore: string | null;
+  alter_name_en: string | null;
+  alter_name_ja: string | null;
   is_primary: boolean;
   sort_order: number;
 }
