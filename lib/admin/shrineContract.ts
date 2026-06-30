@@ -44,6 +44,12 @@ const SourceSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
+const HighlightSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+});
+
 export const ShrineInputSchema = z.object({
   slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "slug must be lowercase letters, digits, or hyphens"),
   name_en: z.string().min(1),
@@ -65,6 +71,7 @@ export const ShrineInputSchema = z.object({
     quote: z.string().nullable().optional(),
     geographic_notes: z.string().nullable().optional(),
   }).optional(),
+  highlights: z.array(HighlightSchema).optional(),
   ranks: z.array(z.string()).optional(),
   prayer_categories: z.array(z.string()).optional(),
   deities: z.array(DeitySchema).min(1, "At least one deity is required"),

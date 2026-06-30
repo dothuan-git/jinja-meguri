@@ -25,6 +25,7 @@ export function shrineDetailToInput(detail: ShrineDetail): ShrineInput {
       quote: detail.details?.quote,
       geographic_notes: detail.details?.geographic_notes,
     },
+    highlights: detail.highlights.map((h, i) => ({ title: h.title, body: h.body, sort_order: i })),
     ranks: detail.ranks.map((r) => r.name_en),
     prayer_categories: detail.categories.map((c) => c.name_en),
     deities: detail.deities.map((d) => ({
@@ -67,6 +68,7 @@ export function emptyShrineInput(): ShrineInput {
     coordinates: null,
     image_urls: [],
     details: { history: null, description: null, prayer_focus: null, best_time: null, quote: null, geographic_notes: null },
+    highlights: [],
     ranks: [],
     prayer_categories: [],
     deities: [{ name_ja: "", is_primary: true, sort_order: 0, regional_lore: null }],

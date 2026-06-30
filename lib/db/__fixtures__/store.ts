@@ -53,6 +53,10 @@ export function makeStore(): Store {
       { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a", geographic_notes: null },
       { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b", geographic_notes: null },
     ],
+    shrine_highlights: [
+      { id: "hl-1", shrine_id: "shrine-a", title: "Couple Camphor (夫婦楠)", body: "Two camphors bound by one rope.", sort_order: 0 },
+      { id: "hl-2", shrine_id: "shrine-a", title: "Ōmigokoro Poem-Slips (大御心)", body: null, sort_order: 1 },
+    ],
     festivals: [
       { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },
       { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2" },

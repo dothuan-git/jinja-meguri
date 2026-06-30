@@ -77,6 +77,7 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       await client.query("DELETE FROM shrine_ranks WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_prayer_categories WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_details WHERE shrine_id = $1", [shrineId]);
+      await client.query("DELETE FROM shrine_highlights WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM sources WHERE shrine_id = $1", [shrineId]);
       // NB: festivals are NOT wiped here — they are upserted by (shrine_id, name_en) below so that
       // their separately-uploaded festival_occurrences survive a shrine re-import/inline edit.
@@ -113,6 +114,15 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       await client.query(
         "INSERT INTO shrine_details (shrine_id,history,description,prayer_focus,best_time,quote,geographic_notes) VALUES ($1,$2,$3,$4,$5,$6,$7)",
         [shrineId, input.details.history ?? null, input.details.description ?? null, input.details.prayer_focus ?? null, input.details.best_time ?? null, input.details.quote ?? null, input.details.geographic_notes ?? null],
+      );
+    }
+
+    // shrine_highlights (1:N) — array index is the display order; skip blank titles.
+    const highlights = (input.highlights ?? []).filter((h) => h.title.trim() !== "");
+    for (const [i, h] of highlights.entries()) {
+      await client.query(
+        "INSERT INTO shrine_highlights (shrine_id,title,body,sort_order) VALUES ($1,$2,$3,$4)",
+        [shrineId, h.title.trim(), h.body?.trim() || null, h.sort_order ?? i],
       );
     }
 

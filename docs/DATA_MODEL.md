@@ -63,6 +63,7 @@ erDiagram
     prayer_categories ||--o{ shrine_prayer_categories : ""
 
     shrines ||--o| shrine_details : "1:1"
+    shrines ||--o{ shrine_highlights : ""
     shrines ||--o{ festivals : ""
     shrines ||--o{ sources : ""
     festivals ||--o{ festival_occurrences : ""
@@ -221,6 +222,23 @@ One row per shrine; topical narrative prose.
 | `quote`             | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
 | `geographic_notes`  | `text` | Yes      | —                                         | Natural setting, landscape, terrain, and access notes shown in the Transit & Geography section. |
 
+### `shrine_highlights` (1:N "don't-miss" points of interest)
+Scannable list of concrete on-site features a visitor can walk up to or do (sacred trees, a unique
+omikuji custom, a signature torii). Rendered under `description` in Chapter I (Sanctuary Blessing).
+Intentionally **may overlap** the `description` prose — no deduplication.
+
+| Column       | Type   | Nullable | Constraints                          | Description                                                  |
+| ------------ | ------ | -------- | ------------------------------------ | ----------------------------------------------------------- |
+| `id`         | `uuid` | No       | PK, `gen_random_uuid()`              | Surrogate key.                                              |
+| `shrine_id`  | `uuid` | No       | → `shrines(id)` ON DELETE CASCADE    | Owning shrine.                                              |
+| `title`      | `text` | No       | —                                    | Feature name, English first with kanji in parens.           |
+| `body`       | `text` | Yes      | —                                    | One short gloss line; `null` for a title-only highlight.    |
+| `sort_order` | `int`  | No       | DEFAULT 0                            | Display order (set from the editor's array index).         |
+
+Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-reinsert on every
+`upsertShrine` (no stable identity needed). Read via `getShrineDetail` into `ShrineDetail.highlights`
+(`{ title, body }[]`, ordered by `sort_order`).
+
 ### `festivals` (definition + optional dated occurrence)
 
 | Column          | Type   | Nullable | Constraints                                | Description                                                    |
@@ -358,8 +376,8 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
 ## 8. Cascade & referential behavior
 
 - Every `shrine_*` child (`shrine_deities`, `shrine_ranks`, `shrine_prayer_categories`,
-  `shrine_details`, `festivals`, `sources`) is **`ON DELETE CASCADE`** from `shrines` —
-  deleting a shrine removes all its dependent rows.
+  `shrine_details`, `shrine_highlights`, `festivals`, `sources`) is **`ON DELETE CASCADE`** from
+  `shrines` — deleting a shrine removes all its dependent rows.
 - `festival_occurrences` cascades from `festivals`.
 - `shrine_deities.deity_id` → `deities(id)` is **not** cascade: a deity is canonical and shared,
   so it is not deleted when a shrine is removed.
@@ -377,7 +395,7 @@ The runtime never hands raw rows to the UI. Two layers in TypeScript bridge the 
 
 ```
 Neon Postgres
-  └─ loadStore()  (lib/db/store.ts)   fetches all 13 tables → Store (one array per table)
+  └─ loadStore()  (lib/db/store.ts)   fetches all 14 tables → Store (one array per table)
        └─ repo.ts  pure functions      assemble typed view models from the Store
             └─ page.tsx                 server components pass view models to client components
 ```
@@ -388,7 +406,7 @@ Neon Postgres
 | View model        | Built by (`repo.ts`)  | Purpose                                                                 |
 | ----------------- | --------------------- | ----------------------------------------------------------------------- |
 | `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`) so client-side filtering needs no extra lookups |
-| `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, festivals, sources  |
+| `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, highlights, festivals, sources  |
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
 | `FacetCatalogs`   | `getFacetCatalogs`    | Filter options, restricted to values actually in use                    |

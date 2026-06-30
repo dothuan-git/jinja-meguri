@@ -72,6 +72,13 @@ export interface ShrineDetailRow {
   quote: string | null;
   geographic_notes: string | null;
 }
+export interface ShrineHighlightRow {
+  id: string;
+  shrine_id: string;
+  title: string;
+  body: string | null;
+  sort_order: number;
+}
 export interface FestivalRow {
   id: string;
   shrine_id: string;
@@ -113,6 +120,7 @@ export interface Store {
   shrine_ranks: ShrineRankRow[];
   shrine_prayer_categories: ShrinePrayerCategoryRow[];
   shrine_details: ShrineDetailRow[];
+  shrine_highlights: ShrineHighlightRow[];
   festivals: FestivalRow[];
   sources: SourceRow[];
   festival_occurrences: FestivalOccurrenceRow[];
@@ -213,6 +221,7 @@ export interface ShrineDetail extends ShrineCard {
     quote: string | null;
     geographic_notes: string | null;
   } | null;
+  highlights: { title: string; body: string | null }[];
   festivals: FestivalView[];
   sources: SourceRow[];
 }

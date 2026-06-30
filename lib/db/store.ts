@@ -19,6 +19,7 @@ const TABLES: (keyof Store)[] = [
   "shrine_ranks",
   "shrine_prayer_categories",
   "shrine_details",
+  "shrine_highlights",
   "festivals",
   "sources",
   "festival_occurrences",
@@ -34,7 +35,7 @@ export function buildStore(raw: Record<string, unknown[]>): Store {
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: true },
-  // Headroom for loadStore's 13 concurrent queries (below) plus an in-flight
+  // Headroom for loadStore's 14 concurrent queries (below) plus an in-flight
   // mutation transaction. The Neon pooled endpoint (pgbouncer) multiplexes these.
   max: 16,
 });
@@ -57,6 +58,7 @@ async function fetchStore(): Promise<Store> {
     shrineRanks,
     shrinePrayerCategories,
     shrineDetails,
+    shrineHighlights,
     festivalsRaw,
     sources,
     festivalOccurrences,
@@ -71,6 +73,7 @@ async function fetchStore(): Promise<Store> {
     pool.query("SELECT * FROM shrine_ranks"),
     pool.query("SELECT * FROM shrine_prayer_categories"),
     pool.query("SELECT * FROM shrine_details"),
+    pool.query("SELECT * FROM shrine_highlights"),
     pool.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes FROM festivals"),
     pool.query("SELECT * FROM sources"),
     pool.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
@@ -91,6 +94,7 @@ async function fetchStore(): Promise<Store> {
   raw["shrine_ranks"] = shrineRanks.rows;
   raw["shrine_prayer_categories"] = shrinePrayerCategories.rows;
   raw["shrine_details"] = shrineDetails.rows;
+  raw["shrine_highlights"] = shrineHighlights.rows;
   raw["festivals"] = festivalsRaw.rows;
   raw["sources"] = sources.rows;
   raw["festival_occurrences"] = festivalOccurrences.rows;

@@ -125,6 +125,19 @@ CREATE TABLE shrine_details (
 );
 
 -- ------------------------------------------------------------
+-- SHRINE HIGHLIGHTS (1:N "don't miss" points of interest)
+-- ------------------------------------------------------------
+CREATE TABLE shrine_highlights (
+    id          uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    shrine_id   uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
+    title       text    NOT NULL,   -- English first, kanji in parens: 'Ōmigokoro Poem-Slips (大御心)'
+    body        text,               -- optional short gloss; null = title-only chip
+    sort_order  int     NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_shrine_highlights_shrine ON shrine_highlights(shrine_id, sort_order);
+
+-- ------------------------------------------------------------
 -- FESTIVALS (definition + optional dated occurrence)
 -- ------------------------------------------------------------
 CREATE TABLE festivals (

@@ -189,6 +189,10 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
           geographic_notes: detailRow.geographic_notes,
         }
       : null,
+    highlights: store.shrine_highlights
+      .filter((h) => h.shrine_id === s.id)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((h) => ({ title: h.title, body: h.body })),
     festivals,
     sources: store.sources.filter((src) => src.shrine_id === s.id),
   };

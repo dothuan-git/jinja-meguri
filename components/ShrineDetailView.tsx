@@ -33,6 +33,7 @@ import {
   EditableProse,
 } from "@/components/shrineEdit/context";
 import { EditableChips, EditableSources } from "@/components/shrineEdit/EditableCollections";
+import HighlightsEditor from "@/components/shrineEdit/HighlightsEditor";
 import LocationEditPopup from "@/components/shrineEdit/LocationEditPopup";
 import DeleteShrinePopup from "@/components/shrineEdit/DeleteShrinePopup";
 
@@ -98,6 +99,7 @@ function toView(shrine: ShrineDetail) {
     about: shrine.details?.history ?? "",
     bestTime: shrine.details?.best_time ?? "",
     geographicNotes: shrine.details?.geographic_notes ?? "",
+    highlights: shrine.highlights,
     primaryDeity: {
       name: primary?.name_en ?? "",
       japaneseName: primary?.name_ja ?? "",
@@ -636,6 +638,8 @@ function PageBody({
                   <>{shrine.description}</>
                 </EditableProse>{" "}
               </p>
+
+              <HighlightsEditor highlights={shrine.highlights} />
             </div>
           </section>
 
