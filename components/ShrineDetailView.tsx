@@ -205,8 +205,8 @@ export default function ShrineDetailView({
         initialData={editor.initialData}
         catalogs={editor.catalogs}
         mode="create"
-        onCancel={() => router.push("/shrines")}
-        onSaved={(savedSlug) => router.push(`/shrines/${savedSlug}`)}
+        onCancel={() => { window.location.href = "/shrines"; }}
+        onSaved={(savedSlug) => { window.location.href = `/shrines/${savedSlug}`; }}
       >
         <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
