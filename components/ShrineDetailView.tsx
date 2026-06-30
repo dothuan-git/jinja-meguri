@@ -151,9 +151,8 @@ function toView(shrine: ShrineDetail) {
 
 type View = ReturnType<typeof toView>;
 
-// Collapses a long lore passage with a "Read more"/"Show less" toggle on mobile,
-// clamped by line count via CSS line-clamp (full text on md+, matching the
-// deities page). whitespace-pre-line at the call site preserves the newlines.
+// Collapses a long lore passage with a "Read more"/"Show less" toggle on all screen sizes,
+// clamped to 8 lines by default. whitespace-pre-line at the call site preserves newlines.
 function CollapsibleLore({
   text,
   className,
@@ -165,13 +164,13 @@ function CollapsibleLore({
 
   return (
     <>
-      <p className={`${className ?? ""} ${expanded ? "" : "line-clamp-[8] md:line-clamp-none"}`}>
+      <p className={`${className ?? ""} ${expanded ? "" : "line-clamp-[8]"}`}>
         {text.trim()}
       </p>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="md:hidden mt-2 text-[10px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
+        className="mt-2 text-[10px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
       >
         {expanded ? "Show less ↑" : "Read more ↓"}
       </button>
@@ -821,7 +820,7 @@ function PageBody({
                             {deity.titles && deity.titles.length > 0 && (
                               <div className="pt-1.5 border-t border-stone/5">
                                 <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
-                                  {deity.titles.map((title, tIdx) => (
+                                  {deity.titles.slice(0, 2).map((title, tIdx) => (
                                     <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
                                       <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
                                       <span>{title}</span>
@@ -1400,7 +1399,7 @@ function ModalBody({
                         {deity.titles && deity.titles.length > 0 && (
                           <div className="pt-1.5 border-t border-stone/5">
                             <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
-                              {deity.titles.map((title, tIdx) => (
+                              {deity.titles.slice(0, 2).map((title, tIdx) => (
                                 <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
                                   <span className="w-1 h-1 rounded-full bg-moss/20 shrink-0 mt-1.5" />
                                   <span>{title}</span>
