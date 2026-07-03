@@ -35,6 +35,7 @@ export function shrineDetailToInput(detail: ShrineDetail): ShrineInput {
       regional_lore: d.regional_lore,
       alter_name_en: d.alter_name_en,
       alter_name_ja: d.alter_name_ja,
+      alter_titles: d.alter_titles,
     })),
     festivals: detail.festivals.map((f) => ({
       name_en: f.name_en,
@@ -73,7 +74,7 @@ export function emptyShrineInput(): ShrineInput {
     highlights: [],
     ranks: [],
     prayer_categories: [],
-    deities: [{ name_ja: "", is_primary: true, sort_order: 0, regional_lore: null, alter_name_en: null, alter_name_ja: null }],
+    deities: [{ name_ja: "", is_primary: true, sort_order: 0, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null }],
     festivals: [],
     sources: [],
   };

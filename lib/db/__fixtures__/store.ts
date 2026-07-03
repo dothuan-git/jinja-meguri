@@ -35,9 +35,9 @@ export function makeStore(): Store {
       { id: "shrine-b", slug: "b", name_en: "Shrine B", name_ja: "乙社", prefecture_id: 2, region_id: 2, city: "Kyōto", address: null, coordinates: null, image_urls: null },
     ],
     shrine_deities: [
-      { shrine_id: "shrine-a", deity_id: "deity-1", is_primary: true, sort_order: 1, regional_lore: "regional-1", alter_name_en: "Alter One", alter_name_ja: "別名一" },
-      { shrine_id: "shrine-a", deity_id: "deity-2", is_primary: false, sort_order: 2, regional_lore: null, alter_name_en: null, alter_name_ja: null },
-      { shrine_id: "shrine-b", deity_id: "deity-2", is_primary: true, sort_order: 1, regional_lore: null, alter_name_en: null, alter_name_ja: null },
+      { shrine_id: "shrine-a", deity_id: "deity-1", is_primary: true, sort_order: 1, regional_lore: "regional-1", alter_name_en: "Alter One", alter_name_ja: "別名一", alter_titles: ["Shrine-Local Title"] },
+      { shrine_id: "shrine-a", deity_id: "deity-2", is_primary: false, sort_order: 2, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null },
+      { shrine_id: "shrine-b", deity_id: "deity-2", is_primary: true, sort_order: 1, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null },
     ],
     shrine_ranks: [
       { shrine_id: "shrine-a", rank_id: 10 },

@@ -182,13 +182,17 @@ Shrine ↔ deity, carrying shrine-specific deity data.
 | `regional_lore` | `text`     | Yes      | —                                     | Shrine or region-specific lore; `null` if the shrine use canonical lore.|
 | `alter_name_en` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) romaji name; `null` = use `deities.name_en`.|
 | `alter_name_ja` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) kanji name; `null` = use `deities.name_ja`.|
+| `alter_titles`  | `text[]`   | Yes      | —                                     | Shrine-specific title/epithet override; `null` = use `deities.titles`.|
 
 PK `(shrine_id, deity_id)`. Index `idx_shrine_deities_deity`.
 The UI shows the primary deity's `canonical_lore` (with `regional_lore` as a supplementary note)
 and `regional_lore` for secondary deities. When `alter_name_en`/`alter_name_ja` are set, the shrine
 detail/modal display **leads with the alternate (enshrined) name** and shows the canonical deity
-name as a subtitle ("Enshrined form of …") — but lore and titles are always sourced canonically from
-`deities`. These alternate names are part of the `DeityView` view model assembled in `lib/db/repo.ts`.
+name as a subtitle ("Enshrined form of …") — lore always comes canonically from `deities`, but
+**titles follow `alter_titles ?? deities.titles`**: a shrine can override how a deity's epithets read
+for that enshrinement (e.g. a different sphere of patronage locally) without touching the global
+deity record other shrines link to. These alternate fields are part of the `DeityView` view model
+assembled in `lib/db/repo.ts`.
 
 ### `shrine_ranks`
 Shrine ↔ rank. All applicable ranks stored as rows.
@@ -463,7 +467,11 @@ Research prompts and worked examples live in [`ai-research/`](./ai-research/).
    `deities[].canonical` block carries identity only (`name_en`, `name_ja`, `deity_type`, `titles`) and
    **no `canonical_lore`** — the deity already has it, so `SHRINE_RESEARCH_PROMPT.md` never re-gathers it.
    (If a referenced deity doesn't exist yet, the embedded block still creates it, with `canonical_lore`
-   left null until edited on the deity record.)
+   left null until edited on the deity record.) A linked (already-existing) deity's displayed titles can
+   still be adjusted **for this shrine only** via the sibling `deities[].alter_titles` field (§5
+   `shrine_deities.alter_titles`) — same idea as `alter_name_en`/`alter_name_ja`, it never touches the
+   deity row itself. `canonical.titles` remains the field used when the embedded block is creating a
+   brand-new deity (there, it *is* the canonical value, since the deity doesn't exist yet).
 3. **Festival default dates are now collected at research time.** `SHRINE_RESEARCH_PROMPT.md` asks for
    `start_date` / `end_date` for festivals with **fixed Gregorian dates** (e.g. always on 15 May);
    stored as `YYYY-MM-DD` with the current year as a placeholder — only month + day matter. Lunar,

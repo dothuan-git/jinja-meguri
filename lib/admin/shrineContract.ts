@@ -40,6 +40,9 @@ const DeitySchema = z.object({
   alter_name_ja: z.string().nullable().optional(),
   // Only required when the deity doesn't exist in the DB yet
   canonical: DeityCanonicalSchema.optional(),
+  // Shrine-specific title/epithet override, like alter_name_en/ja; null/absent = use
+  // the linked deity's canonical titles everywhere this deity is shown.
+  alter_titles: z.array(z.string()).nullable().optional(),
 });
 
 const SourceSchema = z.object({

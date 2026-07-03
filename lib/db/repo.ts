@@ -107,6 +107,7 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
         regional_lore: sd.regional_lore,
         alter_name_en: sd.alter_name_en,
         alter_name_ja: sd.alter_name_ja,
+        alter_titles: sd.alter_titles,
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,
       };
@@ -142,7 +143,7 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
     deity_ja: deities.map((d) => d.name_ja).filter((k): k is string => !!k),
     prayer_focus: detailRow?.prayer_focus ?? null,
     best_time: detailRow?.best_time ?? null,
-    primary_deity_titles: primary?.titles ?? [],
+    primary_deity_titles: (primary?.alter_titles ?? primary?.titles) ?? [],
   };
 }
 
