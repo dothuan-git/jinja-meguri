@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { saveDeityAction } from "@/app/admin/actions";
 import type { DeityInput } from "@/lib/admin/deityContract";
 import { useToast } from "@/components/ui/Toast";
@@ -8,8 +8,8 @@ import { useToast } from "@/components/ui/Toast";
 /**
  * Shared save flow for the deity write pipeline, used by the in-place carousel
  * editor and the `/deities/new` create page. Builds the `FormData{ json, id? }`
- * envelope, runs `saveDeityAction` in a transition, raises a toast, and surfaces
- * the server's validation error. Must be called inside a `ToastProvider`.
+ * envelope, runs `saveDeityAction` in a transition, and raises a toast for both
+ * success and validation errors. Must be called inside a `ToastProvider`.
  */
 export function useDeitySave(opts: {
   mode: "create" | "update";
@@ -17,7 +17,6 @@ export function useDeitySave(opts: {
   onSaved?: (nameJa: string) => void;
 }) {
   const { mode, deityId, onSaved } = opts;
-  const [error, setError] = useState<string | null>(null);
   const [saving, startTransition] = useTransition();
   const toast = useToast();
 
@@ -25,22 +24,20 @@ export function useDeitySave(opts: {
     const formData = new FormData();
     formData.set("json", JSON.stringify(data));
     if (deityId) formData.set("id", deityId);
-    setError(null);
     startTransition(async () => {
       const result = await saveDeityAction(null, formData);
       if (result?.success && result.name_ja) {
         toast.success(
           mode === "update"
-            ? `Deity “${data.name_en}” updated.`
-            : `Deity “${data.name_en}” added.`,
+            ? `Deity "${data.name_en}" updated.`
+            : `Deity "${data.name_en}" added.`,
         );
         onSaved?.(result.name_ja);
       } else if (result?.error) {
-        setError(result.error);
-        toast.error(`Couldn't save deity “${data.name_en}”. Please fix the errors shown.`);
+        toast.error(`Couldn't save "${data.name_en}": ${result.error}`);
       }
     });
   }
 
-  return { save, saving, error };
+  return { save, saving };
 }

@@ -32,6 +32,7 @@ const EMPTY_DETAIL: ShrineDetail = {
   deities: [],
   ranks: [],
   details: null,
+  highlights: [],
   festivals: [],
   sources: [],
 };

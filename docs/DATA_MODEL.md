@@ -63,6 +63,7 @@ erDiagram
     prayer_categories ||--o{ shrine_prayer_categories : ""
 
     shrines ||--o| shrine_details : "1:1"
+    shrines ||--o{ shrine_highlights : ""
     shrines ||--o{ festivals : ""
     shrines ||--o{ sources : ""
     festivals ||--o{ festival_occurrences : ""
@@ -179,10 +180,15 @@ Shrine ↔ deity, carrying shrine-specific deity data.
 | `is_primary`    | `boolean`  | No       | DEFAULT false                         | Whether this is the shrine's main enshrined kami.           |
 | `sort_order`    | `smallint` | No       | DEFAULT 0                             | Display order of deities on the shrine.                     |
 | `regional_lore` | `text`     | Yes      | —                                     | Shrine or region-specific lore; `null` if the shrine use canonical lore.|
+| `alter_name_en` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) romaji name; `null` = use `deities.name_en`.|
+| `alter_name_ja` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) kanji name; `null` = use `deities.name_ja`.|
 
 PK `(shrine_id, deity_id)`. Index `idx_shrine_deities_deity`.
 The UI shows the primary deity's `canonical_lore` (with `regional_lore` as a supplementary note)
-and `regional_lore` for secondary deities.
+and `regional_lore` for secondary deities. When `alter_name_en`/`alter_name_ja` are set, the shrine
+detail/modal display **leads with the alternate (enshrined) name** and shows the canonical deity
+name as a subtitle ("Enshrined form of …") — but lore and titles are always sourced canonically from
+`deities`. These alternate names are part of the `DeityView` view model assembled in `lib/db/repo.ts`.
 
 ### `shrine_ranks`
 Shrine ↔ rank. All applicable ranks stored as rows.
@@ -221,6 +227,23 @@ One row per shrine; topical narrative prose.
 | `quote`             | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
 | `geographic_notes`  | `text` | Yes      | —                                         | Natural setting, landscape, terrain, and access notes shown in the Transit & Geography section. |
 
+### `shrine_highlights` (1:N "don't-miss" points of interest)
+Scannable list of concrete on-site features a visitor can walk up to or do (sacred trees, a unique
+omikuji custom, a signature torii). Rendered under `description` in Chapter I (Sanctuary Portrait).
+Intentionally **may overlap** the `description` prose — no deduplication.
+
+| Column       | Type   | Nullable | Constraints                          | Description                                                  |
+| ------------ | ------ | -------- | ------------------------------------ | ----------------------------------------------------------- |
+| `id`         | `uuid` | No       | PK, `gen_random_uuid()`              | Surrogate key.                                              |
+| `shrine_id`  | `uuid` | No       | → `shrines(id)` ON DELETE CASCADE    | Owning shrine.                                              |
+| `title`      | `text` | No       | —                                    | Feature name, English first with kanji in parens.           |
+| `body`       | `text` | Yes      | —                                    | One short gloss line; `null` for a title-only highlight.    |
+| `sort_order` | `int`  | No       | DEFAULT 0                            | Display order (set from the editor's array index).         |
+
+Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-reinsert on every
+`upsertShrine` (no stable identity needed). Read via `getShrineDetail` into `ShrineDetail.highlights`
+(`{ title, body }[]`, ordered by `sort_order`).
+
 ### `festivals` (definition + optional dated occurrence)
 
 | Column          | Type   | Nullable | Constraints                                | Description                                                    |
@@ -238,10 +261,11 @@ One row per shrine; topical narrative prose.
 | `prayer`        | `text` | Yes      | —                                          | What participants hope for. The specific human need or aspiration the event addresses.  |
 | `festival_type` | `text` | Yes      | CHECK (enum)                               | Visitor access / experience type.                            |
 | `visitor_notes` | `text` | Yes      | —                                          | Practical notes/ guidance for visitors.                      |
+| `sort_order`    | `int`  | No       | DEFAULT 0                                  | Display order within a shrine; set to the array index at upsert time. |
 
 > `festival_type` ∈ `spectacle` | `pilgrimage`.
 
-Index `idx_festivals_shrine`. UNIQUE `(shrine_id, name_en)`. The festival row holds the definition and,
+Index `idx_festivals_shrine (shrine_id, sort_order)`. UNIQUE `(shrine_id, name_en)`. The festival row holds the definition and,
 for fixed-Gregorian events, its own (year-agnostic) default dates; lunar / "Nth-weekday" events leave
 dates null and rely on `festival_occurrences`. The UNIQUE constraint gives festivals a **stable identity**:
 `upsertShrine` upserts festivals by `(shrine_id, name_en)` rather than delete-and-reinsert, so a
@@ -358,8 +382,8 @@ Better Auth **admin plugin** and live in Neon Auth's managed `user` table). `get
 ## 8. Cascade & referential behavior
 
 - Every `shrine_*` child (`shrine_deities`, `shrine_ranks`, `shrine_prayer_categories`,
-  `shrine_details`, `festivals`, `sources`) is **`ON DELETE CASCADE`** from `shrines` —
-  deleting a shrine removes all its dependent rows.
+  `shrine_details`, `shrine_highlights`, `festivals`, `sources`) is **`ON DELETE CASCADE`** from
+  `shrines` — deleting a shrine removes all its dependent rows.
 - `festival_occurrences` cascades from `festivals`.
 - `shrine_deities.deity_id` → `deities(id)` is **not** cascade: a deity is canonical and shared,
   so it is not deleted when a shrine is removed.
@@ -377,7 +401,7 @@ The runtime never hands raw rows to the UI. Two layers in TypeScript bridge the 
 
 ```
 Neon Postgres
-  └─ loadStore()  (lib/db/store.ts)   fetches all 13 tables → Store (one array per table)
+  └─ loadStore()  (lib/db/store.ts)   fetches all 14 tables → Store (one array per table)
        └─ repo.ts  pure functions      assemble typed view models from the Store
             └─ page.tsx                 server components pass view models to client components
 ```
@@ -388,7 +412,7 @@ Neon Postgres
 | View model        | Built by (`repo.ts`)  | Purpose                                                                 |
 | ----------------- | --------------------- | ----------------------------------------------------------------------- |
 | `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`) so client-side filtering needs no extra lookups |
-| `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, festivals, sources  |
+| `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, highlights, festivals, sources  |
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
 | `FacetCatalogs`   | `getFacetCatalogs`    | Filter options, restricted to values actually in use                    |
@@ -400,6 +424,8 @@ Key derivations done in `repo.ts`, not in SQL:
 - **Highest rank** — `pickHighestRankId` (min `rank_order`) flags `is_highest` on a `RankView`.
 - **Primary deity** — the `shrine_deities` row with `is_primary = true`.
 - **Lore fallback** — `regional_lore ?? canonical_lore` for display.
+- **Enshrined-name fallback** — `alter_name_en ?? name_en` / `alter_name_ja ?? name_ja`: the shrine's
+  alternate (enshrined) name is shown when present, otherwise the canonical deity name.
 - **Calendar date resolution** — occurrence date wins over the festival's own date;
   `is_fallback = true` when neither exists (display `time_prose` only).
 

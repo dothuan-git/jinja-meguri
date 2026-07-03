@@ -16,7 +16,6 @@ import {
   Heart,
   Plus,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
 import ShrineImage from "@/components/ShrineImage";
@@ -991,13 +990,13 @@ export default function ShrineListing({
                     Admin Controls
                   </span>
                   <span className="text-stone/25 font-mono select-none text-xs">|</span>
-                  <Link
+                  <a
                     href="/shrines/new"
                     className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
                   >
                     <Plus size={12} className="transition-transform group-hover:rotate-90" />
                     <span>Add shrine</span>
-                  </Link>
+                  </a>
                   <button
                     onClick={() => setAdminExpanded(false)}
                     aria-label="Collapse"
@@ -1029,13 +1028,13 @@ export default function ShrineListing({
               Admin Controls
             </span>
             <span className="text-stone/25 font-mono select-none text-xs">|</span>
-            <Link
+            <a
               href="/shrines/new"
               className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10"
             >
               <Plus size={12} className="transition-transform group-hover:rotate-90" />
               <span>Add shrine</span>
-            </Link>
+            </a>
           </div>
         </div>
       )}

@@ -46,7 +46,7 @@ exactly, so each value can be copied straight into its field.
 ### Prose voice & length
 Write each prose field like a **told story** — the voice of someone recounting the tale aloud, not an encyclopedia summarizing it. Favor a clear narrative sequence: this happened, then this, and here is how it turned. Prefer declarative sentences with momentum over long compound or complex sentences that stack several clauses into one breath. Vary sentence length for rhythm, but when a sentence turns heavy, break it in two.
 
-- **Size to the field.** Regional lore and History are the long-form fields (a focused paragraph, more when the story warrants). Prayer focus, Best time to visit, and Geographic notes must be **concise** — direct and specific, 2–3 sentences at most. Festival Origin / Meaning / Ritual / Prayer / Visitor notes sit in between — a few vivid sentences that paint the scene, never padded.
+- **Size to the field.** Regional lore and History are the long-form fields (a focused paragraph, more when the story warrants). Prayer focus, Best time to visit, and Geographic notes must be **concise** — direct and specific, 2–3 sentences at most. A Highlight's Body is **one short concise line** (a single sentence). Festival Origin / Meaning / Ritual / Prayer / Visitor notes sit in between — a few vivid sentences that paint the scene, never padded.
 - **Multi-episode narratives — break into paragraphs, long-form fields only.** In Regional lore and History you may separate distinct episodes with a **blank line** (press Enter in the form field). Keep the shorter fields (Prayer focus, Best time, Description, festival Origin / Meaning / Ritual / Prayer / Visitor notes) to a **single paragraph** — breaks there are not rendered.
 - **Explain events, don't just name them.** Wherever a myth, founding story, or festival has a defining moment — a conflict, a feat, a transformation, a key relationship — give the reader enough to understand what was at stake and how it resolved, not just a label for it.
 - **Introduce named characters with their role.** The first time any kami or historical figure is named in a prose field, append a brief role identifier — e.g. "Takemikazuchi (建御雷之男神), kami of thunder" or "Fujiwara no Nagate (藤原永手), court minister." Subsequent mentions need no elaboration.
@@ -56,29 +56,20 @@ Write each prose field like a **told story** — the voice of someone recounting
 - **Call the kami as kami.** Use "kami" instead of "god" or "goddess."
 
 ### Research method
-- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified
-  starting point only. Every fact you output (dates, coordinates, ritual names, deity genealogy, festival
-  details) must be **confirmed against real, retrievable sources** during this task, not recalled from
-  training. If you cannot consult sources for a given fact, leave its field `—` rather than filling it
-  from memory.
-- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each
-  key fact across multiple sources (e.g. the official shrine site **and** `ja.wikipedia.org` or an
-  academic source).
+- **Actually research — do not answer from memory.** Treat your own prior knowledge as an unverified starting point only. Every fact you output (dates, coordinates, ritual names, deity genealogy, festival details) must be **confirmed against real, retrievable sources** during this task, not recalled from training. If you cannot consult sources for a given fact, leave its field `—` rather than filling it from memory.
+- **Cross-check across at least two independent sources.** Don't rely on a single page. Corroborate each key fact across multiple sources (e.g. the official shrine site **and** `ja.wikipedia.org` or an academic source).
 - **When sources disagree on lore or facts, follow the majority** — lead with the most common version in the relevant field, flag the disagreement and minority reading under **Notes**. If genuinely tied, defer to the older Japanese-language source.
   - *Example:* the birth of Amaterasu differs between texts — in the Kojiki she arises from Izanagi's
     purification alone (Izanami not involved), whereas the Nihon Shoki main text has Izanagi and Izanami
     produce her together and gives the alternate name Ōhirume-no-Muchi (大日孁貴). Lead with whichever
     account the bulk of sources carry, and note the variant.
-- Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese
-  academic / cultural articles and local-tourism sources; `en.wikipedia.org` is a secondary cross-check.
-- Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under
-  **Regional lore** (see **Lore guidance** below). The canonical narrative is added beforehand on the
-  deity itself, so this sheet never re-gathers it.
+- Research **Japanese-first**: prefer the official shrine site and `ja.wikipedia.org`, then Japanese academic / cultural articles and local-tourism sources; `en.wikipedia.org` is a secondary cross-check.
+- Capture **shrine-specific / regional lore** (not the generic Kojiki/Nihon Shoki narrative) under **Regional lore** (see **Lore guidance** below). The canonical narrative is added beforehand on the deity itself, so this sheet never re-gathers it.
+- **Enshrined-as (alternate) name:** if this shrine enshrines a deity under a *different* name than the canonical one (a 別名/alternate name), record it under **Enshrined as**. The site then displays that name here (with the canonical name shown as a subtitle) while still pulling lore and titles from the canonical deity record. Leave `—` when the shrine uses the canonical name.
+- **Highlights:** list the concrete, on-site "don't-miss" features a visitor can walk up to, point at, or do — e.g. a signature torii, sacred trees (夫婦楠), a unique omikuji/fortune custom, a famous power spot or carving. Title goes **English first with kanji in parens**; Body is **one short line**, or `—` when the Description already explains it. Overlap with the Description is fine — **do not deduplicate.** Skip generic features common to most shrines.
 - Festivals: include **all major / uniquely significant** ones (skip daily/monthly rites). `spectacle` — visible ceremonies and processions — has **no cap**; collect every one that qualifies. `pilgrimage` — participatory pilgrimage festivals — is capped at **max 2 per shrine**. Leave `Type` = `—` if neither applies.
-- Festival dates: for events with **fixed Gregorian dates** (e.g. "15 May every year"), fill
-  `Start date` and `End date` as `YYYY-MM-DD` using the current year as a placeholder — only the
-  month + day carry meaning. Leave both `—` for lunar, Nth-weekday, or otherwise shifting dates;
-  describe the timing under `Time (display)` instead.
+- **Each festival is a self-contained, standalone entry.** Research and write every festival on its own, as if it were the only one on the page. Its prose fields (Origin / Meaning / Ritual / Prayer / Visitor notes) must be fully understandable in isolation, with no cross-references to other festivals ("unlike the X festival above…", "the same procession as…", "see Festival 1") and no reliance on the shrine's History or Description for context — restate whatever the reader needs. Do **not** compare, contrast, or chain festivals together; if two festivals share a ritual or origin, explain it in full within each. Repetition across festivals is acceptable; cross-dependence is not.
+- Festival dates: for events with **fixed Gregorian dates** (e.g. "15 May every year"), fill `Start date` and `End date` as `YYYY-MM-DD` using the current year as a placeholder — only the month + day carry meaning. Leave both `—` for lunar, Nth-weekday, or otherwise shifting dates; describe the timing under `Time (display)` instead.
 
 ### Lore guidance (Regional lore)
 The deity's **canonical lore** is entered beforehand on the deity record itself (via the deity importer),
@@ -91,8 +82,7 @@ so this shrine sheet does **not** include a Canonical lore field — fill only *
 
 ### Output format (reproduce this exactly)
 
-The response should use header, section titles for humen readable, not all plain text, for example bold field names,
-sections, titles, etc.
+The response should use header, section titles for humen readable, not all plain text, for example bold field names, sections, titles, etc.
 
 ```
 <Name (English)> — <Prefecture>
@@ -135,10 +125,18 @@ Best time to visit:
 Geographic notes:
 <prose — natural setting, surrounding landscape, terrain, and access notes — or — if unknown>
 
+Highlights (repeat per item; write "none" if there are none):
+- Title: <English first, kanji in parens — e.g. Couple Camphor (夫婦楠)>
+  Body: <one concise line on what it is / why it matters>
+- Title: <…>
+  Body: <…>
+
 Deity 1
 Primary: Yes
 Name (romaji): <romaji>
 Name (kanji): <kanji — dedup key>
+Enshrined as (romaji): <this shrine's alternate/enshrined name in romaji, or — if same as canonical>
+Enshrined as (kanji): <this shrine's alternate/enshrined name in kanji (別名), or — if same as canonical>
 Deity type: <mythological | deified_human | syncretic>
 
 Titles (one English domain epithet per line — the deity's roles / sphere of patronage; no romaji names, no kanji):
@@ -159,11 +157,11 @@ Time (display): <human-readable timing, e.g. "First Day of the Horse in February
 Start date: <YYYY-MM-DD for fixed Gregorian, — for lunar/shifting>
 End date: <YYYY-MM-DD for fixed Gregorian multi-day, — for single-day/lunar/shifting>
 
-Origin:
-<prose — the historical cause, crisis, myth, or founding moment>
-
 Meaning:
 <prose — cultural / religious meaning to the deity and community>
+
+Origin:
+<prose — the historical cause, crisis, myth, or founding moment>
 
 Ritual:
 <prose — concrete actions, ceremonies, sequence of events, performances>
@@ -174,7 +172,7 @@ Prayer:
 Visitor notes:
 <prose — practical notes / guidance for visitors>
 
-<repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none>
+<repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none. Write each one standalone — no cross-references to other festivals or shrine fields.>
 
 Sources (one entry per site — consolidate multiple pages from the same domain into one):
 1. URL: <url> — Title: <English site title>

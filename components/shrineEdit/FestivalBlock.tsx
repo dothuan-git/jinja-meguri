@@ -166,8 +166,8 @@ export default function FestivalBlock({
           </EditableSelect>
         </div>
 
-        {/* Default festival dates (recurring month-day) — create flow only */}
-        {creating && api && (
+        {/* Default festival dates (recurring month-day) */}
+        {(creating || editing) && api && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono tracking-widest uppercase font-bold pt-1">
             <DefaultDateField api={api} path={`festivals.${idx}.start_date`} label="Start date" />
             <DefaultDateField api={api} path={`festivals.${idx}.end_date`} label="End date" />

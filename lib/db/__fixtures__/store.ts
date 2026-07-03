@@ -35,9 +35,9 @@ export function makeStore(): Store {
       { id: "shrine-b", slug: "b", name_en: "Shrine B", name_ja: "乙社", prefecture_id: 2, region_id: 2, city: "Kyōto", address: null, coordinates: null, image_urls: null },
     ],
     shrine_deities: [
-      { shrine_id: "shrine-a", deity_id: "deity-1", is_primary: true, sort_order: 1, regional_lore: "regional-1" },
-      { shrine_id: "shrine-a", deity_id: "deity-2", is_primary: false, sort_order: 2, regional_lore: null },
-      { shrine_id: "shrine-b", deity_id: "deity-2", is_primary: true, sort_order: 1, regional_lore: null },
+      { shrine_id: "shrine-a", deity_id: "deity-1", is_primary: true, sort_order: 1, regional_lore: "regional-1", alter_name_en: "Alter One", alter_name_ja: "別名一" },
+      { shrine_id: "shrine-a", deity_id: "deity-2", is_primary: false, sort_order: 2, regional_lore: null, alter_name_en: null, alter_name_ja: null },
+      { shrine_id: "shrine-b", deity_id: "deity-2", is_primary: true, sort_order: 1, regional_lore: null, alter_name_en: null, alter_name_ja: null },
     ],
     shrine_ranks: [
       { shrine_id: "shrine-a", rank_id: 10 },
@@ -53,9 +53,13 @@ export function makeStore(): Store {
       { shrine_id: "shrine-a", history: "hist-a", description: "desc-a", prayer_focus: "focus-a", best_time: "spring", quote: "quote-a", geographic_notes: null },
       { shrine_id: "shrine-b", history: "hist-b", description: "desc-b", prayer_focus: "focus-b", best_time: "summer", quote: "quote-b", geographic_notes: null },
     ],
+    shrine_highlights: [
+      { id: "hl-1", shrine_id: "shrine-a", title: "Couple Camphor (夫婦楠)", body: "Two camphors bound by one rope.", sort_order: 0 },
+      { id: "hl-2", shrine_id: "shrine-a", title: "Ōmigokoro Poem-Slips (大御心)", body: null, sort_order: 1 },
+    ],
     festivals: [
-      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v" },
-      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2" },
+      { id: "festival-1", shrine_id: "shrine-a", name_en: "Grand Festival", name_ja: "大祭", time_prose: "early August", start_date: "2026-07-30", end_date: "2026-08-02", origin: "o", meaning: "m", ritual: "r", prayer: "p", festival_type: "spectacle", visitor_notes: "v", sort_order: 0 },
+      { id: "festival-2", shrine_id: "shrine-b", name_en: "Lunar Rite", name_ja: "旧暦祭", time_prose: "2nd Sunday of the 6th lunar month", start_date: null, end_date: null, origin: "o2", meaning: "m2", ritual: "r2", prayer: "p2", festival_type: "pilgrimage", visitor_notes: "v2", sort_order: 0 },
     ],
     sources: [
       { id: "source-1", shrine_id: "shrine-a", url: "https://example.com/a", title: "A official" },

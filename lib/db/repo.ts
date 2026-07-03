@@ -105,6 +105,8 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
         deity_type: d.deity_type,
         canonical_lore: d.canonical_lore,
         regional_lore: sd.regional_lore,
+        alter_name_en: sd.alter_name_en,
+        alter_name_ja: sd.alter_name_ja,
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,
       };
@@ -127,7 +129,10 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
     city: s.city,
     prefecture: pref?.name_en ?? "",
     region: region?.name_en ?? "",
-    primary_deity: primary ? { name_en: primary.name_en, name_ja: primary.name_ja } : null,
+    // Lead with the shrine's alternate (enshrined) name when set, else canonical.
+    primary_deity: primary
+      ? { name_en: primary.alter_name_en || primary.name_en, name_ja: primary.alter_name_ja || primary.name_ja }
+      : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
     region_id: s.region_id,
@@ -158,6 +163,7 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
   const detailRow = idx.detailByShrine.get(s.id) ?? null;
   const festivals: FestivalView[] = store.festivals
     .filter((f) => f.shrine_id === s.id)
+    .sort((a, b) => a.sort_order - b.sort_order)
     .map((f) => ({
       id: f.id,
       name_en: f.name_en,
@@ -189,6 +195,10 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
           geographic_notes: detailRow.geographic_notes,
         }
       : null,
+    highlights: store.shrine_highlights
+      .filter((h) => h.shrine_id === s.id)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((h) => ({ title: h.title, body: h.body })),
     festivals,
     sources: store.sources.filter((src) => src.shrine_id === s.id),
   };

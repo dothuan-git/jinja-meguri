@@ -77,6 +77,7 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       await client.query("DELETE FROM shrine_ranks WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_prayer_categories WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM shrine_details WHERE shrine_id = $1", [shrineId]);
+      await client.query("DELETE FROM shrine_highlights WHERE shrine_id = $1", [shrineId]);
       await client.query("DELETE FROM sources WHERE shrine_id = $1", [shrineId]);
       // NB: festivals are NOT wiped here — they are upserted by (shrine_id, name_en) below so that
       // their separately-uploaded festival_occurrences survive a shrine re-import/inline edit.
@@ -116,6 +117,15 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       );
     }
 
+    // shrine_highlights (1:N) — array index is the display order; skip blank titles.
+    const highlights = (input.highlights ?? []).filter((h) => h.title.trim() !== "");
+    for (const [i, h] of highlights.entries()) {
+      await client.query(
+        "INSERT INTO shrine_highlights (shrine_id,title,body,sort_order) VALUES ($1,$2,$3,$4)",
+        [shrineId, h.title.trim(), h.body?.trim() || null, h.sort_order ?? i],
+      );
+    }
+
     // shrine_ranks + shrine_prayer_categories — resolve every catalog name from a
     // single prefetch of each (tiny, static) table, then write all rows in one
     // multi-row INSERT, instead of a SELECT + INSERT round-trip per name.
@@ -145,8 +155,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     for (const d of input.deities) {
       const deityId = await resolveDeity(client, d);
       await client.query(
-        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore) VALUES ($1,$2,$3,$4,$5)",
-        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null],
+        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore,alter_name_en,alter_name_ja) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null, d.alter_name_en ?? null, d.alter_name_ja ?? null],
       );
     }
 
@@ -159,21 +169,22 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       "DELETE FROM festivals WHERE shrine_id = $1 AND name_en <> ALL($2)",
       [shrineId, inputFestivalNames],
     );
-    for (const f of input.festivals ?? []) {
+    for (const [i, f] of (input.festivals ?? []).entries()) {
       const fRes = await client.query(
-        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
          ON CONFLICT (shrine_id,name_en) DO UPDATE SET
            name_ja=EXCLUDED.name_ja, time_prose=EXCLUDED.time_prose,
            start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
            origin=EXCLUDED.origin, meaning=EXCLUDED.meaning, ritual=EXCLUDED.ritual,
-           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes
+           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes,
+           sort_order=EXCLUDED.sort_order
          RETURNING id`,
         [
           shrineId, f.name_en, f.name_ja ?? null, f.time_prose ?? null,
           f.start_date ?? null, f.end_date ?? null,
           f.origin ?? null, f.meaning ?? null, f.ritual ?? null,
-          f.prayer ?? null, f.festival_type ?? null, f.visitor_notes ?? null,
+          f.prayer ?? null, f.festival_type ?? null, f.visitor_notes ?? null, i,
         ],
       );
       const festivalId = fRes.rows[0].id as string;

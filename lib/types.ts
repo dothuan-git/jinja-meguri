@@ -54,6 +54,11 @@ export interface ShrineDeityRow {
   is_primary: boolean;
   sort_order: number;
   regional_lore: string | null;
+  // Shrine-specific alternate (enshrined) name. When set, the UI displays this in
+  // place of the canonical deity name at this shrine; canonical lore/titles are
+  // still sourced from the deities table. null = fall back to deities.name_en/name_ja.
+  alter_name_en: string | null;
+  alter_name_ja: string | null;
 }
 export interface ShrineRankRow {
   shrine_id: string;
@@ -72,6 +77,13 @@ export interface ShrineDetailRow {
   quote: string | null;
   geographic_notes: string | null;
 }
+export interface ShrineHighlightRow {
+  id: string;
+  shrine_id: string;
+  title: string;
+  body: string | null;
+  sort_order: number;
+}
 export interface FestivalRow {
   id: string;
   shrine_id: string;
@@ -86,6 +98,7 @@ export interface FestivalRow {
   prayer: string | null;
   festival_type: string | null;
   visitor_notes: string | null;
+  sort_order: number;
 }
 export interface SourceRow {
   id: string;
@@ -113,6 +126,7 @@ export interface Store {
   shrine_ranks: ShrineRankRow[];
   shrine_prayer_categories: ShrinePrayerCategoryRow[];
   shrine_details: ShrineDetailRow[];
+  shrine_highlights: ShrineHighlightRow[];
   festivals: FestivalRow[];
   sources: SourceRow[];
   festival_occurrences: FestivalOccurrenceRow[];
@@ -158,6 +172,8 @@ export interface DeityView {
   deity_type: string;
   canonical_lore: string | null;
   regional_lore: string | null;
+  alter_name_en: string | null;
+  alter_name_ja: string | null;
   is_primary: boolean;
   sort_order: number;
 }
@@ -213,6 +229,7 @@ export interface ShrineDetail extends ShrineCard {
     quote: string | null;
     geographic_notes: string | null;
   } | null;
+  highlights: { title: string; body: string | null }[];
   festivals: FestivalView[];
   sources: SourceRow[];
 }

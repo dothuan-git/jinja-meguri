@@ -23,7 +23,7 @@ export default function DeityEditProvider(props: Props) {
 
 function EditFrame({ initialData, deityId, mode = "update", onCancel, onSaved, children }: Props) {
   const [draft, setDraft] = useState<DeityInput>(initialData);
-  const { save, saving, error } = useDeitySave({ mode, deityId, onSaved });
+  const { save, saving } = useDeitySave({ mode, deityId, onSaved });
   const creating = mode === "create";
 
   // Portal the floating bar to <body> so the carousel's Framer-Motion transform
@@ -48,11 +48,6 @@ function EditFrame({ initialData, deityId, mode = "update", onCancel, onSaved, c
           {creating ? "New deity" : "Editing"}
         </span>
         <span className="text-stone/25 font-mono select-none text-xs">|</span>
-        {error && (
-          <span className="max-w-xs truncate text-xs text-red-600" title={error}>
-            {error}
-          </span>
-        )}
         <button
           onClick={onCancel}
           disabled={saving}

@@ -35,6 +35,9 @@ const DeitySchema = z.object({
   is_primary: z.boolean(),
   sort_order: z.number().int().min(0).default(0),
   regional_lore: z.string().nullable().optional(),
+  // Shrine-specific alternate (enshrined) name; null/absent = use the canonical deity name.
+  alter_name_en: z.string().nullable().optional(),
+  alter_name_ja: z.string().nullable().optional(),
   // Only required when the deity doesn't exist in the DB yet
   canonical: DeityCanonicalSchema.optional(),
 });
@@ -42,6 +45,12 @@ const DeitySchema = z.object({
 const SourceSchema = z.object({
   url: z.string().url(),
   title: z.string().nullable().optional(),
+});
+
+const HighlightSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
 });
 
 export const ShrineInputSchema = z.object({
@@ -65,6 +74,7 @@ export const ShrineInputSchema = z.object({
     quote: z.string().nullable().optional(),
     geographic_notes: z.string().nullable().optional(),
   }).optional(),
+  highlights: z.array(HighlightSchema).optional(),
   ranks: z.array(z.string()).optional(),
   prayer_categories: z.array(z.string()).optional(),
   deities: z.array(DeitySchema).min(1, "At least one deity is required"),

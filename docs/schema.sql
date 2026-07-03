@@ -85,6 +85,8 @@ CREATE TABLE shrine_deities (
     is_primary    boolean  NOT NULL DEFAULT false,
     sort_order    smallint NOT NULL DEFAULT 0,
     regional_lore text,                          -- shrine-specific lore; null = use deities.canonical_lore
+    alter_name_en text,                          -- shrine-specific alternate (enshrined) romaji name; null = use deities.name_en
+    alter_name_ja text,                          -- shrine-specific alternate (enshrined) kanji name; null = use deities.name_ja
     PRIMARY KEY (shrine_id, deity_id)
 );
 
@@ -125,6 +127,19 @@ CREATE TABLE shrine_details (
 );
 
 -- ------------------------------------------------------------
+-- SHRINE HIGHLIGHTS (1:N "don't miss" points of interest)
+-- ------------------------------------------------------------
+CREATE TABLE shrine_highlights (
+    id          uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    shrine_id   uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
+    title       text    NOT NULL,   -- English first, kanji in parens: 'Ōmigokoro Poem-Slips (大御心)'
+    body        text,               -- optional short gloss; null = title-only chip
+    sort_order  int     NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_shrine_highlights_shrine ON shrine_highlights(shrine_id, sort_order);
+
+-- ------------------------------------------------------------
 -- FESTIVALS (definition + optional dated occurrence)
 -- ------------------------------------------------------------
 CREATE TABLE festivals (
@@ -141,11 +156,12 @@ CREATE TABLE festivals (
     prayer        text,
     festival_type text CHECK (festival_type IN ('spectacle','pilgrimage')),
     visitor_notes text,
+    sort_order    int     NOT NULL DEFAULT 0,
     UNIQUE (shrine_id, name_en)  -- stable identity: re-importing a shrine upserts festivals by name
                                  -- (preserves festival_occurrences instead of cascade-deleting them)
 );
 
-CREATE INDEX idx_festivals_shrine ON festivals(shrine_id);
+CREATE INDEX idx_festivals_shrine ON festivals(shrine_id, sort_order);
 
 -- ------------------------------------------------------------
 -- SOURCES (provenance)
