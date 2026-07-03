@@ -180,9 +180,14 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
   `/deities?deity=<id|name_ja>` focuses a deity, `&edit=1` opens it in edit mode. The floating
   Save/Cancel bar is portaled to `<body>` so the carousel's Framer-Motion transform doesn't capture
   `position: fixed`.
-- **Festival occurrences:** the yearly-date importer UI (`/admin/occurrences/new`) was removed;
-  the data layer (`upsertOccurrences` in `lib/db/mutations.ts`, `lib/admin/occurrenceContract.ts`)
-  is retained for a future re-implementation. Festival dates are otherwise seeded via the DB scripts.
+- **Festival occurrences:** admins set/overwrite a festival's exact per-year date inline on `/calendar`
+  (an "Admin Controls" pill → "Add / edit dates" opens `components/admin/OccurrenceModal.tsx`) rather
+  than via a separate `/admin/*` route. A form tab takes one shared year plus any number of
+  shrine+festival rows (searchable pickers, pre-filled from the existing stored occurrence for that
+  festival+year); a JSON tab handles bulk paste/upload. Both go through `saveOccurrencesAction`
+  (`app/admin/actions.ts`) → `lib/admin/occurrenceContract.ts` → `upsertOccurrences` in
+  `lib/db/mutations.ts`, which upserts on `(festival_id, year)` — same (shrine, festival, year) always
+  overwrites. This only edits dates of **existing** festivals; it never creates shrines or festivals.
 
 ### Maps
 

@@ -293,11 +293,17 @@ UNIQUE `(festival_id, year)`. Indexes `idx_festival_occurrences_festival`, `idx_
 
 Loaded through the data layer: each target is `{ shrine_slug, festival_name_en, occurrences: [{ year, start_date, end_date?, notes? }] }`
 (a single object or an array). The festival is resolved by `(shrine_slug, festival_name_en)` — unique via
-the festivals constraint above — and rows upsert on `(festival_id, year)`. Contract: `lib/admin/occurrenceContract.ts`;
-mutation: `upsertOccurrences` in `lib/db/mutations.ts`. Example JSON:
-`docs/ai-research/example-festival-occurrences.json`. **The importer UI (`/admin/occurrences/new`) and
-its `saveOccurrencesAction` were removed**; the contract + mutation are retained for a future uploader, so
-occurrences are currently seeded via the DB scripts or a direct `upsertOccurrences` call.
+the festivals constraint above — and rows upsert on `(festival_id, year)`, so re-saving the same
+(shrine, festival, year) overwrites it. Contract: `lib/admin/occurrenceContract.ts`; mutation:
+`upsertOccurrences` in `lib/db/mutations.ts`; server action: `saveOccurrencesAction` in `app/admin/actions.ts`.
+Example JSON: `docs/ai-research/example-festival-occurrences.json`.
+
+**Admin UI** lives on `/calendar` (not a separate `/admin/*` route, per the inline-editing convention):
+an "Admin Controls" pill → "Add / edit dates" opens `components/admin/OccurrenceModal.tsx`, which has a
+form tab (shared year, add any number of shrine+festival rows via the `SearchSelect` combobox, dates
+pre-fill from the existing stored occurrence for that festival+year if one exists) and a bulk JSON-import
+tab. `app/calendar/page.tsx` passes `isAdmin` and — only for admins — the full `store.festival_occurrences`
+as `occurrenceSeed` so the form can pre-fill for any year without an extra fetch.
 
 ### `sources` (provenance)
 

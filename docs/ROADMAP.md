@@ -8,12 +8,13 @@ Planned work not yet implemented. Ask Claude to "implement <feature> from docs/R
 
 Implemented. Details in `DATA_MODEL.md` (§ `festivals` / `festival_occurrences` and §10). Summary:
 
-- **Importer** (was at `/admin/occurrences/new`, JSON paste + structured form) — **the UI and its
-  `saveOccurrencesAction` were since removed in the admin-route cleanup.** The data layer is retained:
-  contract `lib/admin/occurrenceContract.ts`, mutation `upsertOccurrences` (`lib/db/mutations.ts`, upsert
-  on `(festival_id, year)`), example `docs/ai-research/example-festival-occurrences.json`. A replacement
-  uploader is now a deferred item (occurrences are seeded via the DB scripts / a direct `upsertOccurrences`
-  call in the meantime).
+- **Importer** — inline on `/calendar`: admins get an "Admin Controls" pill → "Add / edit dates" opening
+  `components/admin/OccurrenceModal.tsx`. One tab is a form (shared year, multiple shrine+festival rows via
+  `components/admin/SearchSelect.tsx`, pre-filled from any existing stored occurrence for that
+  festival+year); the other is bulk JSON paste/upload matching the example file. Both post through
+  `saveOccurrencesAction` (`app/admin/actions.ts`) → contract `lib/admin/occurrenceContract.ts` → mutation
+  `upsertOccurrences` (`lib/db/mutations.ts`, upsert on `(festival_id, year)`). Example JSON:
+  `docs/ai-research/example-festival-occurrences.json`.
 - **Stable festival identity:** festivals are UNIQUE on `(shrine_id, name_en)` and `upsertShrine` upserts
   them by name instead of delete+reinsert, so occurrences survive shrine re-imports/inline edits.
 - **Date resolution** (`resolveCalendarDates` in `lib/calendar.ts`, calendar only): current-year
