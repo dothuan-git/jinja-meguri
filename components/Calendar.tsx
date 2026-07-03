@@ -134,9 +134,14 @@ export default function Calendar({
   const monthScrollRef = useRef<HTMLDivElement>(null);
   const monthDrag = useRef({ active: false, startX: 0, startLeft: 0, moved: 0 });
   const agendaRef = useRef<HTMLDivElement>(null);
-  const [calendarMonth, setCalendarMonth] = useState(6); // Default to June (6)
+  // Stable snapshot of the real "today", used to default the popup and mark the today-cell.
+  const today = useMemo(() => {
+    const now = new Date();
+    return { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() };
+  }, []);
+  const [calendarMonth, setCalendarMonth] = useState(today.month);
   const [calendarYear, setCalendarYear] = useState(year);
-  const [selectedDay, setSelectedDay] = useState<{ day: number; month: number; year: number } | null>({ day: 8, month: 6, year: 2026 });
+  const [selectedDay, setSelectedDay] = useState<{ day: number; month: number; year: number } | null>(today);
 
   // createPortal targets document.body — render the portal only after mount (SSR-safe)
   const [mounted, setMounted] = useState(false);
@@ -1003,7 +1008,7 @@ export default function Calendar({
 
                         return cells.map((cell, idx) => {
                           const cellEvents = linked.filter(fest => isFestivalOnDay(fest, cell.year, cell.month, cell.day));
-                          const isToday = cell.day === 8 && cell.month === 6 && cell.year === 2026;
+                          const isToday = cell.day === today.day && cell.month === today.month && cell.year === today.year;
                           const isSelected = selectedDay && selectedDay.day === cell.day && selectedDay.month === cell.month && selectedDay.year === cell.year;
 
                           return (
