@@ -11,7 +11,7 @@ type DeityDraft = ShrineInput["deities"][number];
 const DEITY_TYPES = ["mythological", "deified_human", "syncretic"] as const;
 
 function emptyCompanion(sortOrder: number): DeityDraft {
-  return { name_ja: "", is_primary: false, sort_order: sortOrder, regional_lore: null, alter_name_en: null, alter_name_ja: null };
+  return { name_ja: "", is_primary: false, sort_order: sortOrder, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null };
 }
 
 const inputBase =
@@ -24,8 +24,9 @@ const areaBase =
 /**
  * Draft-driven deity editor for the create-on-detail-page flow. Always one Primary
  * deity slot; companions are optional. Each deity either links an existing DB deity
- * (the dropdown — shows its canonical lore read-only) or starts a brand-new deity
- * (reveals identity inputs), rendered in the detail-page card style.
+ * (the dropdown — shows its canonical lore/titles read-only, plus a shrine-specific
+ * alternate name/titles override) or starts a brand-new deity (reveals identity inputs),
+ * rendered in the detail-page card style.
  */
 export default function DeityCreateEditor() {
   const api = useShrineEdit();
@@ -40,11 +41,11 @@ export default function DeityCreateEditor() {
 
   // Picker: link existing (no canonical → importer reuses), new deity (reveal fields), or clear.
   const selectDeity = (i: number, value: string) => {
-    if (value === "__new__") update(i, { name_ja: "", canonical: { name_en: "", deity_type: "mythological" } });
-    else if (value === "") update(i, { name_ja: "", canonical: undefined });
+    if (value === "__new__") update(i, { name_ja: "", canonical: { name_en: "", deity_type: "mythological" }, alter_titles: null });
+    else if (value === "") update(i, { name_ja: "", canonical: undefined, alter_titles: null });
     else {
       const picked = deityOptions.find((o) => o.id === value);
-      update(i, { name_ja: picked?.name_ja ?? "", canonical: undefined });
+      update(i, { name_ja: picked?.name_ja ?? "", canonical: undefined, alter_titles: null });
     }
   };
 
@@ -215,27 +216,42 @@ export default function DeityCreateEditor() {
               </div>
             )}
 
-            {/* Enshrined-as / alternate name (shrine-specific). Optional — when set, the
-                shrine displays this name in place of the canonical deity name; canonical
-                lore/titles still come from the deities table. */}
-            <div className="space-y-1 pt-3 border-t border-dashed border-moss/10">
-              <span className={`${typo.fieldLabel} block`}>Enshrined as (this shrine&rsquo;s alternate name)</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  value={d.alter_name_en ?? ""}
-                  onChange={(e) => update(i, { alter_name_en: e.target.value || null })}
-                  placeholder="Alternate name (romaji) — optional"
-                  aria-label="Enshrined alternate name (romaji)"
-                  className={`${inputBase} w-full`}
-                />
-                <input
-                  value={d.alter_name_ja ?? ""}
-                  onChange={(e) => update(i, { alter_name_ja: e.target.value || null })}
-                  placeholder="別名 (kanji) — optional"
-                  aria-label="Enshrined alternate name (kanji)"
-                  className={`${inputBase} w-full`}
-                />
+            {/* Enshrined-as / alternate name + titles (shrine-specific). Optional — when set,
+                the shrine displays these in place of the canonical deity name/titles; the
+                deities table itself is never touched. */}
+            <div className="space-y-3 pt-3 border-t border-dashed border-moss/10">
+              <div className="space-y-1">
+                <span className={`${typo.fieldLabel} block`}>Enshrined as (this shrine&rsquo;s alternate name)</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    value={d.alter_name_en ?? ""}
+                    onChange={(e) => update(i, { alter_name_en: e.target.value || null })}
+                    placeholder="Alternate name (romaji) — optional"
+                    aria-label="Enshrined alternate name (romaji)"
+                    className={`${inputBase} w-full`}
+                  />
+                  <input
+                    value={d.alter_name_ja ?? ""}
+                    onChange={(e) => update(i, { alter_name_ja: e.target.value || null })}
+                    placeholder="別名 (kanji) — optional"
+                    aria-label="Enshrined alternate name (kanji)"
+                    className={`${inputBase} w-full`}
+                  />
+                </div>
               </div>
+              <label className="space-y-1 block">
+                <span className={`${typo.fieldLabel} block`}>Alternate titles for this shrine (one per line, optional)</span>
+                <textarea
+                  value={(d.alter_titles ?? []).join("\n")}
+                  onChange={(e) =>
+                    update(i, { alter_titles: e.target.value.trim() === "" ? null : e.target.value.split("\n") })
+                  }
+                  rows={2}
+                  placeholder="Leave blank to use the deity's canonical titles"
+                  aria-label="Enshrined alternate titles"
+                  className={`${areaBase} text-xs font-sans`}
+                />
+              </label>
             </div>
 
             {/* Regional lore (shrine-specific) */}

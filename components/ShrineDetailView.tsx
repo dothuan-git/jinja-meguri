@@ -83,6 +83,10 @@ function companionsOf(shrine: ShrineDetail) {
   return shrine.deities.filter((d) => !d.is_primary);
 }
 
+function deityHref(nameJa: string) {
+  return `/deities?deity=${encodeURIComponent(nameJa)}`;
+}
+
 // Adapts the ShrineDetail view model to the shape the ported front-end JSX consumes.
 function toView(shrine: ShrineDetail) {
   const primary = primaryOf(shrine);
@@ -108,7 +112,7 @@ function toView(shrine: ShrineDetail) {
       name: primary?.alter_name_en || primary?.name_en || "",
       japaneseName: primary?.alter_name_ja || primary?.name_ja || "",
       deityType: primary?.deity_type ?? "",
-      titles: primary?.titles ?? [],
+      titles: (primary?.alter_titles ?? primary?.titles) ?? [],
       canonicalLore: primary?.canonical_lore ?? "",
       regionalLore: primary?.regional_lore ?? "",
       // Raw alter values (for edit inputs) + canonical identity (shown as a subtitle
@@ -117,13 +121,15 @@ function toView(shrine: ShrineDetail) {
       alterNameJa: primary?.alter_name_ja ?? "",
       canonicalName: primary?.name_en ?? "",
       canonicalNameJa: primary?.name_ja ?? "",
+      // Raw canonical titles (pre-fallback) — shown as reference next to the alter_titles editor.
+      canonicalTitles: primary?.titles ?? [],
       hasAlter: Boolean(primary?.alter_name_en || primary?.alter_name_ja),
     },
     secondaryDeities: companionsOf(shrine).map((d) => ({
       name: d.alter_name_en || d.name_en,
       japaneseName: d.alter_name_ja || d.name_ja || "",
       deityType: d.deity_type,
-      titles: d.titles,
+      titles: d.alter_titles ?? d.titles,
       regionalLore: d.regional_lore ?? "",
       alterNameEn: d.alter_name_en ?? "",
       alterNameJa: d.alter_name_ja ?? "",
@@ -284,7 +290,7 @@ function PageBody({
   const addDraftCompanion = () =>
     edit!.setValue("deities", [
       ...draftDeities,
-      { name_ja: "", is_primary: false, sort_order: draftDeities.length, regional_lore: null, alter_name_en: null, alter_name_ja: null },
+      { name_ja: "", is_primary: false, sort_order: draftDeities.length, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null },
     ]);
   const removeDraftDeityAt = (globalIdx: number) =>
     edit!.setValue("deities", draftDeities.filter((_, i) => i !== globalIdx));
@@ -720,7 +726,9 @@ function PageBody({
                       editClassName={`${typo.subheading} w-full`}
                     >
                       <h4 className={typo.subheading}>
-                        {shrine.primaryDeity.name}
+                        <Link href={deityHref(shrine.primaryDeity.canonicalNameJa)} className="transition-colors hover:text-torii">
+                          {shrine.primaryDeity.name}
+                        </Link>
                       </h4>
                     </EditableText>
                     <div className="flex items-center gap-2 mt-1">
@@ -747,18 +755,54 @@ function PageBody({
                   </div>
 
                   {/* Primary Deity Epithets */}
-                  {shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
-                    <div className="pt-2 border-t border-moss/5 space-y-1">
-                      <span className={`${typo.fieldLabel} block select-none`}>Divine Powers & Epithets</span>
-                      <div className="flex flex-col gap-1 text-xs text-stone/60 font-sans font-medium">
-                        {shrine.primaryDeity.titles.map((title, tIdx) => (
-                          <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
-                            <span className="w-1 h-1 rounded-full bg-torii/40 shrink-0 mt-1.5" />
-                            <span>{title}</span>
+                  {editing ? (
+                    primaryDeityIndex >= 0 && (
+                      <div className="pt-2 border-t border-moss/5 space-y-2">
+                        {shrine.primaryDeity.canonicalTitles.length > 0 && (
+                          <div className="space-y-1">
+                            <span className={`${typo.fieldLabel} block select-none`}>Canonical Divine Powers & Epithets</span>
+                            <div className="flex flex-col gap-1 text-xs text-stone/60 font-sans font-medium">
+                              {shrine.primaryDeity.canonicalTitles.map((title, tIdx) => (
+                                <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
+                                  <span className="w-1 h-1 rounded-full bg-torii/40 shrink-0 mt-1.5" />
+                                  <span>{title}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
+                        <label className="space-y-1 block">
+                          <span className={`${typo.fieldLabel} block select-none`}>Alternate titles for this shrine (one per line, optional)</span>
+                          <textarea
+                            value={((edit!.getValue(`deities.${primaryDeityIndex}.alter_titles`) as string[] | null) ?? []).join("\n")}
+                            onChange={(e) =>
+                              edit!.setValue(
+                                `deities.${primaryDeityIndex}.alter_titles`,
+                                e.target.value.trim() === "" ? null : e.target.value.split("\n"),
+                              )
+                            }
+                            rows={2}
+                            placeholder="Leave blank to use the deity's canonical titles"
+                            aria-label="Primary deity alternate titles"
+                            className="block w-full bg-torii/[0.04] outline-none border border-dashed border-torii/30 focus:border-torii rounded-md p-2 resize-y text-xs font-sans"
+                          />
+                        </label>
                       </div>
-                    </div>
+                    )
+                  ) : (
+                    shrine.primaryDeity.titles && shrine.primaryDeity.titles.length > 0 && (
+                      <div className="pt-2 border-t border-moss/5 space-y-1">
+                        <span className={`${typo.fieldLabel} block select-none`}>Divine Powers & Epithets</span>
+                        <div className="flex flex-col gap-1 text-xs text-stone/60 font-sans font-medium">
+                          {shrine.primaryDeity.titles.map((title, tIdx) => (
+                            <div key={tIdx} className="flex items-start gap-1.5 leading-snug">
+                              <span className="w-1 h-1 rounded-full bg-torii/40 shrink-0 mt-1.5" />
+                              <span>{title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
                   )}
 
                   {/* Canonical Chronicle Lore text */}
@@ -867,6 +911,19 @@ function PageBody({
                                           </div>
                                         </div>
                                       )}
+                                      <textarea
+                                        value={((edit!.getValue(`deities.${globalIdx}.alter_titles`) as string[] | null) ?? []).join("\n")}
+                                        onChange={(e) =>
+                                          edit!.setValue(
+                                            `deities.${globalIdx}.alter_titles`,
+                                            e.target.value.trim() === "" ? null : e.target.value.split("\n"),
+                                          )
+                                        }
+                                        rows={2}
+                                        placeholder="Alternate titles for this shrine (optional)"
+                                        aria-label="Companion deity alternate titles"
+                                        className="block w-full bg-torii/[0.04] outline-none border-t border-dashed border-stone/10 pt-1.5 text-[10px] font-sans resize-y placeholder:text-stone/30"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -880,7 +937,9 @@ function PageBody({
                                     COMPANION SPIRIT
                                   </span>
                                   <h4 className="text-sm font-serif font-black text-stone leading-tight">
-                                    {deity.name}
+                                    <Link href={deityHref(deity.canonicalNameJa)} className="transition-colors hover:text-torii">
+                                      {deity.name}
+                                    </Link>
                                   </h4>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
@@ -953,13 +1012,16 @@ function PageBody({
                         )
                       ) : (
                         shrine.secondaryDeities.some(d => d.regionalLore) && (
-                          <div className="pt-4 border-t border-dashed border-stone/10 space-y-1">
+                          <div className="pt-4 border-t border-dashed border-stone/10 space-y-3">
                             <span className={`${typo.fieldLabel} block select-none`}>LORE & SANCTUARY RELATION</span>
-                            <div className={`${typo.lore} text-justify space-y-2`}>
-                              {shrine.secondaryDeities.map(d => d.regionalLore).filter(Boolean).map((lore, lIdx) => (
-                                <p key={lIdx} className="whitespace-pre-line">{lore}</p>
-                              ))}
-                            </div>
+                            {shrine.secondaryDeities.filter(d => d.regionalLore).map((deity, lIdx) => (
+                              <div key={lIdx} className="space-y-1">
+                                <span className="text-[10px] font-mono tracking-wide text-stone/60 block">
+                                  {deity.name}{deity.japaneseName ? ` (${deity.japaneseName})` : ""}
+                                </span>
+                                <p className={`${typo.lore} text-justify whitespace-pre-line`}>{deity.regionalLore}</p>
+                              </div>
+                            ))}
                           </div>
                         )
                       )}
@@ -1421,7 +1483,11 @@ function ModalBody({
                 <span className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold bg-white border border-moss/10 px-2.5 py-0.5 rounded-full inline-block mb-2 select-none">
                   Primary Enshrined Spirit
                 </span>
-                <h4 className={typo.subheading}>{shrine.primaryDeity.name}</h4>
+                <h4 className={typo.subheading}>
+                  <Link href={deityHref(shrine.primaryDeity.canonicalNameJa)} className="transition-colors hover:text-torii">
+                    {shrine.primaryDeity.name}
+                  </Link>
+                </h4>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                     {shrine.primaryDeity.japaneseName}
@@ -1473,7 +1539,11 @@ function ModalBody({
                     {shrine.secondaryDeities.map((deity, idx) => (
                       <div key={deity.canonicalNameJa + idx} className="space-y-1.5 p-3.5 rounded-lg bg-white/30 hover:bg-white/80 border border-stone/5 shadow-3xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between">
                         <div className="space-y-1">
-                          <h4 className="text-sm font-serif font-black text-stone leading-tight">{deity.name}</h4>
+                          <h4 className="text-sm font-serif font-black text-stone leading-tight">
+                            <Link href={deityHref(deity.canonicalNameJa)} className="transition-colors hover:text-torii">
+                              {deity.name}
+                            </Link>
+                          </h4>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
                               {deity.japaneseName}

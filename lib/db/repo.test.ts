@@ -36,6 +36,11 @@ describe("getShrineCards extended fields", () => {
     expect(card).toHaveProperty("best_time");
     expect(Array.isArray(card.primary_deity_titles)).toBe(true);
   });
+  it("resolves primary_deity_titles from alter_titles when set, else canonical titles", () => {
+    const cards = getShrineCards(store);
+    expect(cards.find((c) => c.slug === "a")!.primary_deity_titles).toEqual(["Shrine-Local Title"]);
+    expect(cards.find((c) => c.slug === "b")!.primary_deity_titles).toEqual(["Guardian of the Sea"]);
+  });
 });
 
 describe("getShrineDetail", () => {
@@ -49,6 +54,10 @@ describe("getShrineDetail", () => {
   });
   it("exposes deity titles as an array", () => {
     expect(a.deities[0].titles).toEqual(["Lord of the Sun", "Divine Ancestor"]);
+  });
+  it("keeps alter_titles separate from canonical titles", () => {
+    expect(a.deities[0].alter_titles).toEqual(["Shrine-Local Title"]);
+    expect(a.deities[1].alter_titles).toBeNull();
   });
   it("flags the highest rank among all ranks", () => {
     const highest = a.ranks.filter((r) => r.is_highest);

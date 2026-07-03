@@ -55,10 +55,12 @@ export interface ShrineDeityRow {
   sort_order: number;
   regional_lore: string | null;
   // Shrine-specific alternate (enshrined) name. When set, the UI displays this in
-  // place of the canonical deity name at this shrine; canonical lore/titles are
-  // still sourced from the deities table. null = fall back to deities.name_en/name_ja.
+  // place of the canonical deity name at this shrine; canonical lore is still
+  // sourced from the deities table. null = fall back to deities.name_en/name_ja.
   alter_name_en: string | null;
   alter_name_ja: string | null;
+  // Shrine-specific title/epithet override. null = fall back to deities.titles.
+  alter_titles: string[] | null;
 }
 export interface ShrineRankRow {
   shrine_id: string;
@@ -139,7 +141,8 @@ export interface EditCatalogs {
   prayerCategories: string[]; // all category name_en
   prefectures: { name_en: string; region: string }[]; // all 47 + their region name_en
   // Existing deities for the create-flow picker: enough to link by name_ja and to
-  // render the linked deity's canonical lore/type/titles read-only on the create page.
+  // render the linked deity's canonical lore/type/titles read-only on the create page
+  // (a per-shrine title override can still be set — see ShrineInput.deities[].alter_titles).
   deities?: {
     id: string;
     name_en: string;
@@ -168,12 +171,16 @@ export interface DeityView {
   id: string;
   name_en: string;
   name_ja: string | null;
+  // Canonical titles (deities.titles); raw, pre-fallback — see alter_titles.
   titles: string[];
   deity_type: string;
   canonical_lore: string | null;
   regional_lore: string | null;
   alter_name_en: string | null;
   alter_name_ja: string | null;
+  // Shrine-specific title override (shrine_deities.alter_titles); raw, pre-fallback.
+  // Display should use `alter_titles ?? titles`.
+  alter_titles: string[] | null;
   is_primary: boolean;
   sort_order: number;
 }
