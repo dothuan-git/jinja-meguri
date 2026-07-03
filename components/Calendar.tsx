@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
+import { useState, useEffect, useMemo, useRef, type MouseEvent, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Calendar as CalendarIcon,
+  CalendarPlus,
   ArrowRight,
   ShieldAlert,
   Sparkles,
@@ -22,9 +24,14 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
-import type { CalendarFestival } from "@/lib/types";
+import type { CalendarFestival, FestivalOccurrenceRow } from "@/lib/types";
 import { FESTIVAL_TYPE_LABEL } from "@/lib/labels";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
+import type { OccurrenceShrineOption } from "@/components/admin/OccurrenceModal";
+
+// Admin-only occurrence editor; lazily loaded so its form/picker/toast chunk ships
+// only to admins, keeping the public calendar bundle lean.
+const OccurrenceModal = dynamic(() => import("@/components/admin/OccurrenceModal"), { ssr: false });
 
 // Poetic lunar month structure
 interface PoeticMonth {
@@ -81,10 +88,39 @@ type LinkedFestival = {
   shrine: { id: string; name: string; location: string; prefecture: string; region: string; slug: string };
 };
 
-export default function Calendar({ year, festivals }: { year: number; festivals: CalendarFestival[] }) {
+export default function Calendar({
+  year,
+  festivals,
+  isAdmin = false,
+  occurrenceSeed,
+}: {
+  year: number;
+  festivals: CalendarFestival[];
+  isAdmin?: boolean;
+  occurrenceSeed?: FestivalOccurrenceRow[];
+}) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
+
+  const [occModalOpen, setOccModalOpen] = useState(false);
+
+  // Picker options for the admin occurrence editor, derived from the already-loaded
+  // `festivals` prop (no extra fetch) — every field the modal needs is on CalendarFestival.
+  const shrineOptions = useMemo<OccurrenceShrineOption[]>(() => {
+    const map = new Map<string, OccurrenceShrineOption>();
+    for (const f of festivals) {
+      if (!map.has(f.shrine_slug)) {
+        map.set(f.shrine_slug, { shrine_slug: f.shrine_slug, shrine_name_en: f.shrine_name_en, festivals: [] });
+      }
+      map.get(f.shrine_slug)!.festivals.push({
+        festival_id: f.festival_id,
+        name_en: f.festival_name_en,
+        name_ja: f.festival_name_ja,
+      });
+    }
+    return Array.from(map.values()).sort((a, b) => a.shrine_name_en.localeCompare(b.shrine_name_en));
+  }, [festivals]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all"); // "all", "spectacle", "pilgrimage"
@@ -1191,6 +1227,39 @@ export default function Calendar({ year, festivals }: { year: number; festivals:
           )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* Admin Controls — floating pill, opens the occurrence editor */}
+      {isAdmin && (
+        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-20 md:pb-5 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
+              Admin Controls
+            </span>
+            <span className="text-stone/25 font-mono select-none text-xs">|</span>
+            <button
+              onClick={() => setOccModalOpen(true)}
+              className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10 cursor-pointer"
+            >
+              <CalendarPlus size={12} />
+              <span>Edit events</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && (
+        <OccurrenceModal
+          open={occModalOpen}
+          onClose={() => setOccModalOpen(false)}
+          shrineOptions={shrineOptions}
+          occurrenceSeed={occurrenceSeed ?? []}
+          defaultYear={year}
+          onSaved={() => {
+            setOccModalOpen(false);
+            router.refresh();
+          }}
+        />
       )}
 
     </div>
