@@ -19,6 +19,7 @@ function stamp(p: Partial<StampEntry> & { slug: string; stamped_at: string }): S
     primary_deity: p.primary_deity ?? null,
     categories: p.categories ?? [],
     highest_rank: p.highest_rank ?? null,
+    coordinates: p.coordinates ?? null,
     region_id: p.region_id ?? 1,
     prefecture_id: p.prefecture_id ?? 1,
     rank_codes: p.rank_codes ?? [],

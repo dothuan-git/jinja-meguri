@@ -136,6 +136,7 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
       : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
+    coordinates: s.coordinates,
     region_id: s.region_id,
     prefecture_id: s.prefecture_id,
     rank_codes: ranks.map((r) => r.name_en),
@@ -182,7 +183,6 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
   return {
     ...card,
     address: s.address,
-    coordinates: s.coordinates,
     image_urls: s.image_urls,
     deities: shrineDeityViews(idx, s.id),
     ranks: shrineRankViews(idx, s.id),

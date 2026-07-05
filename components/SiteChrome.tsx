@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Compass, Calendar as CalendarIcon, Home, Sparkles, User, LogIn } from "lucide-react";
+import { Compass, Calendar as CalendarIcon, Home, MapPinned, Sparkles, User, LogIn } from "lucide-react";
 import type { CurrentUser } from "@/lib/auth/server";
 
 const NAV = [
   { href: "/shrines", label: "Shrines", match: ["/shrines"] },
   { href: "/deities", label: "Deities", match: ["/deities"] },
   { href: "/calendar", label: "Festivals", match: ["/calendar"] },
+  { href: "/map", label: "Map", match: ["/map"] },
 ];
 
 function isActive(pathname: string, match: string[]) {
@@ -113,6 +114,10 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
           <Link href="/calendar" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
             <CalendarIcon size={18} className={isActive(pathname, ["/calendar"]) ? "text-torii scale-110" : "text-moss-light"} />
             <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/calendar"]) ? "text-torii" : "text-moss-light"}`}>Festivals</span>
+          </Link>
+          <Link href="/map" className="flex flex-col items-center justify-center gap-1.5 w-14 h-12">
+            <MapPinned size={18} className={isActive(pathname, ["/map"]) ? "text-torii scale-110" : "text-moss-light"} />
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/map"]) ? "text-torii" : "text-moss-light"}`}>Map</span>
           </Link>
           {user ? (
             <Link href={`/users/${user.id}`} className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">

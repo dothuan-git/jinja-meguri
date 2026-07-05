@@ -91,9 +91,14 @@ Both call the same `getShrineDetail` + `ShrineDetailView`; the `variant` prop (`
 
 Pages are server components that hand pre-built data to client components:
 - `ShrineListing` — faceted filtering (URL-synced) over `ShrineCard[]`
+- `ShrineMapView` (`/map`) — the same faceted filtering over `ShrineCard[]` (via a filter popup), rendered as Leaflet markers
 - `DeityListing` — the public `/deities` ("Pantheon") browse view
 - `Calendar` — month navigation over `CalendarEntry[]`
 - `SearchResults` — Fuse.js over `SearchDoc[]` (blob built in `lib/search.ts` from the Store)
+
+The shrine facet-filter logic (URL param names, search/facet predicate) is shared between
+`ShrineListing` and `ShrineMapView` via `lib/shrineFilters.ts` — change filter semantics there,
+not in the components.
 
 ### Admin section (dynamic, authenticated)
 
@@ -193,6 +198,18 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
 
 `lib/maps.ts` builds keyless Google Maps `output=embed` iframe URLs from a shrine's
 `lat`/`lng`. The map in `ShrineMap` is lazy-loaded on scroll and unloaded (`about:blank`) on modal close.
+
+`/map` (`app/map/page.tsx` → `components/map/ShrineMapView.tsx`) shows every shrine with
+non-null `coordinates` as a marker on a square Leaflet canvas (`react-leaflet`, keyless — consistent
+with the no-API-key stance), using Esri's "World Light Gray Canvas" base + reference tiles (chosen
+over OSM's own tiles because Esri renders place labels in English worldwide, whereas OSM tiles use
+each place's local-script name). The Leaflet map itself (`components/map/ShrineLeafletMap.tsx`) is
+loaded with `next/dynamic` + `ssr: false` because Leaflet touches `window` at import time. Marker
+popups are reskinned to the washi/torii palette (`.shrine-popup` overrides in `app/globals.css`) and
+soft-link to `/shrines/[slug]`, which opens the intercepted detail modal over the map. All filter
+controls (search + the Region/Prefecture/Focus/Rank facets) live in a single popup,
+`components/map/ShrineMapFilters.tsx`, opened from a Filter button that shows an icon + label on
+desktop (`xl:` and up) and an icon-only badge below that (covers tablets and phones).
 
 ### Ambient audio / motion
 

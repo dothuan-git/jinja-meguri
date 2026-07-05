@@ -209,6 +209,7 @@ export interface ShrineCard {
   primary_deity: { name_en: string; name_ja: string | null } | null;
   categories: CategoryView[];
   highest_rank: RankView | null;
+  coordinates: Coordinates | null;
   // Facet membership for client filtering:
   region_id: number;
   prefecture_id: number;
@@ -222,7 +223,6 @@ export interface ShrineCard {
 
 export interface ShrineDetail extends ShrineCard {
   address: string | null;
-  coordinates: Coordinates | null;
   // Kept (not displayed: ShrineImage is a procedural placeholder) because the
   // inline editor round-trips it via shrineDetailToInput → upsertShrine.
   image_urls: string[] | null;

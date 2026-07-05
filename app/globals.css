@@ -114,3 +114,34 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(140, 122, 107, 0.2); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(140, 122, 107, 0.4); }
+
+/* /map marker popup (react-leaflet) — reskin the default white Leaflet
+   popup chrome to match the washi/torii palette. Scoped via the `shrine-popup`
+   className passed to <Popup>. */
+.shrine-popup .leaflet-popup-content-wrapper {
+  background: var(--color-washi);
+  border: 1px solid rgba(34, 63, 45, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px -14px rgba(26, 32, 28, 0.35);
+  padding: 0;
+}
+.shrine-popup .leaflet-popup-content {
+  margin: 14px 16px;
+  min-width: 190px;
+}
+.shrine-popup .leaflet-popup-tip-container {
+  overflow: hidden;
+}
+.shrine-popup .leaflet-popup-tip {
+  background: var(--color-washi);
+  box-shadow: none;
+}
+.shrine-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: rgba(26, 32, 28, 0.35) !important;
+  font-size: 16px !important;
+}
+.shrine-popup .leaflet-popup-close-button:hover {
+  color: var(--color-torii) !important;
+}

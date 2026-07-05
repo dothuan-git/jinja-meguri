@@ -421,7 +421,7 @@ Neon Postgres
 
 | View model        | Built by (`repo.ts`)  | Purpose                                                                 |
 | ----------------- | --------------------- | ----------------------------------------------------------------------- |
-| `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`) so client-side filtering needs no extra lookups |
+| `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`) so client-side filtering needs no extra lookups, plus nullable `coordinates` for the `/map` markers |
 | `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, highlights, festivals, sources  |
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
