@@ -2,12 +2,11 @@
 
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Filter, MapPinned } from "lucide-react";
+import { Filter, MapPinned, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
 import {
   FILTER_PARAM_KEY,
-  hasActiveShrineFilters,
   matchesShrineFilters,
   readShrineFilters,
   type ShrineFacetId,
@@ -106,13 +105,14 @@ export default function ShrineMapView({
   const points = filtered.filter((c): c is ShrineMapPoint => c.coordinates !== null);
   const missingCoords = filtered.length - points.length;
 
-  const hasActiveFacetFilters = hasActiveShrineFilters(filters);
+  // Search now lives on the page, so the filter button reflects only the facet
+  // selections that remain inside the popup.
   const activeFilterCount =
-    (filters.searchQuery ? 1 : 0) +
     (filters.region.length > 0 ? 1 : 0) +
     (filters.prefecture.length > 0 ? 1 : 0) +
     (filters.prayerFocus.length > 0 ? 1 : 0) +
     (filters.ranks.length > 0 ? 1 : 0);
+  const hasActiveFacetFilters = activeFilterCount > 0;
 
   return (
     <div
@@ -149,36 +149,60 @@ export default function ShrineMapView({
         </p>
       </div>
 
-      {/* Filter trigger — all facets + search live in the ShrineMapFilters popup */}
+      {/* Search lives on the page; the remaining facets live in the ShrineMapFilters popup */}
       <section
         data-reveal="fade-up"
-        className="w-full pb-2 mb-3 flex items-center justify-between gap-3 select-none text-xs"
+        className="w-full pb-2 mb-3 flex flex-col gap-2.5 select-none text-xs"
       >
+        <div className="flex items-stretch gap-2">
+          {/* Search input */}
+          <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
+            <Search className="absolute left-3 text-stone/40" size={14} />
+            <input
+              type="text"
+              placeholder="Search shrines, deities, places..."
+              value={filters.searchQuery}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full text-xs font-sans pl-9 pr-9 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
+            />
+            {filters.searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-2.5 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors cursor-pointer"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            aria-label="Filter shrines"
+            className={`relative flex items-center gap-2 px-4 border rounded-xl text-xs tracking-wide transition-all duration-200 cursor-pointer shrink-0 ${
+              hasActiveFacetFilters
+                ? "border-torii bg-torii/5 text-torii font-extrabold"
+                : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
+            }`}
+          >
+            <Filter size={14} />
+            <span className="hidden xl:inline font-sans whitespace-nowrap">
+              {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+            </span>
+            {activeFilterCount > 0 && (
+              <span className="xl:hidden absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-torii text-white text-[9px] font-bold leading-none">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
         <p className="text-[10px] font-mono uppercase tracking-widest text-moss-light">
           {points.length} of {cards.length} shrines
           {missingCoords > 0 && <span className="text-stone/40"> · {missingCoords} w/o coords</span>}
         </p>
-
-        <button
-          type="button"
-          onClick={() => setFilterOpen(true)}
-          aria-label="Filter shrines"
-          className={`relative flex items-center gap-2 h-10 px-4 border rounded-xl text-xs tracking-wide transition-all duration-200 cursor-pointer ${
-            hasActiveFacetFilters
-              ? "border-torii bg-torii/5 text-torii font-extrabold"
-              : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
-          }`}
-        >
-          <Filter size={14} />
-          <span className="hidden xl:inline font-sans whitespace-nowrap">
-            {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
-          </span>
-          {activeFilterCount > 0 && (
-            <span className="xl:hidden absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-torii text-white text-[9px] font-bold leading-none">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
       </section>
 
       {/* Map panel — square canvas, capped so it doesn't grow unbounded on wide
@@ -204,7 +228,6 @@ export default function ShrineMapView({
         onClose={() => setFilterOpen(false)}
         filters={filters}
         dropdowns={dropdowns}
-        onSearchChange={setSearch}
         onToggleFacet={toggleFacet}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFacetFilters}

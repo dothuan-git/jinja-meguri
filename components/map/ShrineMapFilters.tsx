@@ -13,7 +13,6 @@ export default function ShrineMapFilters({
   onClose,
   filters,
   dropdowns,
-  onSearchChange,
   onToggleFacet,
   onClearAll,
   hasActiveFilters,
@@ -22,7 +21,6 @@ export default function ShrineMapFilters({
   onClose: () => void;
   filters: ShrineFilters;
   dropdowns: FacetDropdown[];
-  onSearchChange: (q: string) => void;
   onToggleFacet: (facet: ShrineFacetId, value: string) => void;
   onClearAll: () => void;
   hasActiveFilters: boolean;
@@ -30,6 +28,8 @@ export default function ShrineMapFilters({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const [openFacet, setOpenFacet] = useState<ShrineFacetId | null>(null);
+  // Per-facet option query for the searchable dropdowns; resets when a facet closes.
+  const [optionQuery, setOptionQuery] = useState("");
 
   if (!mounted) return null;
 
@@ -64,38 +64,23 @@ export default function ShrineMapFilters({
               </button>
             </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              {/* Search */}
-              <div className="relative flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
-                <Search className="absolute left-3 text-stone/40" size={14} />
-                <input
-                  type="text"
-                  placeholder="Search shrines, deities, places..."
-                  value={filters.searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full text-xs font-sans pl-9 pr-9 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
-                />
-                {filters.searchQuery && (
-                  <button
-                    onClick={() => onSearchChange("")}
-                    aria-label="Clear search"
-                    className="absolute right-2.5 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors cursor-pointer"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-
-              {/* Facet groups — each is its own dropdown */}
+            {/* Body — each facet is its own searchable dropdown */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {dropdowns.map((dropdown) => {
                 const activeCount = filters[dropdown.id].length;
                 const isOpen = openFacet === dropdown.id;
+                const query = isOpen ? optionQuery.trim().toLowerCase() : "";
+                const options = query
+                  ? dropdown.options.filter((o) => o.toLowerCase().includes(query))
+                  : dropdown.options;
                 return (
                   <div key={dropdown.id} className="border border-moss/15 rounded-xl overflow-hidden">
                     <button
                       type="button"
-                      onClick={() => setOpenFacet(isOpen ? null : dropdown.id)}
+                      onClick={() => {
+                        setOpenFacet(isOpen ? null : dropdown.id);
+                        setOptionQuery("");
+                      }}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs cursor-pointer transition-colors ${
                         activeCount > 0 ? "bg-torii/5 text-torii font-bold" : "bg-washi/60 text-stone/75 hover:bg-washi"
                       }`}
@@ -118,30 +103,60 @@ export default function ShrineMapFilters({
                           transition={{ duration: 0.15 }}
                           className="overflow-hidden border-t border-moss/10"
                         >
-                          <div className="p-3 max-h-48 overflow-y-auto space-y-0.5">
-                            {dropdown.options.map((option) => {
-                              const checked = filters[dropdown.id].includes(option);
-                              return (
-                                <label
-                                  key={option}
-                                  className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none"
+                          {/* Option search */}
+                          <div className="px-3 pt-3">
+                            <div className="relative flex items-center bg-washi/90 border border-moss/15 rounded-lg focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
+                              <Search className="absolute left-2.5 text-stone/40" size={12} />
+                              <input
+                                type="text"
+                                autoFocus
+                                placeholder={`Search ${dropdown.label.toLowerCase()}…`}
+                                value={optionQuery}
+                                onChange={(e) => setOptionQuery(e.target.value)}
+                                className="w-full text-[11px] font-sans pl-7 pr-7 py-2 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
+                              />
+                              {optionQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setOptionQuery("")}
+                                  aria-label="Clear"
+                                  className="absolute right-2 text-stone/40 hover:text-torii p-1 rounded-full transition-colors cursor-pointer"
                                 >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => onToggleFacet(dropdown.id, option)}
-                                    className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
-                                  />
-                                  <span
-                                    className={`transition-colors truncate font-sans font-medium ${
-                                      checked ? "text-torii font-bold" : "text-stone/72"
-                                    }`}
+                                  <X size={11} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3 max-h-48 overflow-y-auto space-y-0.5">
+                            {options.length === 0 ? (
+                              <p className="px-1 py-2 text-[11px] font-sans italic text-stone/40">
+                                No matches
+                              </p>
+                            ) : (
+                              options.map((option) => {
+                                const checked = filters[dropdown.id].includes(option);
+                                return (
+                                  <label
+                                    key={option}
+                                    className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none"
                                   >
-                                    {option}
-                                  </span>
-                                </label>
-                              );
-                            })}
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => onToggleFacet(dropdown.id, option)}
+                                      className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
+                                    />
+                                    <span
+                                      className={`transition-colors truncate font-sans font-medium ${
+                                        checked ? "text-torii font-bold" : "text-stone/72"
+                                      }`}
+                                    >
+                                      {option}
+                                    </span>
+                                  </label>
+                                );
+                              })
+                            )}
                           </div>
                         </motion.div>
                       )}
