@@ -19,8 +19,8 @@ import ShrineMapFilters, { type FacetDropdown } from "@/components/map/ShrineMap
 
 export type ShrineMapPoint = ShrineCard & { coordinates: Coordinates };
 
-// Leaflet touches `window` at import time — client-only.
-const ShrineLeafletMap = dynamic(() => import("@/components/map/ShrineLeafletMap"), {
+// MapLibre GL touches `window` at import time — client-only.
+const ShrineMapCanvas = dynamic(() => import("@/components/map/ShrineMapCanvas"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center text-xs font-mono uppercase tracking-widest text-moss-light">
@@ -182,12 +182,14 @@ export default function ShrineMapView({
       </section>
 
       {/* Map panel — square canvas, capped so it doesn't grow unbounded on wide
-          viewports. z-0 + isolate keep Leaflet's internal panes below the site chrome. */}
+          viewports. z-0 + isolate keep MapLibre's internal layers below the site chrome.
+          No data-reveal here: the GSAP entrance applies a CSS transform, and MapLibre's
+          DOM overlay (markers + popups) desyncs from the WebGL canvas — markers "fly"
+          on zoom — whenever an ancestor of the map is transformed. */}
       <div
-        data-reveal="fade-up"
         className="relative z-0 isolate w-full aspect-square max-h-[600px] rounded-2xl overflow-hidden border border-moss/15 shadow-sm bg-stone/5"
       >
-        <ShrineLeafletMap points={points} />
+        <ShrineMapCanvas points={points} />
         {points.length === 0 && (
           <div className="absolute inset-0 z-[500] flex items-center justify-center bg-washi/70 backdrop-blur-[2px] pointer-events-none">
             <p className="text-xs font-mono uppercase tracking-widest text-stone/60">

@@ -91,7 +91,7 @@ Both call the same `getShrineDetail` + `ShrineDetailView`; the `variant` prop (`
 
 Pages are server components that hand pre-built data to client components:
 - `ShrineListing` — faceted filtering (URL-synced) over `ShrineCard[]`
-- `ShrineMapView` (`/map`) — the same faceted filtering over `ShrineCard[]` (via a filter popup), rendered as Leaflet markers
+- `ShrineMapView` (`/map`) — the same faceted filtering over `ShrineCard[]` (via a filter popup), rendered as MapLibre GL markers
 - `DeityListing` — the public `/deities` ("Pantheon") browse view
 - `Calendar` — month navigation over `CalendarEntry[]`
 - `SearchResults` — Fuse.js over `SearchDoc[]` (blob built in `lib/search.ts` from the Store)
@@ -200,13 +200,25 @@ dashboard and structured-form / JSON-import pages were removed in favor of inlin
 `lat`/`lng`. The map in `ShrineMap` is lazy-loaded on scroll and unloaded (`about:blank`) on modal close.
 
 `/map` (`app/map/page.tsx` → `components/map/ShrineMapView.tsx`) shows every shrine with
-non-null `coordinates` as a marker on a square Leaflet canvas (`react-leaflet`, keyless — consistent
-with the no-API-key stance), using Esri's "World Light Gray Canvas" base + reference tiles (chosen
-over OSM's own tiles because Esri renders place labels in English worldwide, whereas OSM tiles use
-each place's local-script name). The Leaflet map itself (`components/map/ShrineLeafletMap.tsx`) is
-loaded with `next/dynamic` + `ssr: false` because Leaflet touches `window` at import time. Marker
-popups are reskinned to the washi/torii palette (`.shrine-popup` overrides in `app/globals.css`) and
-soft-link to `/shrines/[slug]`, which opens the intercepted detail modal over the map. All filter
+non-null `coordinates` as a marker on a **MapLibre GL vector** canvas
+(`components/map/ShrineMapCanvas.tsx`, via `react-map-gl/maplibre` + `maplibre-gl`), keyless — the
+basemap is OpenFreeMap's "liberty" style (`tiles.openfreemap.org`, OpenMapTiles schema, free and
+unrestricted — no API key, no session cap, no commercial-use carve-out). Label language is a runtime
+style property (`applyLabelLanguage` rewrites every symbol layer's `text-field` to
+`coalesce(name:<lang>, name:en, name)` via `map.setLayoutProperty`) instead of being baked into a
+pre-rendered image. This is the reason for the vector-tile approach: raster basemaps (CARTO Voyager,
+tried first, and the Esri World Terrain base before that) render international/English names for
+large regions at low zoom but the raw local-script `name` tag for street/POI-level detail at high
+zoom, with no way to override that per viewer — zooming in on Japan flipped labels to Japanese.
+`ShrineMapCanvas`'s `language` prop (an ISO 639-1 code, default `"en"`) is a placeholder until the
+site has its own i18n locale to drive it; wire that locale in once it exists. Two Esri raster
+basemaps were tried and dropped before the CARTO/OpenFreeMap line: Canvas/World_Light_Gray
+(zoom-level gaps that surface Esri's "map data not yet available" placeholder when zoomed out) and
+World_Street_Map (tone didn't fit). The map is
+loaded with `next/dynamic` + `ssr: false` because MapLibre GL touches `window` at import time. Marker
+popups are reskinned to the washi/torii palette (`.shrine-popup` / `.shrine-tooltip` overrides in
+`app/globals.css`, targeting MapLibre's `.maplibregl-popup-*` DOM) and soft-link to
+`/shrines/[slug]`, which opens the intercepted detail modal over the map. All filter
 controls (search + the Region/Prefecture/Focus/Rank facets) live in a single popup,
 `components/map/ShrineMapFilters.tsx`, opened from a Filter button that shows an icon + label on
 desktop (`xl:` and up) and an icon-only badge below that (covers tablets and phones).
