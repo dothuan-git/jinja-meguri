@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, SlidersHorizontal, X } from "lucide-react";
 import type { ShrineFacetId, ShrineFilters } from "@/lib/shrineFilters";
 
 export type FacetDropdown = { id: ShrineFacetId; label: string; options: string[] };
@@ -29,6 +29,7 @@ export default function ShrineMapFilters({
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const [openFacet, setOpenFacet] = useState<ShrineFacetId | null>(null);
 
   if (!mounted) return null;
 
@@ -86,33 +87,68 @@ export default function ShrineMapFilters({
                 )}
               </div>
 
-              {/* Facet groups */}
-              {dropdowns.map((dropdown) => (
-                <div key={dropdown.id}>
-                  <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
-                    {dropdown.label}
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {dropdown.options.map((option) => {
-                      const checked = filters[dropdown.id].includes(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => onToggleFacet(dropdown.id, option)}
-                          className={`text-[11px] font-sans px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
-                            checked
-                              ? "border-torii bg-torii/10 text-torii font-bold"
-                              : "border-moss/20 text-stone/70 hover:border-moss/45"
-                          }`}
+              {/* Facet groups — each is its own dropdown */}
+              {dropdowns.map((dropdown) => {
+                const activeCount = filters[dropdown.id].length;
+                const isOpen = openFacet === dropdown.id;
+                return (
+                  <div key={dropdown.id} className="border border-moss/15 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFacet(isOpen ? null : dropdown.id)}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs cursor-pointer transition-colors ${
+                        activeCount > 0 ? "bg-torii/5 text-torii font-bold" : "bg-washi/60 text-stone/75 hover:bg-washi"
+                      }`}
+                    >
+                      <span className="font-sans">
+                        {activeCount > 0 ? `${dropdown.label} (${activeCount})` : dropdown.label}
+                      </span>
+                      {isOpen ? (
+                        <ChevronUp size={13} className="text-moss-light" />
+                      ) : (
+                        <ChevronDown size={13} className="text-moss-light" />
+                      )}
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden border-t border-moss/10"
                         >
-                          {option}
-                        </button>
-                      );
-                    })}
+                          <div className="p-3 max-h-48 overflow-y-auto space-y-0.5">
+                            {dropdown.options.map((option) => {
+                              const checked = filters[dropdown.id].includes(option);
+                              return (
+                                <label
+                                  key={option}
+                                  className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => onToggleFacet(dropdown.id, option)}
+                                    className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
+                                  />
+                                  <span
+                                    className={`transition-colors truncate font-sans font-medium ${
+                                      checked ? "text-torii font-bold" : "text-stone/72"
+                                    }`}
+                                  >
+                                    {option}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Footer */}

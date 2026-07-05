@@ -154,6 +154,11 @@ export default function ShrineMapView({
         data-reveal="fade-up"
         className="w-full pb-2 mb-3 flex items-center justify-between gap-3 select-none text-xs"
       >
+        <p className="text-[10px] font-mono uppercase tracking-widest text-moss-light">
+          {points.length} of {cards.length} shrines
+          {missingCoords > 0 && <span className="text-stone/40"> · {missingCoords} w/o coords</span>}
+        </p>
+
         <button
           type="button"
           onClick={() => setFilterOpen(true)}
@@ -174,18 +179,13 @@ export default function ShrineMapView({
             </span>
           )}
         </button>
-
-        <p className="text-[10px] font-mono uppercase tracking-widest text-moss-light text-right">
-          {points.length} of {cards.length} shrines
-          {missingCoords > 0 && <span className="text-stone/40"> · {missingCoords} w/o coords</span>}
-        </p>
       </section>
 
       {/* Map panel — square canvas, capped so it doesn't grow unbounded on wide
           viewports. z-0 + isolate keep Leaflet's internal panes below the site chrome. */}
       <div
         data-reveal="fade-up"
-        className="relative z-0 isolate w-full aspect-square max-h-[560px] rounded-2xl overflow-hidden border border-moss/15 shadow-sm bg-stone/5"
+        className="relative z-0 isolate w-full aspect-square max-h-[600px] rounded-2xl overflow-hidden border border-moss/15 shadow-sm bg-stone/5"
       >
         <ShrineLeafletMap points={points} />
         {points.length === 0 && (
