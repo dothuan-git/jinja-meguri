@@ -28,9 +28,10 @@ function toBlock(f: FestivalDraft, i: number): FestivalForBlock {
 }
 
 /**
- * Draft-driven festival editor for the create flow: add/remove festivals, each
- * rendered with the shared {@link FestivalBlock} so it reads identically to the
- * detail page. Dates (festival_occurrences) are deferred and not collected here.
+ * Draft-driven festival editor shared by the create flow and in-place shrine
+ * editing: add/remove festivals, each rendered with the shared {@link FestivalBlock}
+ * so it reads identically to the detail page. Dates (festival_occurrences) are
+ * deferred and not collected here.
  */
 export default function FestivalCreateEditor() {
   const api = useShrineEdit();
