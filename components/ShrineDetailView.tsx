@@ -1109,7 +1109,7 @@ function PageBody({
 
               {/* Festival listings - elegant box-free editorial design */}
               <div className="space-y-6 md:space-y-16">
-                {creating ? (
+                {editing ? (
                   <FestivalCreateEditor />
                 ) : (
                   shrine.festivals.map((fest, idx) => (
