@@ -23,6 +23,8 @@ const EMPTY_DETAIL: ShrineDetail = {
   rank_codes: [],
   category_codes: [],
   deity_ja: [],
+  festival_months: [],
+  festivals_brief: [],
   prayer_focus: null,
   best_time: null,
   primary_deity_titles: [],

@@ -27,6 +27,21 @@ describe("getShrineCards", () => {
     expect(a.deity_ja).toContain("神一");
     expect(a.rank_codes.sort()).toEqual(["Ichinomiya", "Sonsha"]);
   });
+  it("derives festival_months from festival date spans", () => {
+    // Shrine A's festival runs 2026-07-30 → 2026-08-02, so it spans July & August.
+    expect(cards.find((c) => c.slug === "a")!.festival_months).toEqual([7, 8]);
+    // Shrine B's only festival is undated (lunar) with no occurrences → no months.
+    expect(cards.find((c) => c.slug === "b")!.festival_months).toEqual([]);
+  });
+  it("builds festivals_brief with a time_prose 'when' for the map popup", () => {
+    expect(cards.find((c) => c.slug === "a")!.festivals_brief).toEqual([
+      { name_en: "Grand Festival", name_ja: "大祭", when: "early August" },
+    ]);
+    // Undated lunar festival still lists, using its time_prose.
+    expect(cards.find((c) => c.slug === "b")!.festivals_brief).toEqual([
+      { name_en: "Lunar Rite", name_ja: "旧暦祭", when: "2nd Sunday of the 6th lunar month" },
+    ]);
+  });
 });
 
 describe("getShrineCards extended fields", () => {

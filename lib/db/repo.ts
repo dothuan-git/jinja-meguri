@@ -14,12 +14,15 @@ import type {
   RankView,
   CategoryView,
   DeityView,
+  FestivalBrief,
   FestivalView,
   FacetCatalogs,
   Prefecture,
   CalendarFestival,
   DeityListItem,
   DeityShrineLink,
+  FestivalRow,
+  FestivalOccurrenceRow,
 } from "@/lib/types";
 import { pickHighestRankId } from "@/lib/db/derive";
 import { resolveCalendarDates } from "@/lib/calendar";
@@ -54,6 +57,8 @@ type StoreIndex = {
   catsByShrine: Map<string, ShrinePrayerCategoryRow[]>;
   deitiesByShrine: Map<string, ShrineDeityRow[]>;
   detailByShrine: Map<string, ShrineDetailRow>;
+  festivalsByShrine: Map<string, FestivalRow[]>;
+  occsByFestival: Map<string, FestivalOccurrenceRow[]>;
 };
 
 function buildIndex(store: Store): StoreIndex {
@@ -67,7 +72,60 @@ function buildIndex(store: Store): StoreIndex {
     catsByShrine: groupBy(store.shrine_prayer_categories, (spc) => spc.shrine_id),
     deitiesByShrine: groupBy(store.shrine_deities, (sd) => sd.shrine_id),
     detailByShrine: new Map(store.shrine_details.map((d) => [d.shrine_id, d])),
+    festivalsByShrine: groupBy(store.festivals, (f) => f.shrine_id),
+    occsByFestival: groupBy(store.festival_occurrences, (o) => o.festival_id),
   };
+}
+
+// Every month (1-12) touched by a `YYYY-MM-DD` span. When the end month is
+// earlier than the start month the span crosses New Year, so it wraps
+// (e.g. 12-28 → 01-03 yields {12, 1}).
+function monthsInSpan(start: string, end: string | null): number[] {
+  const startM = Number(start.slice(5, 7));
+  const endM = end ? Number(end.slice(5, 7)) : startM;
+  const months: number[] = [];
+  if (endM >= startM) {
+    for (let m = startM; m <= endM; m++) months.push(m);
+  } else {
+    for (let m = startM; m <= 12; m++) months.push(m);
+    for (let m = 1; m <= endM; m++) months.push(m);
+  }
+  return months;
+}
+
+// Year-agnostic set of months a shrine's festivals fall in. Fixed-date
+// festivals use their stored start/end; lunar / Nth-weekday festivals (no
+// stored date) fall back to the union of their recorded occurrences.
+function shrineFestivalMonths(idx: StoreIndex, shrineId: string): number[] {
+  const months = new Set<number>();
+  for (const f of idx.festivalsByShrine.get(shrineId) ?? []) {
+    if (f.start_date) {
+      monthsInSpan(f.start_date, f.end_date).forEach((m) => months.add(m));
+    } else {
+      for (const o of idx.occsByFestival.get(f.id) ?? []) {
+        monthsInSpan(o.start_date, o.end_date).forEach((m) => months.add(m));
+      }
+    }
+  }
+  return [...months].sort((a, b) => a - b);
+}
+
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Compact "when" label for the map popup: prefer the human time_prose, else a
+// month-day span from the fixed start/end dates, else null.
+function festivalWhen(f: FestivalRow): string | null {
+  if (f.time_prose) return f.time_prose;
+  if (!f.start_date) return null;
+  const dayLabel = (d: string) => `${MONTH_ABBR[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`;
+  const start = dayLabel(f.start_date);
+  return f.end_date && f.end_date !== f.start_date ? `${start} – ${dayLabel(f.end_date)}` : start;
+}
+
+function shrineFestivalsBrief(idx: StoreIndex, shrineId: string): FestivalBrief[] {
+  return [...(idx.festivalsByShrine.get(shrineId) ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((f) => ({ name_en: f.name_en, name_ja: f.name_ja, when: festivalWhen(f) }));
 }
 
 function shrineRankViews(idx: StoreIndex, shrineId: string): RankView[] {
@@ -136,11 +194,14 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
       : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
+    coordinates: s.coordinates,
     region_id: s.region_id,
     prefecture_id: s.prefecture_id,
     rank_codes: ranks.map((r) => r.name_en),
     category_codes: categories.map((c) => c.name_en),
     deity_ja: deities.map((d) => d.name_ja).filter((k): k is string => !!k),
+    festival_months: shrineFestivalMonths(idx, s.id),
+    festivals_brief: shrineFestivalsBrief(idx, s.id),
     prayer_focus: detailRow?.prayer_focus ?? null,
     best_time: detailRow?.best_time ?? null,
     primary_deity_titles: (primary?.alter_titles ?? primary?.titles) ?? [],
@@ -182,7 +243,6 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
   return {
     ...card,
     address: s.address,
-    coordinates: s.coordinates,
     image_urls: s.image_urls,
     deities: shrineDeityViews(idx, s.id),
     ranks: shrineRankViews(idx, s.id),

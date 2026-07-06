@@ -184,6 +184,16 @@ export interface DeityView {
   is_primary: boolean;
   sort_order: number;
 }
+// Compact festival summary embedded on ShrineCard for the map marker popup's
+// optional "show festivals" display — just enough to name a festival and say
+// roughly when it happens, without the full FestivalView payload.
+export interface FestivalBrief {
+  name_en: string;
+  name_ja: string | null;
+  // Human date/time: time_prose when present, else a "Jul 30 – Aug 2" span from
+  // the fixed start/end dates, else null (undated lunar / Nth-weekday festival).
+  when: string | null;
+}
 export interface FestivalView {
   id: string;
   name_en: string;
@@ -209,12 +219,21 @@ export interface ShrineCard {
   primary_deity: { name_en: string; name_ja: string | null } | null;
   categories: CategoryView[];
   highest_rank: RankView | null;
+  coordinates: Coordinates | null;
   // Facet membership for client filtering:
   region_id: number;
   prefecture_id: number;
   rank_codes: string[];
   category_codes: string[];
   deity_ja: string[];
+  // Months (1-12) in which this shrine holds any festival, for the map's
+  // festival-season filter. Derived from festival start/end dates, with a
+  // fallback to festival_occurrences for lunar / Nth-weekday festivals;
+  // undated festivals contribute nothing.
+  festival_months: number[];
+  // Festivals held at this shrine (sorted), for the map popup's optional
+  // festival display; see FestivalBrief.
+  festivals_brief: FestivalBrief[];
   prayer_focus: string | null;
   best_time: string | null;
   primary_deity_titles: string[];
@@ -222,7 +241,6 @@ export interface ShrineCard {
 
 export interface ShrineDetail extends ShrineCard {
   address: string | null;
-  coordinates: Coordinates | null;
   // Kept (not displayed: ShrineImage is a procedural placeholder) because the
   // inline editor round-trips it via shrineDetailToInput → upsertShrine.
   image_urls: string[] | null;

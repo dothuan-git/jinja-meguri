@@ -114,3 +114,41 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(140, 122, 107, 0.2); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(140, 122, 107, 0.4); }
+
+/* /map marker popup (react-map-gl/maplibre) — reskin the default white
+   MapLibre popup chrome to match the washi/torii palette. Scoped via the
+   `shrine-popup` className passed to <Popup>. */
+.shrine-popup.maplibregl-popup .maplibregl-popup-content {
+  background: var(--color-washi);
+  border: 1px solid rgba(34, 63, 45, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px -14px rgba(26, 32, 28, 0.35);
+  padding: 14px 16px;
+  min-width: 190px;
+}
+.shrine-popup.maplibregl-popup .maplibregl-popup-tip {
+  border-top-color: var(--color-washi);
+  border-bottom-color: var(--color-washi);
+}
+.shrine-popup.maplibregl-popup .maplibregl-popup-close-button {
+  top: 8px;
+  right: 8px;
+  color: rgba(26, 32, 28, 0.35);
+  font-size: 16px;
+}
+.shrine-popup.maplibregl-popup .maplibregl-popup-close-button:hover {
+  color: var(--color-torii);
+}
+
+/* Hover-only marker label (no close button, no chrome). */
+.shrine-tooltip.maplibregl-popup .maplibregl-popup-content {
+  background: var(--color-washi);
+  border: 1px solid rgba(34, 63, 45, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px -12px rgba(26, 32, 28, 0.35);
+  padding: 4px 10px;
+}
+.shrine-tooltip.maplibregl-popup .maplibregl-popup-tip {
+  border-top-color: var(--color-washi);
+  border-bottom-color: var(--color-washi);
+}

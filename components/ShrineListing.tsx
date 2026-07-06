@@ -18,6 +18,13 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
+import {
+  FILTER_PARAM_KEY,
+  hasActiveShrineFilters,
+  matchesShrineFilters,
+  readShrineFilters,
+  type ShrineFilters,
+} from "@/lib/shrineFilters";
 import ShrineImage from "@/components/ShrineImage";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import { getCategoryColor } from "@/lib/facetColors";
@@ -29,25 +36,12 @@ import { useShrineMarks } from "@/components/user/useShrineMark";
 // table, cards, and the shrine detail/modal views. Color comes from facetColors.
 const CHIP = "text-[8.5px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border";
 
-type Filters = {
-  searchQuery: string;
-  prayerFocus: string[];
-  ranks: string[];
-  region: string[];
-  prefecture: string[];
-  deity: string[];
-};
+// Filter state/logic is shared with the map page — see lib/shrineFilters.ts.
+type Filters = ShrineFilters;
+const PARAM_KEY = FILTER_PARAM_KEY;
 
 type SortField = "name" | "location" | "rank";
 type SortDirection = "asc" | "desc";
-
-const PARAM_KEY: Record<Exclude<keyof Filters, "searchQuery">, string> = {
-  prayerFocus: "cat",
-  ranks: "rank",
-  region: "region",
-  prefecture: "pref",
-  deity: "deity",
-};
 
 export default function ShrineListing({
   cards,
@@ -82,15 +76,7 @@ export default function ShrineListing({
     router.replace(`/shrines?${next.toString()}`, { scroll: false });
   }
 
-  const getList = (key: string) => params.getAll(key);
-  const filters: Filters = {
-    searchQuery: params.get("q") ?? "",
-    prayerFocus: getList("cat"), // category name_en values
-    ranks: getList("rank"),
-    region: getList("region"),
-    prefecture: getList("pref"),
-    deity: getList("deity"),
-  };
+  const filters: Filters = readShrineFilters(params);
 
   function setParam(key: string, values: string[]) {
     const next = new URLSearchParams(params.toString());
@@ -142,7 +128,7 @@ export default function ShrineListing({
     direction: "asc",
   });
 
-  const handleToggleFilter = (category: Exclude<keyof Filters, "searchQuery">, value: string) => {
+  const handleToggleFilter = (category: Exclude<keyof Filters, "searchQuery" | "festivalMonths">, value: string) => {
     const current = filters[category];
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     setParam(PARAM_KEY[category], next);
@@ -166,51 +152,7 @@ export default function ShrineListing({
       // Personal collection filters (signed-in only; sets update optimistically).
       if (showSaved && !marks.isSaved(card.slug)) return false;
       if (showCollected && !marks.isStamped(card.slug)) return false;
-
-      // Search Term match
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        const nameMatch = card.name_en.toLowerCase().includes(query) || (card.name_ja ?? "").includes(query);
-        const locMatch =
-          (card.city ?? "").toLowerCase().includes(query) || card.prefecture.toLowerCase().includes(query);
-        const primaryDeityMatch =
-          (card.primary_deity?.name_en ?? "").toLowerCase().includes(query) ||
-          (card.primary_deity?.name_ja ?? "").includes(query);
-        const deityKanjiMatch = card.deity_ja.some((k) => k.includes(query));
-        const rankMatch = card.rank_codes.some((r) => r.toLowerCase().includes(query));
-        if (!nameMatch && !locMatch && !primaryDeityMatch && !deityKanjiMatch && !rankMatch) return false;
-      }
-
-      // Prayer Focus multi-match
-      if (filters.prayerFocus.length > 0) {
-        const hasFocus = card.category_codes.some((f) => filters.prayerFocus.includes(f));
-        if (!hasFocus) return false;
-      }
-
-      // Rank multi-match
-      if (filters.ranks.length > 0) {
-        const hasRank = card.rank_codes.some((r) => filters.ranks.includes(r));
-        if (!hasRank) return false;
-      }
-
-      // Region multi-match
-      if (filters.region.length > 0 && !filters.region.includes(card.region)) {
-        return false;
-      }
-
-      // Prefecture multi-match
-      if (filters.prefecture.length > 0 && !filters.prefecture.includes(card.prefecture)) {
-        return false;
-      }
-
-      // Deity multi-match (primary)
-      if (filters.deity.length > 0) {
-        const deities = card.primary_deity ? [card.primary_deity.name_en] : [];
-        const hasDeity = deities.some((d) => filters.deity.includes(d));
-        if (!hasDeity) return false;
-      }
-
-      return true;
+      return matchesShrineFilters(card, filters);
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -247,11 +189,7 @@ export default function ShrineListing({
     });
 
   // Calculate active filter count
-  const hasActiveFilters =
-    Object.values(filters).some((v) => Array.isArray(v) && v.length > 0) ||
-    filters.searchQuery !== "" ||
-    showSaved ||
-    showCollected;
+  const hasActiveFilters = hasActiveShrineFilters(filters) || showSaved || showCollected;
 
   // Heart toggle shared by the table rows and cards (signed-in only).
   const renderHeart = (slug: string, name: string, className: string) =>
