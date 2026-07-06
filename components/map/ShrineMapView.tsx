@@ -134,7 +134,7 @@ export default function ShrineMapView({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[calc(100vh-140px)] w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 pb-16 z-10 select-none flex flex-col"
+      className="relative w-full md:w-[calc(100%-2.5rem)] max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 pb-16 z-10 select-none flex flex-col"
     >
       {/* Page Title with low opacity backdrop calligraphic seal */}
       <div
