@@ -23,6 +23,8 @@ const card: ShrineCard = {
   rank_codes: ["Kanpei-taisha"],
   category_codes: ["Protection"],
   deity_ja: ["素戔嗚尊"],
+  festival_months: [7], // Gion Matsuri — July
+  festivals_brief: [{ name_en: "Gion Matsuri", name_ja: "祇園祭", when: "Jul" }],
   prayer_focus: null,
   best_time: null,
   primary_deity_titles: [],
@@ -35,11 +37,12 @@ const none: ShrineFilters = {
   region: [],
   prefecture: [],
   deity: [],
+  festivalMonths: null,
 };
 
 describe("readShrineFilters", () => {
   it("reads all facets from URL params", () => {
-    const params = new URLSearchParams("q=fox&cat=Protection&cat=Luck&rank=Sonsha&region=Kansai&pref=Kyoto&deity=Inari");
+    const params = new URLSearchParams("q=fox&cat=Protection&cat=Luck&rank=Sonsha&region=Kansai&pref=Kyoto&deity=Inari&fmFrom=3&fmTo=5");
     expect(readShrineFilters(params)).toEqual({
       searchQuery: "fox",
       prayerFocus: ["Protection", "Luck"],
@@ -47,7 +50,14 @@ describe("readShrineFilters", () => {
       region: ["Kansai"],
       prefecture: ["Kyoto"],
       deity: ["Inari"],
+      festivalMonths: { from: 3, to: 5 },
     });
+  });
+
+  it("ignores an incomplete or out-of-range festival month range", () => {
+    expect(readShrineFilters(new URLSearchParams("fmFrom=3")).festivalMonths).toBeNull();
+    expect(readShrineFilters(new URLSearchParams("fmFrom=0&fmTo=5")).festivalMonths).toBeNull();
+    expect(readShrineFilters(new URLSearchParams("fmFrom=3&fmTo=13")).festivalMonths).toBeNull();
   });
 
   it("defaults to empty filters", () => {
@@ -86,6 +96,19 @@ describe("matchesShrineFilters", () => {
   it("requires a primary deity for deity filters", () => {
     expect(matchesShrineFilters({ ...card, primary_deity: null }, { ...none, deity: ["Susanoo"] })).toBe(false);
   });
+
+  it("filters by festival month range, including year-wrapping ranges", () => {
+    expect(matchesShrineFilters(card, { ...none, festivalMonths: { from: 6, to: 8 } })).toBe(true);
+    expect(matchesShrineFilters(card, { ...none, festivalMonths: { from: 1, to: 3 } })).toBe(false);
+    // Winter range wraps the year end (Dec–Feb); July shrine is excluded.
+    expect(matchesShrineFilters(card, { ...none, festivalMonths: { from: 12, to: 2 } })).toBe(false);
+    // A shrine whose festival is in January matches the wrapping winter range.
+    const jan = { ...card, festival_months: [1] };
+    expect(matchesShrineFilters(jan, { ...none, festivalMonths: { from: 12, to: 2 } })).toBe(true);
+    // A shrine with no dated festivals never matches an active season filter.
+    const undated = { ...card, festival_months: [] };
+    expect(matchesShrineFilters(undated, { ...none, festivalMonths: { from: 1, to: 12 } })).toBe(false);
+  });
 });
 
 describe("hasActiveShrineFilters", () => {
@@ -93,5 +116,6 @@ describe("hasActiveShrineFilters", () => {
     expect(hasActiveShrineFilters(none)).toBe(false);
     expect(hasActiveShrineFilters({ ...none, searchQuery: "x" })).toBe(true);
     expect(hasActiveShrineFilters({ ...none, region: ["Kansai"] })).toBe(true);
+    expect(hasActiveShrineFilters({ ...none, festivalMonths: { from: 3, to: 5 } })).toBe(true);
   });
 });

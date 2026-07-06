@@ -6,9 +6,11 @@ import { Filter, MapPinned, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
 import {
+  FESTIVAL_MONTH_PARAM,
   FILTER_PARAM_KEY,
   matchesShrineFilters,
   readShrineFilters,
+  type MonthRange,
   type ShrineFacetId,
 } from "@/lib/shrineFilters";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
@@ -54,6 +56,9 @@ export default function ShrineMapView({
 
   const filters = readShrineFilters(params);
   const [filterOpen, setFilterOpen] = useState(false);
+  // Display-only preference (not a filter): show each shrine's festivals inside
+  // the marker-click popup. Toggled from the filter modal.
+  const [showFestivals, setShowFestivals] = useState(false);
 
   function replaceParams(next: URLSearchParams) {
     router.replace(`/map?${next.toString()}`, { scroll: false });
@@ -76,6 +81,17 @@ export default function ShrineMapView({
     const next = new URLSearchParams(params.toString());
     next.delete(FILTER_PARAM_KEY[facet]);
     values.forEach((v) => next.append(FILTER_PARAM_KEY[facet], v));
+    replaceParams(next);
+  }
+  function setFestivalMonths(range: MonthRange | null) {
+    const next = new URLSearchParams(params.toString());
+    if (range) {
+      next.set(FESTIVAL_MONTH_PARAM.from, String(range.from));
+      next.set(FESTIVAL_MONTH_PARAM.to, String(range.to));
+    } else {
+      next.delete(FESTIVAL_MONTH_PARAM.from);
+      next.delete(FESTIVAL_MONTH_PARAM.to);
+    }
     replaceParams(next);
   }
   function clearAll() {
@@ -111,7 +127,8 @@ export default function ShrineMapView({
     (filters.region.length > 0 ? 1 : 0) +
     (filters.prefecture.length > 0 ? 1 : 0) +
     (filters.prayerFocus.length > 0 ? 1 : 0) +
-    (filters.ranks.length > 0 ? 1 : 0);
+    (filters.ranks.length > 0 ? 1 : 0) +
+    (filters.festivalMonths ? 1 : 0);
   const hasActiveFacetFilters = activeFilterCount > 0;
 
   return (
@@ -213,7 +230,7 @@ export default function ShrineMapView({
       <div
         className="relative z-0 isolate w-full aspect-square max-h-[600px] rounded-2xl overflow-hidden border border-moss/15 shadow-sm bg-stone/5"
       >
-        <ShrineMapCanvas points={points} />
+        <ShrineMapCanvas points={points} showFestivals={showFestivals} />
         {points.length === 0 && (
           <div className="absolute inset-0 z-[500] flex items-center justify-center bg-washi/70 backdrop-blur-[2px] pointer-events-none">
             <p className="text-xs font-mono uppercase tracking-widest text-stone/60">
@@ -229,6 +246,9 @@ export default function ShrineMapView({
         filters={filters}
         dropdowns={dropdowns}
         onToggleFacet={toggleFacet}
+        onSetFestivalMonths={setFestivalMonths}
+        showFestivals={showFestivals}
+        onToggleShowFestivals={() => setShowFestivals((v) => !v)}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFacetFilters}
       />

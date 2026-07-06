@@ -421,7 +421,7 @@ Neon Postgres
 
 | View model        | Built by (`repo.ts`)  | Purpose                                                                 |
 | ----------------- | --------------------- | ----------------------------------------------------------------------- |
-| `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`) so client-side filtering needs no extra lookups, plus nullable `coordinates` for the `/map` markers |
+| `ShrineCard`      | `getShrineCards`      | Listing card; embeds facet membership (`rank_codes`, `category_codes`, `deity_ja`, `festival_months`) so client-side filtering needs no extra lookups, a `festivals_brief` summary for the `/map` popup, plus nullable `coordinates` for the `/map` markers |
 | `ShrineDetail`    | `getShrineDetail`     | Extends `ShrineCard` with deities, all ranks, prose, highlights, festivals, sources  |
 | `DeityListItem`   | `getDeityList`        | Pantheon page; deity + its shrine links (deities with no links still show) |
 | `CalendarFestival`| `getFestivalYear`     | Merges festival definition + that year's occurrence (or `time_prose` fallback) |
@@ -433,6 +433,14 @@ Key derivations done in `repo.ts`, not in SQL:
 
 - **Highest rank** — `pickHighestRankId` (min `rank_order`) flags `is_highest` on a `RankView`.
 - **Primary deity** — the `shrine_deities` row with `is_primary = true`.
+- **Festival months** — `festival_months` (1-12) is the year-agnostic union of months a shrine's
+  festivals fall in: each festival's `start_date`/`end_date` span, or (for lunar / Nth-weekday
+  festivals with no fixed date) its `festival_occurrences` spans; undated festivals contribute
+  nothing. Drives the `/map` festival-season filter (see the map § in `CLAUDE.md`).
+- **Festivals brief** — `festivals_brief` is a compact `{ name_en, name_ja, when }[]` (sorted by
+  `sort_order`) embedded on every `ShrineCard` for the `/map` marker popup's optional "Show
+  festivals in popup" display. `when` prefers the festival's `time_prose`, else a `Jul 30 – Aug 2`
+  span from its fixed `start_date`/`end_date`, else null.
 - **Lore fallback** — `regional_lore ?? canonical_lore` for display.
 - **Enshrined-name fallback** — `alter_name_en ?? name_en` / `alter_name_ja ?? name_ja`: the shrine's
   alternate (enshrined) name is shown when present, otherwise the canonical deity name.

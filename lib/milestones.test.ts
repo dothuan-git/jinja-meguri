@@ -25,6 +25,8 @@ function stamp(p: Partial<StampEntry> & { slug: string; stamped_at: string }): S
     rank_codes: p.rank_codes ?? [],
     category_codes: p.category_codes ?? [],
     deity_ja: p.deity_ja ?? [],
+    festival_months: p.festival_months ?? [],
+    festivals_brief: p.festivals_brief ?? [],
     prayer_focus: p.prayer_focus ?? null,
     best_time: p.best_time ?? null,
     primary_deity_titles: p.primary_deity_titles ?? [],

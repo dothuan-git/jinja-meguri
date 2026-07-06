@@ -128,7 +128,7 @@ export default function ShrineListing({
     direction: "asc",
   });
 
-  const handleToggleFilter = (category: Exclude<keyof Filters, "searchQuery">, value: string) => {
+  const handleToggleFilter = (category: Exclude<keyof Filters, "searchQuery" | "festivalMonths">, value: string) => {
     const current = filters[category];
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     setParam(PARAM_KEY[category], next);

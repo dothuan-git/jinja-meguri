@@ -98,7 +98,9 @@ Pages are server components that hand pre-built data to client components:
 
 The shrine facet-filter logic (URL param names, search/facet predicate) is shared between
 `ShrineListing` and `ShrineMapView` via `lib/shrineFilters.ts` — change filter semantics there,
-not in the components.
+not in the components. This includes the map-only **festival-season filter** (`festivalMonths`, a
+year-wrapping month range carried in the `fmFrom`/`fmTo` params) matched against
+`ShrineCard.festival_months`; it lives in the shared predicate but only the map renders a control.
 
 ### Admin section (dynamic, authenticated)
 
@@ -218,10 +220,17 @@ World_Street_Map (tone didn't fit). The map is
 loaded with `next/dynamic` + `ssr: false` because MapLibre GL touches `window` at import time. Marker
 popups are reskinned to the washi/torii palette (`.shrine-popup` / `.shrine-tooltip` overrides in
 `app/globals.css`, targeting MapLibre's `.maplibregl-popup-*` DOM) and soft-link to
-`/shrines/[slug]`, which opens the intercepted detail modal over the map. All filter
-controls (search + the Region/Prefecture/Focus/Rank facets) live in a single popup,
-`components/map/ShrineMapFilters.tsx`, opened from a Filter button that shows an icon + label on
-desktop (`xl:` and up) and an icon-only badge below that (covers tablets and phones).
+`/shrines/[slug]`, which opens the intercepted detail modal over the map. Search lives on the page;
+the remaining filter controls (a **Festival season** month-range picker + the Region/Prefecture/
+Focus/Rank facets) live in a single popup, `components/map/ShrineMapFilters.tsx`, opened from a Filter
+button that shows an icon + label on desktop (`xl:` and up) and an icon-only badge below that (covers
+tablets and phones). The Festival season block pairs season presets (Spring/Summer/Autumn/Winter)
+with a 12-month bar using two-click range selection (click a start month, then an end); it drives the
+shared `festivalMonths` filter (see the Client interactivity §). The same popup also carries a
+**"Show festivals in popup"** switch — a display-only preference (local `showFestivals` state in
+`ShrineMapView`, **not** a URL filter, so it doesn't affect the match count) that, when on, lists each
+shrine's festivals (`ShrineCard.festivals_brief`) inside the marker-click popup rendered by
+`ShrineMapCanvas`.
 
 ### Ambient audio / motion
 

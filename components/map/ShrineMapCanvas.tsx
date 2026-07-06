@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Map, Marker, Popup, type MapRef } from "react-map-gl/maplibre";
 import type { Map as MaplibreMap } from "maplibre-gl";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, PartyPopper } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ShrineMapPoint } from "@/components/map/ShrineMapView";
 
@@ -74,9 +74,11 @@ function applyRoadWidths(map: MaplibreMap) {
 
 export default function ShrineMapCanvas({
   points,
+  showFestivals = false,
   language = DEFAULT_LANGUAGE,
 }: {
   points: ShrineMapPoint[];
+  showFestivals?: boolean;
   language?: string;
 }) {
   const mapRef = useRef<MapRef | null>(null);
@@ -209,6 +211,30 @@ export default function ShrineMapCanvas({
                 Enshrines {selected.primary_deity.name_en}
                 {selected.primary_deity.name_ja ? ` · ${selected.primary_deity.name_ja}` : ""}
               </p>
+            )}
+
+            {showFestivals && (
+              <div className="mt-2 pt-2 border-t border-moss/10">
+                <p className="flex items-center gap-1 text-[9px] font-mono font-bold uppercase tracking-widest text-moss-light m-0">
+                  <PartyPopper size={10} className="shrink-0 text-torii/70" />
+                  Festivals
+                </p>
+                {selected.festivals_brief.length === 0 ? (
+                  <p className="text-[11px] text-stone/50 italic mt-1 mb-0">No festivals recorded.</p>
+                ) : (
+                  <ul className="list-none p-0 mt-1 mb-0 space-y-1.5">
+                    {selected.festivals_brief.map((f, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-[11px] leading-tight">
+                        <span className="mt-1 w-1 h-1 rounded-full bg-torii/60 shrink-0" />
+                        <span className="flex flex-col">
+                          <span className="text-stone font-semibold">{f.name_en}</span>
+                          {f.when && <span className="text-moss">{f.when}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
 
             <Link
