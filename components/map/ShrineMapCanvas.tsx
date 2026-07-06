@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Map, Marker, Popup, type MapRef } from "react-map-gl/maplibre";
 import type { Map as MaplibreMap } from "maplibre-gl";
-import { MapPin, ArrowRight, PartyPopper } from "lucide-react";
+import { MapPin, ArrowRight, PartyPopper, Heart, Stamp } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ShrineMapPoint } from "@/components/map/ShrineMapView";
 
@@ -75,10 +75,16 @@ function applyRoadWidths(map: MaplibreMap) {
 export default function ShrineMapCanvas({
   points,
   showFestivals = false,
+  showFavoriteMarkers = false,
+  isSaved,
+  isStamped,
   language = DEFAULT_LANGUAGE,
 }: {
   points: ShrineMapPoint[];
   showFestivals?: boolean;
+  showFavoriteMarkers?: boolean;
+  isSaved?: (slug: string) => boolean;
+  isStamped?: (slug: string) => boolean;
   language?: string;
 }) {
   const mapRef = useRef<MapRef | null>(null);
@@ -147,24 +153,36 @@ export default function ShrineMapCanvas({
       }}
       onMoveEnd={() => setInteracting(false)}
     >
-      {points.map((p) => (
-        <Marker
-          key={p.slug}
-          longitude={p.coordinates.lng}
-          latitude={p.coordinates.lat}
-          onClick={(e) => {
-            e.originalEvent.stopPropagation();
-            setSelectedSlug(p.slug);
-          }}
-        >
-          <div
-            onMouseEnter={() => setHoveredSlug(p.slug)}
-            onMouseLeave={() => setHoveredSlug((s) => (s === p.slug ? null : s))}
-            className="w-3.5 h-3.5 rounded-full border-[1.5px] cursor-pointer"
-            style={{ background: "#c94b32", borderColor: "#fbf9f4" }}
-          />
-        </Marker>
-      ))}
+      {points.map((p) => {
+        const stamped = showFavoriteMarkers && isStamped?.(p.slug);
+        const saved = showFavoriteMarkers && !stamped && isSaved?.(p.slug);
+        return (
+          <Marker
+            key={p.slug}
+            longitude={p.coordinates.lng}
+            latitude={p.coordinates.lat}
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              setSelectedSlug(p.slug);
+            }}
+          >
+            <div
+              onMouseEnter={() => setHoveredSlug(p.slug)}
+              onMouseLeave={() => setHoveredSlug((s) => (s === p.slug ? null : s))}
+              className={`rounded-full border-[1.5px] cursor-pointer flex items-center justify-center ${
+                stamped || saved ? "w-4 h-4" : "w-3.5 h-3.5"
+              }`}
+              style={{ background: stamped ? "#223f2d" : "#c94b32", borderColor: "#fbf9f4" }}
+            >
+              {stamped ? (
+                <Stamp size={9} className="text-washi fill-washi" />
+              ) : saved ? (
+                <Heart size={9} className="text-washi fill-washi" />
+              ) : null}
+            </div>
+          </Marker>
+        );
+      })}
 
       {hovered && (
         <Popup

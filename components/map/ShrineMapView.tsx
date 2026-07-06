@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Filter, MapPinned, Search, X } from "lucide-react";
+import { Filter, Heart, MapPinned, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
 import {
@@ -59,6 +59,9 @@ export default function ShrineMapView({
   // Display-only preference (not a filter): show each shrine's festivals inside
   // the marker-click popup. Toggled from the filter modal.
   const [showFestivals, setShowFestivals] = useState(false);
+  // Display-only preference (not a filter): swap saved/stamped shrine markers
+  // for heart/stamp icons on the map. Signed-in users only.
+  const [showFavoriteMarkers, setShowFavoriteMarkers] = useState(false);
 
   function replaceParams(next: URLSearchParams) {
     router.replace(`/map?${next.toString()}`, { scroll: false });
@@ -194,6 +197,23 @@ export default function ShrineMapView({
             )}
           </div>
 
+          {isSignedIn && (
+            <button
+              type="button"
+              onClick={() => setShowFavoriteMarkers((v) => !v)}
+              aria-pressed={showFavoriteMarkers}
+              aria-label="Toggle favorite markers"
+              className={`relative flex items-center gap-2 px-4 border rounded-xl text-xs tracking-wide transition-all duration-200 cursor-pointer shrink-0 ${
+                showFavoriteMarkers
+                  ? "border-torii bg-torii/5 text-torii font-extrabold"
+                  : "border-moss/15 bg-washi/95 hover:border-moss/45 text-stone/70 shadow-3xs"
+              }`}
+            >
+              <Heart size={14} className={showFavoriteMarkers ? "fill-torii" : ""} />
+              <span className="hidden xl:inline font-sans whitespace-nowrap">Favorites</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
@@ -230,7 +250,13 @@ export default function ShrineMapView({
       <div
         className="relative z-0 isolate w-full aspect-square max-h-[600px] rounded-2xl overflow-hidden border border-moss/15 shadow-sm bg-stone/5"
       >
-        <ShrineMapCanvas points={points} showFestivals={showFestivals} />
+        <ShrineMapCanvas
+          points={points}
+          showFestivals={showFestivals}
+          showFavoriteMarkers={showFavoriteMarkers}
+          isSaved={marks.isSaved}
+          isStamped={marks.isStamped}
+        />
         {points.length === 0 && (
           <div className="absolute inset-0 z-[500] flex items-center justify-center bg-washi/70 backdrop-blur-[2px] pointer-events-none">
             <p className="text-xs font-mono uppercase tracking-widest text-stone/60">
