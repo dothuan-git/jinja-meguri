@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart, Stamp, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function UserControls({
   showSaved,
@@ -15,6 +16,7 @@ export default function UserControls({
   onToggleSaved: () => void;
   onToggleCollected: () => void;
 }) {
+  const t = useTranslations("UserControls");
   const [expanded, setExpanded] = useState(false);
 
   const base =
@@ -45,7 +47,7 @@ export default function UserControls({
               <button
                 onClick={onToggleSaved}
                 aria-pressed={showSaved}
-                aria-label="Saved shrines"
+                aria-label={t("savedShrines")}
                 className={`flex items-center justify-center p-2 rounded-full border transition-colors cursor-pointer ${
                   showSaved
                     ? "border-torii bg-torii/10 text-torii"
@@ -57,7 +59,7 @@ export default function UserControls({
               <button
                 onClick={onToggleCollected}
                 aria-pressed={showCollected}
-                aria-label="Collected shrines"
+                aria-label={t("collectedShrines")}
                 className={`flex items-center justify-center p-2 rounded-full border transition-colors cursor-pointer ${
                   showCollected
                     ? "border-torii bg-torii/10 text-torii"
@@ -68,7 +70,7 @@ export default function UserControls({
               </button>
               <button
                 onClick={() => setExpanded(false)}
-                aria-label="Collapse"
+                aria-label={t("collapse")}
                 className="ml-0.5 p-1.5 rounded-full text-stone/35 hover:text-stone/70 transition-colors cursor-pointer"
               >
                 <X size={11} />
@@ -82,11 +84,11 @@ export default function UserControls({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
               onClick={() => setExpanded(true)}
-              aria-label="My Collection"
+              aria-label={t("myCollection")}
               className="relative flex items-center px-4 py-2.5 cursor-pointer"
             >
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-moss whitespace-nowrap">
-                My Collection
+                {t("myCollection")}
               </span>
               {isAnyActive && (
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-torii border-2 border-washi" />
@@ -99,16 +101,16 @@ export default function UserControls({
       {/* Desktop: always full bar with text labels */}
       <div className="hidden md:flex pointer-events-auto items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-moss select-none">
-          My Collection
+          {t("myCollection")}
         </span>
         <span className="text-stone/25 font-mono select-none text-xs">|</span>
         <button onClick={onToggleSaved} aria-pressed={showSaved} className={`${base} ${showSaved ? on : off}`}>
           <Heart size={12} className={showSaved ? "fill-torii" : ""} />
-          <span>Saved</span>
+          <span>{t("saved")}</span>
         </button>
         <button onClick={onToggleCollected} aria-pressed={showCollected} className={`${base} ${showCollected ? on : off}`}>
           <Stamp size={12} />
-          <span>Collected</span>
+          <span>{t("collected")}</span>
         </button>
       </div>
     </div>

@@ -4,21 +4,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Compass, Calendar as CalendarIcon, Home, MapPinned, Sparkles, User, LogIn } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { CurrentUser } from "@/lib/auth/server";
+import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 const NAV = [
-  { href: "/shrines", label: "Shrines", match: ["/shrines"] },
-  { href: "/deities", label: "Deities", match: ["/deities"] },
-  { href: "/calendar", label: "Festivals", match: ["/calendar"] },
-  { href: "/map", label: "Map", match: ["/map"] },
-];
+  { href: "/shrines", key: "shrines", match: ["/shrines"] },
+  { href: "/deities", key: "deities", match: ["/deities"] },
+  { href: "/calendar", key: "festivals", match: ["/calendar"] },
+  { href: "/map", key: "map", match: ["/map"] },
+] as const;
 
-function isActive(pathname: string, match: string[]) {
+function isActive(pathname: string, match: readonly string[]) {
   return match.some((m) => pathname === m || pathname.startsWith(m + "/"));
 }
 
 export default function SiteChrome({ user }: { user: CurrentUser | null }) {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
   if (pathname === "/") return null; // home is full-bleed, no chrome
 
   return (
@@ -55,40 +58,44 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
                   : "text-moss-light hover:text-torii"
               }`}
             >
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </nav>
 
-        {user ? (
-          <Link
-            href={`/users/${user.id}`}
-            aria-label={user.name || "Profile"}
-            title={user.name || "Profile"}
-            className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
-              pathname.startsWith("/users/")
-                ? "border-torii text-torii"
-                : "border-moss/20 text-moss-light hover:border-torii hover:text-torii"
-            }`}
-          >
-            <User size={16} />
-          </Link>
-        ) : (
+        <div className="flex items-center gap-3">
+          <LocaleSwitcher />
+          {user ? (
             <Link
-            href="/sign-in"
-            className="text-xs tracking-widest uppercase py-1 font-mono font-bold text-moss-light transition-colors hover:text-torii"
-          >
-            Sign in
-          </Link>
-        )}
+              href={`/users/${user.id}`}
+              aria-label={user.name || t("profile")}
+              title={user.name || t("profile")}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+                pathname.startsWith("/users/")
+                  ? "border-torii text-torii"
+                  : "border-moss/20 text-moss-light hover:border-torii hover:text-torii"
+              }`}
+            >
+              <User size={16} />
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="text-xs tracking-widest uppercase py-1 font-mono font-bold text-moss-light transition-colors hover:text-torii"
+            >
+              {t("signIn")}
+            </Link>
+          )}
+        </div>
       </motion.header>
 
       {/* Mobile top banner */}
-      <div className="md:hidden w-full flex items-center justify-center gap-2 py-4 bg-washi/85 backdrop-blur-sm border-b border-moss/10 z-20 shrink-0">
+      <div className="md:hidden relative w-full flex items-center justify-center gap-2 py-4 bg-washi/85 backdrop-blur-sm border-b border-moss/10 z-20 shrink-0">
         <div className="w-5.5 h-5.5 hanko-seal text-[11px] p-0 flex items-center justify-center font-bold">神</div>
         <Link href="/" className="font-display text-sm tracking-[0.25em] text-stone pl-[0.25em] cursor-pointer font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }}>
           神社巡り
         </Link>
+        <LocaleSwitcher className="absolute right-3 top-1/2 -translate-y-1/2" />
       </div>
 
       {/* Mobile bottom nav */}
@@ -101,33 +108,33 @@ export default function SiteChrome({ user }: { user: CurrentUser | null }) {
         >
           <Link href="/" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
             <Home size={18} className={pathname === "/" ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${pathname === "/" ? "text-torii" : "text-moss-light"}`}>Home</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${pathname === "/" ? "text-torii" : "text-moss-light"}`}>{t("home")}</span>
           </Link>
           <Link href="/shrines" className="flex flex-col items-center justify-center gap-1.5 w-20 h-12">
             <Compass size={18} className={isActive(pathname, ["/shrines"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/shrines"]) ? "text-torii" : "text-moss-light"}`}>Shrines</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/shrines"]) ? "text-torii" : "text-moss-light"}`}>{t("shrines")}</span>
           </Link>
           <Link href="/deities" className="flex flex-col items-center justify-center gap-1.5 w-18 h-12">
             <Sparkles size={18} className={isActive(pathname, ["/deities"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/deities"]) ? "text-torii" : "text-moss-light"}`}>Deities</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/deities"]) ? "text-torii" : "text-moss-light"}`}>{t("deities")}</span>
           </Link>
           <Link href="/calendar" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
             <CalendarIcon size={18} className={isActive(pathname, ["/calendar"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/calendar"]) ? "text-torii" : "text-moss-light"}`}>Festivals</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/calendar"]) ? "text-torii" : "text-moss-light"}`}>{t("festivals")}</span>
           </Link>
           <Link href="/map" className="flex flex-col items-center justify-center gap-1.5 w-14 h-12">
             <MapPinned size={18} className={isActive(pathname, ["/map"]) ? "text-torii scale-110" : "text-moss-light"} />
-            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/map"]) ? "text-torii" : "text-moss-light"}`}>Map</span>
+            <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/map"]) ? "text-torii" : "text-moss-light"}`}>{t("map")}</span>
           </Link>
           {user ? (
             <Link href={`/users/${user.id}`} className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
               <User size={18} className={pathname.startsWith("/users/") ? "text-torii scale-110" : "text-moss-light"} />
-              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${pathname.startsWith("/users/") ? "text-torii" : "text-moss-light"}`}>Profile</span>
+              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${pathname.startsWith("/users/") ? "text-torii" : "text-moss-light"}`}>{t("profile")}</span>
             </Link>
           ) : (
             <Link href="/sign-in" className="flex flex-col items-center justify-center gap-1.5 w-16 h-12">
               <LogIn size={18} className={isActive(pathname, ["/sign-in", "/sign-up"]) ? "text-torii scale-110" : "text-moss-light"} />
-              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/sign-in", "/sign-up"]) ? "text-torii" : "text-moss-light"}`}>Sign in</span>
+              <span className={`text-[9px] uppercase tracking-widest font-mono font-bold ${isActive(pathname, ["/sign-in", "/sign-up"]) ? "text-torii" : "text-moss-light"}`}>{t("signIn")}</span>
             </Link>
           )}
         </motion.div>

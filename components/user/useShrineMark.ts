@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toggleSaveAction, toggleStampAction } from "@/app/users/actions";
 import { useToast } from "@/components/ui/Toast";
 
@@ -25,6 +26,7 @@ export function useShrineMarks(initial: { saved?: string[]; stamped?: string[] }
   const [stamped, setStamped] = useState<Set<string>>(() => new Set(initial.stamped ?? []));
   const [pending, startTransition] = useTransition();
   const toast = useToast();
+  const t = useTranslations("Toasts");
 
   const run = useCallback(
     (kind: Kind, slug: string, name?: string) => {
@@ -40,18 +42,18 @@ export function useShrineMarks(initial: { saved?: string[]; stamped?: string[] }
         const res = await action(slug, next);
         if (res.error || !res.state) {
           setState((prev) => withSlug(prev, slug, !next)); // revert
-          toast.error(res.error ?? "Couldn't save your change. Please try again.");
+          toast.error(res.error ?? t("saveFailed"));
           return;
         }
         // Reconcile both columns to the authoritative row state.
         setSaved((prev) => withSlug(prev, slug, res.state!.saved));
         setStamped((prev) => withSlug(prev, slug, res.state!.stamped));
         if (kind === "stamp" && next) {
-          toast.success(name ? `Goshuin collected — ${name}.` : "Goshuin collected.");
+          toast.success(name ? t("goshuinCollectedNamed", { name }) : t("goshuinCollected"));
         }
       });
     },
-    [saved, stamped, toast],
+    [saved, stamped, toast, t],
   );
 
   return {

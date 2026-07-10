@@ -9,8 +9,11 @@ export const DeityInputSchema = z.object({
   name_ja: z.string().min(1, "name_ja (kanji dedup key) is required"),
   deity_type: z.enum(DEITY_TYPES),
   titles: z.array(z.string()).nullable().optional(),
+  titles_ja: z.array(z.string()).nullable().optional(),
   canonical_lore: z.string().nullable().optional(),
+  canonical_lore_ja: z.string().nullable().optional(),
   mythic_sphere: z.string().nullable().optional(),
+  mythic_sphere_ja: z.string().nullable().optional(),
 });
 
 export type DeityInput = z.infer<typeof DeityInputSchema>;

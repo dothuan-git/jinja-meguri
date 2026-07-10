@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 
 export default function SignOutButton() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -26,7 +28,7 @@ export default function SignOutButton() {
       className="inline-flex items-center gap-2 rounded-xl border border-moss/25 px-4 py-2 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-torii hover:text-torii disabled:opacity-50"
     >
       <LogOut size={13} />
-      {pending ? "Signing out…" : "Sign out"}
+      {pending ? t("signingOut") : t("signOut")}
     </button>
   );
 }

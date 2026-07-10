@@ -39,7 +39,7 @@ describe("entriesForMonth", () => {
 
 describe("resolveCalendarDates", () => {
   const occ = (year: number, start: string, end: string | null) => ({
-    id: "o", festival_id: "x", year, start_date: start, end_date: end, notes: null,
+    id: "o", festival_id: "x", year, start_date: start, end_date: end, notes: null, notes_ja: null,
   });
   const defaultDates = { start_date: "2020-07-30", end_date: "2020-08-02" }; // placeholder year
 

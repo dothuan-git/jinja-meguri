@@ -47,6 +47,57 @@ Authorization uses the Neon Auth user role, not an application table (see §7).
 
 ---
 
+## 1.5 Localization (i18n): parallel `*_ja` columns
+
+The site is bilingual (English default, Japanese opt-in via a `locale` cookie — see the
+"Multi-language" section in `CLAUDE.md`). Every free-text **narrative/prose** column has a
+nullable `*_ja` sibling added by `docs/migrations/001-i18n-ja-prose.sql` (mirrored into
+`schema.sql`), matching the pre-existing `name_en`/`name_ja` idiom used for proper nouns:
+
+| Table                 | Columns with a `_ja` sibling                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `shrines`              | `city_ja`, `address_ja`                                                                   |
+| `shrine_details`       | `history_ja`, `description_ja`, `prayer_focus_ja`, `best_time_ja`, `quote_ja`, `geographic_notes_ja` |
+| `shrine_highlights`    | `title_ja`, `body_ja`                                                                      |
+| `festivals`            | `time_prose_ja`, `origin_ja`, `meaning_ja`, `ritual_ja`, `prayer_ja`, `visitor_notes_ja`   |
+| `deities`              | `titles_ja` (`text[]`), `canonical_lore_ja`, `mythic_sphere_ja`                            |
+| `shrine_deities`       | `regional_lore_ja`, `alter_titles_ja` (`text[]`)                                           |
+| `ranks`                | `description_ja`                                                                           |
+| `prayer_categories`    | `group_label_ja` (display-only — see caveat below)                                        |
+| `festival_occurrences` | `notes_ja`                                                                                  |
+| `sources`              | `title_ja`                                                                                  |
+
+**Rules:**
+
+- **Fallback, never a join.** Repo-layer assembly (`lib/db/repo.ts`) picks the column at
+  read time: `loc(locale, en, ja) = locale === "ja" ? (ja ?? en) : en`. A null/empty `_ja`
+  value silently falls back to English — content can be translated incrementally, shrine by
+  shrine, field by field.
+- **Whole-array fallback for `text[]` columns.** `titles_ja` / `alter_titles_ja` are never
+  merged element-wise with their English counterpart — `locArr()` returns the *entire* `_ja`
+  array if it has any entries, else the *entire* English array. Never a mix of translated and
+  untranslated titles in one list.
+- **`group_label` is grouping key AND display string — `group_label_ja` is display-only.**
+  `prayer_categories.group_label` doubles as the facet's stable grouping identity (categories
+  are grouped by comparing the English `group_label` values); `group_label_ja` only affects
+  what's rendered, never which categories bucket together.
+- **Proper nouns (`name_en`/`name_ja`) are untouched** by this migration — they already had a
+  dedicated bilingual pair and are shown side-by-side in the UI, not locale-switched.
+- **The `Store` cache stays locale-agnostic.** `loadStore()`/`fetchStore()` never reads
+  `cookies()` and is never keyed by locale — it fetches every column (including all `_ja`
+  siblings) once, and locale is applied per-request in `repo.ts`. See `lib/i18n.ts` for the
+  `Locale`/`LOCALE_COOKIE` constants and `i18n/request.ts` for the next-intl wiring.
+- **Admin editing bypasses the localized view model entirely.** `buildShrineInput` /
+  `buildDeityInput` (`lib/admin/*Input.ts`) read straight from raw `Store` rows — both
+  languages — so the in-place editors' EN/日本語 toggle (`ShrineEditApi.editLang`,
+  `DeityEditApi.editLang`) can present either language without ever losing or overwriting the
+  other on save. Never reconstruct editor drafts from a localized `ShrineDetail`/`DeityListItem`.
+- **UI chrome strings** (buttons, labels, nav — everything that isn't DB content) are handled
+  separately via `next-intl` message catalogs (`messages/en.json` / `messages/ja.json`), not
+  by this `_ja`-column convention.
+
+---
+
 ## 2. Entity-relationship diagram
 
 ```mermaid
@@ -101,11 +152,12 @@ Consolidated cross-system shrine-rank list (classical, modern *shakaku*, post-19
 
 | Column        | Type       | Nullable | Constraints            | Description                                              |
 | ------------- | ---------- | -------- | ---------------------- | -------------------------------------------------------- |
-| `id`          | `smallint` | No       | PK, generated identity | Surrogate key.                                           |
-| `name_en`     | `text`     | No       | UNIQUE                 | Romaji rank name ('Ichinomiya', 'Sonsha', …).            |
-| `description` | `text`     | Yes      | —                      | English translation / label for the rank.               |
-| `name_ja`     | `text`     | Yes      | —                      | Rank name in kanji.                                      |
-| `rank_order`  | `smallint` | No       | —                      | Prestige order; **1 = highest**. Drives "highest rank".  |
+| `id`             | `smallint` | No       | PK, generated identity | Surrogate key.                                           |
+| `name_en`        | `text`     | No       | UNIQUE                 | Romaji rank name ('Ichinomiya', 'Sonsha', …).            |
+| `description`    | `text`     | Yes      | —                      | English translation / label for the rank.               |
+| `description_ja` | `text`     | Yes      | —                      | JA translation / label (i18n; null ⇒ falls back to `description` — §1.5). |
+| `name_ja`        | `text`     | Yes      | —                      | Rank name in kanji.                                      |
+| `rank_order`     | `smallint` | No       | —                      | Prestige order; **1 = highest**. Drives "highest rank".  |
 
 `Honso` (本宗, order 0) is unique to Ise Jingū; `Sohonsha` (総本社, order 1) is the head of a network.
 
@@ -114,10 +166,11 @@ Consolidated cross-system shrine-rank list (classical, modern *shakaku*, post-19
 
 | Column        | Type       | Nullable | Constraints            | Description                                       |
 | ------------- | ---------- | -------- | ---------------------- | ------------------------------------------------- |
-| `id`          | `smallint` | No       | PK, generated identity | Surrogate key.                                    |
-| `name_en`     | `text`     | No       | UNIQUE                 | Goriyaku name in romaji / English.                |
-| `name_ja`     | `text`     | Yes      | —                      | Goriyaku name in kanji.                           |
-| `group_label` | `text`     | No       | —                      | Display grouping, e.g. "Love & Family", "Health". |
+| `id`             | `smallint` | No       | PK, generated identity | Surrogate key.                                    |
+| `name_en`        | `text`     | No       | UNIQUE                 | Goriyaku name in romaji / English.                |
+| `name_ja`        | `text`     | Yes      | —                      | Goriyaku name in kanji.                           |
+| `group_label`    | `text`     | No       | —                      | Display grouping **and stable facet key**, e.g. "Love & Family", "Health" (§1.5). |
+| `group_label_ja` | `text`     | Yes      | —                      | JA display label only; never used for grouping (§1.5). |
 
 ---
 
@@ -128,13 +181,16 @@ Canonical, one row per kami. Deduped on `name_ja` at ingest.
 
 | Column           | Type     | Nullable | Constraints             | Description                                                             |
 | ---------------- | -------- | -------- | ----------------------- | ----------------------------------------------------------------------- |
-| `id`             | `uuid`   | No       | PK, `gen_random_uuid()` | Surrogate key.                                                          |
-| `name_en`        | `text`   | No       | —                       | Romaji / English name.                                                 |
-| `name_ja`        | `text`   | Yes      | UNIQUE                  | Kanji name; the **dedup key** on ingest.                               |
-| `titles`         | `text[]` | Yes      | —                       | Domain/role epithets (sphere of patronage); empty for primordial kami. |
-| `deity_type`     | `text`   | No       | CHECK (enum)            | Current official status only (not historical syncretism).              |
-| `canonical_lore` | `text`   | Yes      | —                       | Kojiki/Nihon Shoki narrative.                                          |
-| `mythic_sphere`  | `text`   | Yes      | —                       | Free-text domain label shown in the deity card (e.g. "Agriculture & Commerce"). |
+| `id`                | `uuid`   | No       | PK, `gen_random_uuid()` | Surrogate key.                                                          |
+| `name_en`           | `text`   | No       | —                       | Romaji / English name.                                                 |
+| `name_ja`           | `text`   | Yes      | UNIQUE                  | Kanji name; the **dedup key** on ingest.                               |
+| `titles`            | `text[]` | Yes      | —                       | Domain/role epithets (sphere of patronage); empty for primordial kami. |
+| `titles_ja`         | `text[]` | Yes      | —                       | JA epithets (i18n, whole-array fallback — §1.5).                       |
+| `deity_type`        | `text`   | No       | CHECK (enum)            | Current official status only (not historical syncretism).              |
+| `canonical_lore`    | `text`   | Yes      | —                       | Kojiki/Nihon Shoki narrative.                                          |
+| `canonical_lore_ja` | `text`   | Yes      | —                       | JA narrative (i18n; null ⇒ falls back to `canonical_lore` — §1.5).      |
+| `mythic_sphere`     | `text`   | Yes      | —                       | Free-text domain label shown in the deity card (e.g. "Agriculture & Commerce"). |
+| `mythic_sphere_ja`  | `text`   | Yes      | —                       | JA domain label (i18n; null ⇒ falls back to `mythic_sphere` — §1.5).    |
 
 > `deity_type` ∈ `mythological` | `deified_human` | `syncretic`.
 
@@ -154,7 +210,9 @@ The central entity.
 | `prefecture_id` | `smallint`         | No       | → `prefectures(id)`     | Prefecture the shrine is located in.                  |
 | `region_id`     | `smallint`         | No       | → `regions(id)`         | **Denormalized** region (derivable from prefecture) for cheap filtering. |
 | `city`          | `text`             | Yes      | —                       | City / town.                                          |
+| `city_ja`       | `text`             | Yes      | —                       | JA city / town (i18n; null ⇒ falls back to `city` — §1.5). |
 | `address`       | `text`             | Yes      | —                       | Full street address.                                  |
+| `address_ja`    | `text`             | Yes      | —                       | JA address (i18n; null ⇒ falls back to `address` — §1.5). |
 | `lat`           | `double precision` | Yes      | —                       | WGS-84 latitude (plain column, **not** PostGIS).      |
 | `lng`           | `double precision` | Yes      | —                       | WGS-84 longitude.                                     |
 | `image_urls`    | `text[]`           | Yes      | —                       | External image URLs.                                  |
@@ -180,9 +238,11 @@ Shrine ↔ deity, carrying shrine-specific deity data.
 | `is_primary`    | `boolean`  | No       | DEFAULT false                         | Whether this is the shrine's main enshrined kami.           |
 | `sort_order`    | `smallint` | No       | DEFAULT 0                             | Display order of deities on the shrine.                     |
 | `regional_lore` | `text`     | Yes      | —                                     | Shrine or region-specific lore; `null` if the shrine use canonical lore.|
+| `regional_lore_ja` | `text`  | Yes      | —                                     | JA lore (i18n; null ⇒ falls back to `regional_lore` — §1.5).|
 | `alter_name_en` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) romaji name; `null` = use `deities.name_en`.|
 | `alter_name_ja` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) kanji name; `null` = use `deities.name_ja`.|
 | `alter_titles`  | `text[]`   | Yes      | —                                     | Shrine-specific title/epithet override; `null` = use `deities.titles`.|
+| `alter_titles_ja` | `text[]` | Yes      | —                                     | JA title override (i18n, whole-array fallback — §1.5).|
 
 PK `(shrine_id, deity_id)`. Index `idx_shrine_deities_deity`.
 The UI shows the primary deity's `canonical_lore` (with `regional_lore` as a supplementary note)
@@ -225,11 +285,17 @@ One row per shrine; topical narrative prose.
 | -------------- | ------ | -------- | ----------------------------------------- | ----------------------------------------------- |
 | `shrine_id`         | `uuid` | No       | **PK**, → `shrines(id)` ON DELETE CASCADE | Owning shrine (1:1).                            |
 | `history`           | `text` | Yes      | —                                         | Founding, legendary events, syncretic layers.  |
+| `history_ja`        | `text` | Yes      | —                                         | JA (i18n; null ⇒ falls back to `history` — §1.5). |
 | `description`       | `text` | Yes      | —                                         | Significance, unique fact + visitor experience (why visit).  |
+| `description_ja`    | `text` | Yes      | —                                         | JA (i18n; null ⇒ falls back to `description` — §1.5). |
 | `prayer_focus`      | `text` | Yes      | —                                         | Primary purposes pilgrims pray for - with JP terms.                 |
+| `prayer_focus_ja`   | `text` | Yes      | —                                         | JA (i18n; null ⇒ falls back to `prayer_focus` — §1.5). |
 | `best_time`         | `text` | Yes      | —                                         | Nature / atmosphere / timing.                  |
+| `best_time_ja`      | `text` | Yes      | —                                         | JA (i18n; null ⇒ falls back to `best_time` — §1.5). |
 | `quote`             | `text` | Yes      | —                                         | Short 1–2 sentence quote about the shrine (rendered as the detail-view epigraph). |
+| `quote_ja`          | `text` | Yes      | —                                         | JA (i18n; null ⇒ falls back to `quote` — §1.5). |
 | `geographic_notes`  | `text` | Yes      | —                                         | Natural setting, landscape, terrain, and access notes shown in the Transit & Geography section. |
+| `geographic_notes_ja` | `text` | Yes    | —                                         | JA (i18n; null ⇒ falls back to `geographic_notes` — §1.5). |
 
 ### `shrine_highlights` (1:N "don't-miss" points of interest)
 Scannable list of concrete on-site features a visitor can walk up to or do (sacred trees, a unique
@@ -241,7 +307,9 @@ Intentionally **may overlap** the `description` prose — no deduplication.
 | `id`         | `uuid` | No       | PK, `gen_random_uuid()`              | Surrogate key.                                              |
 | `shrine_id`  | `uuid` | No       | → `shrines(id)` ON DELETE CASCADE    | Owning shrine.                                              |
 | `title`      | `text` | No       | —                                    | Feature name, English first with kanji in parens.           |
+| `title_ja`   | `text` | Yes      | —                                    | JA feature name (i18n; null ⇒ falls back to `title` — §1.5). |
 | `body`       | `text` | Yes      | —                                    | One short gloss line; `null` for a title-only highlight.    |
+| `body_ja`    | `text` | Yes      | —                                    | JA gloss (i18n; null ⇒ falls back to `body` — §1.5).         |
 | `sort_order` | `int`  | No       | DEFAULT 0                            | Display order (set from the editor's array index).         |
 
 Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-reinsert on every
@@ -257,14 +325,20 @@ Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-re
 | `name_en`       | `text` | No       | —                                          | Festival name in romaji / English.                           |
 | `name_ja`       | `text` | Yes      | —                                          | Festival name in kanji.                                       |
 | `time_prose`    | `text` | Yes      | —                                          | Display label for timing, cycle ('dawn, 2nd Sunday of May', lunar…). |
+| `time_prose_ja` | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `time_prose` — §1.5).          |
 | `start_date`    | `date` | Yes      | —                                          | Structured start date; `null` if undated.                    |
 | `end_date`      | `date` | Yes      | —                                          | Structured end date; `null` if undated.                      |
 | `origin`        | `text` | Yes      | —                                          | Historical cause, crisis, myth, or founding moment.          |
+| `origin_ja`     | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `origin` — §1.5).              |
 | `meaning`       | `text` | Yes      | —                                          | Cultural / religious meaning to the deity and community.     |
+| `meaning_ja`    | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `meaning` — §1.5).             |
 | `ritual`        | `text` | Yes      | —                                          | Description of the ritual(s). Concrete actions, ceremonies, sequence of events, performances.|
+| `ritual_ja`     | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `ritual` — §1.5).              |
 | `prayer`        | `text` | Yes      | —                                          | What participants hope for. The specific human need or aspiration the event addresses.  |
+| `prayer_ja`     | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `prayer` — §1.5).              |
 | `festival_type` | `text` | Yes      | CHECK (enum)                               | Visitor access / experience type.                            |
 | `visitor_notes` | `text` | Yes      | —                                          | Practical notes/ guidance for visitors.                      |
+| `visitor_notes_ja` | `text` | Yes  | —                                          | JA (i18n; null ⇒ falls back to `visitor_notes` — §1.5).       |
 | `sort_order`    | `int`  | No       | DEFAULT 0                                  | Display order within a shrine; set to the array index at upsert time. |
 
 > `festival_type` ∈ `spectacle` | `pilgrimage`.
@@ -288,6 +362,7 @@ Concrete dated instances for festivals that can't be computed (lunar, Nth-weekda
 | `start_date`  | `date`     | No       | —                                 | Exact start date for that year.        |
 | `end_date`    | `date`     | Yes      | —                                 | Exact end date for that year.          |
 | `notes`       | `text`     | Yes      | —                                 | Year-specific notes.                   |
+| `notes_ja`    | `text`     | Yes      | —                                 | JA notes (i18n; null ⇒ falls back to `notes` — §1.5). |
 
 UNIQUE `(festival_id, year)`. Indexes `idx_festival_occurrences_festival`, `idx_festival_occurrences_year`.
 
@@ -313,6 +388,7 @@ as `occurrenceSeed` so the form can pre-fill for any year without an extra fetch
 | `shrine_id` | `uuid` | No       | → `shrines(id)` ON DELETE CASCADE | Owning shrine.           |
 | `url`       | `text` | No       | —                                 | Citation URL.            |
 | `title`     | `text` | Yes      | —                                 | Citation title / label.  |
+| `title_ja`  | `text` | Yes      | —                                 | JA title (i18n; null ⇒ falls back to `title` — §1.5). |
 
 Index `idx_sources_shrine`. Rendered as visible footnotes on the detail page.
 
@@ -416,8 +492,11 @@ Neon Postgres
             └─ page.tsx                 server components pass view models to client components
 ```
 
-**Row types** (`ShrineRow`, `FestivalRow`, `Deity`, …) mirror DB columns exactly and make up the
-`Store`. **View models** are what the UI consumes:
+**Row types** (`ShrineRow`, `FestivalRow`, `Deity`, …) mirror DB columns exactly (including every
+`_ja` sibling — §1.5) and make up the `Store`. **View models** are what the UI consumes; every
+builder below takes an optional `locale: Locale = "en"` and localizes prose at assembly time via
+`loc()`/`locArr()` (see §1.5) — prose fields keep their existing English-column names/shapes in
+the view model regardless of locale:
 
 | View model        | Built by (`repo.ts`)  | Purpose                                                                 |
 | ----------------- | --------------------- | ----------------------------------------------------------------------- |
@@ -459,7 +538,15 @@ Key derivations done in `repo.ts`, not in SQL:
 
 Content is authored **in place** on the public surfaces (`/shrines`, `/shrines/new`, `/deities`,
 `/deities/new`) — there is no ingest script, no `data/` directory, and no `/admin` JSON-import UI.
-The in-place editors serialize their draft to the contract shape (`ShrineInput` / `DeityInput`).
+The in-place editors serialize their draft to the contract shape (`ShrineInput` / `DeityInput`),
+which carries **both** languages (every field plus its `_ja` sibling — §1.5) at once.
+
+**Bilingual editing.** The editors expose an EN / 日本語 toggle (`editLang` on `ShrineEditApi` /
+`DeityEditApi`) that rebinds each `bilingual`-flagged prose field to its `_ja` sibling in place —
+same layout, same field, different column. A single Save writes whichever fields were touched in
+either language; Japanese is always optional; the editor's initial draft is built from **raw**
+`Store` rows (`buildShrineInput` / `buildDeityInput` in `lib/admin/*Input.ts`), never from a
+locale-picked view model, so editing under a `ja` cookie can never clobber the English columns.
 
 ```
 Research (JA-first) → in-place editor draft (ShrineInput / DeityInput)

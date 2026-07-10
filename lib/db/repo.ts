@@ -26,6 +26,20 @@ import type {
 } from "@/lib/types";
 import { pickHighestRankId } from "@/lib/db/derive";
 import { resolveCalendarDates } from "@/lib/calendar";
+import type { Locale } from "@/lib/i18n";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
+
+// Locale-picked prose: return the JA value when it exists and the locale is "ja",
+// else fall back to the English value. Never element-wise for arrays — see locArr.
+function loc(locale: Locale, en: string | null, ja: string | null): string | null {
+  return locale === "ja" ? (ja ?? en) : en;
+}
+// Whole-array fallback: an empty/null `ja` array falls back to the entire `en`
+// array (we never mix translated + untranslated elements).
+function locArr(locale: Locale, en: string[] | null, ja: string[] | null): string[] | null {
+  if (locale === "ja" && ja && ja.length > 0) return ja;
+  return en;
+}
 
 function index<T extends { id: string | number }>(rows: T[]): Map<T["id"], T> {
   return new Map(rows.map((r) => [r.id, r]));
@@ -113,22 +127,27 @@ function shrineFestivalMonths(idx: StoreIndex, shrineId: string): number[] {
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // Compact "when" label for the map popup: prefer the human time_prose, else a
-// month-day span from the fixed start/end dates, else null.
-function festivalWhen(f: FestivalRow): string | null {
-  if (f.time_prose) return f.time_prose;
+// month-day span from the fixed start/end dates, else null. JA uses `7月30日`.
+function festivalWhen(f: FestivalRow, locale: Locale): string | null {
+  const prose = loc(locale, f.time_prose, f.time_prose_ja);
+  if (prose) return prose;
   if (!f.start_date) return null;
-  const dayLabel = (d: string) => `${MONTH_ABBR[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`;
+  const dayLabel = (d: string) => {
+    const m = Number(d.slice(5, 7));
+    const day = Number(d.slice(8, 10));
+    return locale === "ja" ? `${m}月${day}日` : `${MONTH_ABBR[m - 1]} ${day}`;
+  };
   const start = dayLabel(f.start_date);
   return f.end_date && f.end_date !== f.start_date ? `${start} – ${dayLabel(f.end_date)}` : start;
 }
 
-function shrineFestivalsBrief(idx: StoreIndex, shrineId: string): FestivalBrief[] {
+function shrineFestivalsBrief(idx: StoreIndex, shrineId: string, locale: Locale): FestivalBrief[] {
   return [...(idx.festivalsByShrine.get(shrineId) ?? [])]
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((f) => ({ name_en: f.name_en, name_ja: f.name_ja, when: festivalWhen(f) }));
+    .map((f) => ({ name_en: f.name_en, name_ja: f.name_ja, when: festivalWhen(f, locale) }));
 }
 
-function shrineRankViews(idx: StoreIndex, shrineId: string): RankView[] {
+function shrineRankViews(idx: StoreIndex, shrineId: string, locale: Locale): RankView[] {
   const ranks = (idx.ranksByShrine.get(shrineId) ?? [])
     .map((sr) => idx.rankById.get(sr.rank_id)!)
     .filter(Boolean);
@@ -136,7 +155,7 @@ function shrineRankViews(idx: StoreIndex, shrineId: string): RankView[] {
   return ranks
     .map((r) => ({
       name_en: r.name_en,
-      description: r.description,
+      description: loc(locale, r.description, r.description_ja),
       name_ja: r.name_ja,
       rank_order: r.rank_order,
       is_highest: r.id === highestId,
@@ -144,14 +163,15 @@ function shrineRankViews(idx: StoreIndex, shrineId: string): RankView[] {
     .sort((a, b) => a.rank_order - b.rank_order);
 }
 
-function shrineCategoryViews(idx: StoreIndex, shrineId: string): CategoryView[] {
+function shrineCategoryViews(idx: StoreIndex, shrineId: string, locale: Locale): CategoryView[] {
   return (idx.catsByShrine.get(shrineId) ?? [])
     .map((spc) => idx.catById.get(spc.category_id)!)
     .filter(Boolean)
+    // group_label stays the EN facet key; group_label_ja is display-only elsewhere.
     .map((c) => ({ name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label }));
 }
 
-function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
+function shrineDeityViews(idx: StoreIndex, shrineId: string, locale: Locale): DeityView[] {
   return (idx.deitiesByShrine.get(shrineId) ?? [])
     .map((sd) => {
       const d = idx.deityById.get(sd.deity_id)!;
@@ -159,13 +179,13 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
         id: d.id,
         name_en: d.name_en,
         name_ja: d.name_ja,
-        titles: d.titles ?? [],
+        titles: locArr(locale, d.titles, d.titles_ja) ?? [],
         deity_type: d.deity_type,
-        canonical_lore: d.canonical_lore,
-        regional_lore: sd.regional_lore,
+        canonical_lore: loc(locale, d.canonical_lore, d.canonical_lore_ja),
+        regional_lore: loc(locale, sd.regional_lore, sd.regional_lore_ja),
         alter_name_en: sd.alter_name_en,
         alter_name_ja: sd.alter_name_ja,
-        alter_titles: sd.alter_titles,
+        alter_titles: locArr(locale, sd.alter_titles, sd.alter_titles_ja),
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,
       };
@@ -173,19 +193,19 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string): DeityView[] {
     .sort((a, b) => a.sort_order - b.sort_order);
 }
 
-function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
+function buildCard(idx: StoreIndex, s: ShrineRow, locale: Locale): ShrineCard {
   const region = idx.regionById.get(s.region_id);
   const pref = idx.prefById.get(s.prefecture_id);
-  const ranks = shrineRankViews(idx, s.id);
-  const categories = shrineCategoryViews(idx, s.id);
-  const deities = shrineDeityViews(idx, s.id);
+  const ranks = shrineRankViews(idx, s.id, locale);
+  const categories = shrineCategoryViews(idx, s.id, locale);
+  const deities = shrineDeityViews(idx, s.id, locale);
   const primary = deities.find((d) => d.is_primary) ?? null;
   const detailRow = idx.detailByShrine.get(s.id) ?? null;
   return {
     slug: s.slug,
     name_en: s.name_en,
     name_ja: s.name_ja,
-    city: s.city,
+    city: loc(locale, s.city, s.city_ja),
     prefecture: pref?.name_en ?? "",
     region: region?.name_en ?? "",
     // Lead with the shrine's alternate (enshrined) name when set, else canonical.
@@ -201,27 +221,27 @@ function buildCard(idx: StoreIndex, s: ShrineRow): ShrineCard {
     category_codes: categories.map((c) => c.name_en),
     deity_ja: deities.map((d) => d.name_ja).filter((k): k is string => !!k),
     festival_months: shrineFestivalMonths(idx, s.id),
-    festivals_brief: shrineFestivalsBrief(idx, s.id),
-    prayer_focus: detailRow?.prayer_focus ?? null,
-    best_time: detailRow?.best_time ?? null,
+    festivals_brief: shrineFestivalsBrief(idx, s.id, locale),
+    prayer_focus: loc(locale, detailRow?.prayer_focus ?? null, detailRow?.prayer_focus_ja ?? null),
+    best_time: loc(locale, detailRow?.best_time ?? null, detailRow?.best_time_ja ?? null),
     primary_deity_titles: (primary?.alter_titles ?? primary?.titles) ?? [],
   };
 }
 
-export function getShrineCards(store: Store): ShrineCard[] {
+export function getShrineCards(store: Store, locale: Locale = DEFAULT_LOCALE): ShrineCard[] {
   const idx = buildIndex(store);
-  return store.shrines.map((s) => buildCard(idx, s)).sort((a, b) => a.name_en.localeCompare(b.name_en));
+  return store.shrines.map((s) => buildCard(idx, s, locale)).sort((a, b) => a.name_en.localeCompare(b.name_en));
 }
 
 export function getAllSlugs(store: Store): string[] {
   return store.shrines.map((s) => s.slug);
 }
 
-export function getShrineDetail(store: Store, slug: string): ShrineDetail | null {
+export function getShrineDetail(store: Store, slug: string, locale: Locale = DEFAULT_LOCALE): ShrineDetail | null {
   const s = store.shrines.find((x) => x.slug === slug);
   if (!s) return null;
   const idx = buildIndex(store);
-  const card = buildCard(idx, s);
+  const card = buildCard(idx, s, locale);
   const detailRow = idx.detailByShrine.get(s.id) ?? null;
   const festivals: FestivalView[] = store.festivals
     .filter((f) => f.shrine_id === s.id)
@@ -230,42 +250,44 @@ export function getShrineDetail(store: Store, slug: string): ShrineDetail | null
       id: f.id,
       name_en: f.name_en,
       name_ja: f.name_ja,
-      time_prose: f.time_prose,
+      time_prose: loc(locale, f.time_prose, f.time_prose_ja),
       start_date: f.start_date,
       end_date: f.end_date,
-      origin: f.origin,
-      meaning: f.meaning,
-      ritual: f.ritual,
-      prayer: f.prayer,
+      origin: loc(locale, f.origin, f.origin_ja),
+      meaning: loc(locale, f.meaning, f.meaning_ja),
+      ritual: loc(locale, f.ritual, f.ritual_ja),
+      prayer: loc(locale, f.prayer, f.prayer_ja),
       festival_type: f.festival_type,
-      visitor_notes: f.visitor_notes,
+      visitor_notes: loc(locale, f.visitor_notes, f.visitor_notes_ja),
     }));
   return {
     ...card,
-    address: s.address,
+    address: loc(locale, s.address, s.address_ja),
     image_urls: s.image_urls,
-    deities: shrineDeityViews(idx, s.id),
-    ranks: shrineRankViews(idx, s.id),
+    deities: shrineDeityViews(idx, s.id, locale),
+    ranks: shrineRankViews(idx, s.id, locale),
     details: detailRow
       ? {
-          history: detailRow.history,
-          description: detailRow.description,
-          prayer_focus: detailRow.prayer_focus,
-          best_time: detailRow.best_time,
-          quote: detailRow.quote,
-          geographic_notes: detailRow.geographic_notes,
+          history: loc(locale, detailRow.history, detailRow.history_ja),
+          description: loc(locale, detailRow.description, detailRow.description_ja),
+          prayer_focus: loc(locale, detailRow.prayer_focus, detailRow.prayer_focus_ja),
+          best_time: loc(locale, detailRow.best_time, detailRow.best_time_ja),
+          quote: loc(locale, detailRow.quote, detailRow.quote_ja),
+          geographic_notes: loc(locale, detailRow.geographic_notes, detailRow.geographic_notes_ja),
         }
       : null,
     highlights: store.shrine_highlights
       .filter((h) => h.shrine_id === s.id)
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((h) => ({ title: h.title, body: h.body })),
+      .map((h) => ({ title: loc(locale, h.title, h.title_ja) ?? h.title, body: loc(locale, h.body, h.body_ja) })),
     festivals,
-    sources: store.sources.filter((src) => src.shrine_id === s.id),
+    sources: store.sources
+      .filter((src) => src.shrine_id === s.id)
+      .map((src) => ({ ...src, title: loc(locale, src.title, src.title_ja) })),
   };
 }
 
-export function getFestivalYear(store: Store, year: number): CalendarFestival[] {
+export function getFestivalYear(store: Store, year: number, locale: Locale = DEFAULT_LOCALE): CalendarFestival[] {
   const shrineById = index(store.shrines);
   const regionById = index(store.regions);
   const prefById = index(store.prefectures);
@@ -283,28 +305,29 @@ export function getFestivalYear(store: Store, year: number): CalendarFestival[] 
       festival_id: f.id,
       shrine_slug: s.slug,
       shrine_name_en: s.name_en,
-      shrine_city: s.city,
+      shrine_name_ja: s.name_ja,
+      shrine_city: loc(locale, s.city, s.city_ja),
       shrine_prefecture: pref?.name_en ?? "",
       shrine_region: region?.name_en ?? "",
       region_id: s.region_id,
       festival_name_en: f.name_en,
       festival_name_ja: f.name_ja,
       festival_type: f.festival_type,
-      time_prose: f.time_prose,
+      time_prose: loc(locale, f.time_prose, f.time_prose_ja),
       start_date: startDate,
       end_date: endDate,
       month,
-      meaning: f.meaning,
-      ritual: f.ritual,
-      prayer: f.prayer,
-      visitor_notes: f.visitor_notes,
-      origin: f.origin,
+      meaning: loc(locale, f.meaning, f.meaning_ja),
+      ritual: loc(locale, f.ritual, f.ritual_ja),
+      prayer: loc(locale, f.prayer, f.prayer_ja),
+      visitor_notes: loc(locale, f.visitor_notes, f.visitor_notes_ja),
+      origin: loc(locale, f.origin, f.origin_ja),
       is_fallback,
     };
   });
 }
 
-export function getDeityList(store: Store): DeityListItem[] {
+export function getDeityList(store: Store, locale: Locale = DEFAULT_LOCALE): DeityListItem[] {
   const shrineById = index(store.shrines);
   const regionById = index(store.regions);
   const prefById = index(store.prefectures);
@@ -319,11 +342,11 @@ export function getDeityList(store: Store): DeityListItem[] {
           slug: s.slug,
           name_en: s.name_en,
           name_ja: s.name_ja,
-          city: s.city,
+          city: loc(locale, s.city, s.city_ja),
           prefecture: pref?.name_en ?? "",
           region: region?.name_en ?? "",
           is_primary: sd.is_primary,
-          regional_lore: sd.regional_lore,
+          regional_lore: loc(locale, sd.regional_lore, sd.regional_lore_ja),
         };
       })
       .sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
@@ -331,10 +354,10 @@ export function getDeityList(store: Store): DeityListItem[] {
       id: d.id,
       name_en: d.name_en,
       name_ja: d.name_ja,
-      titles: d.titles ?? [],
+      titles: locArr(locale, d.titles, d.titles_ja) ?? [],
       deity_type: d.deity_type,
-      canonical_lore: d.canonical_lore,
-      mythic_sphere: d.mythic_sphere,
+      canonical_lore: loc(locale, d.canonical_lore, d.canonical_lore_ja),
+      mythic_sphere: loc(locale, d.mythic_sphere, d.mythic_sphere_ja),
       shrines: links,
     };
   });
@@ -347,7 +370,9 @@ export function getDeityList(store: Store): DeityListItem[] {
     });
 }
 
-export function getFacetCatalogs(store: Store): FacetCatalogs {
+export function getFacetCatalogs(store: Store, locale: Locale = DEFAULT_LOCALE): FacetCatalogs {
+  // group_label stays the EN grouping key (stable facet identity); the localized
+  // group_label_ja is display-only and not surfaced through CategoryView here.
   const groupsMap = new Map<string, CategoryView[]>();
   for (const c of store.prayer_categories) {
     const v: CategoryView = { name_en: c.name_en, name_ja: c.name_ja, group_label: c.group_label };
@@ -360,7 +385,7 @@ export function getFacetCatalogs(store: Store): FacetCatalogs {
   const ranks: RankView[] = store.ranks
     .filter((r) => rankIdsInUse.has(r.id))
     .sort((a, b) => a.rank_order - b.rank_order)
-    .map((r) => ({ name_en: r.name_en, description: r.description, name_ja: r.name_ja, rank_order: r.rank_order, is_highest: false }));
+    .map((r) => ({ name_en: r.name_en, description: loc(locale, r.description, r.description_ja), name_ja: r.name_ja, rank_order: r.rank_order, is_highest: false }));
 
   const prefecturesByRegion: Record<number, Prefecture[]> = {};
   for (const p of store.prefectures) {

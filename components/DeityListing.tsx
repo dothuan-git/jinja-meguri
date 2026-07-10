@@ -14,25 +14,32 @@ import {
   Trash2,
   Plus,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { DeityListItem } from "@/lib/types";
 import { fold } from "@/lib/search";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import DeityCardBody, { type DeityCardData } from "@/components/DeityCardBody";
 import DeityEditProvider from "@/components/deityEdit/DeityEditProvider";
 import DeleteDeityPopup from "@/components/deityEdit/DeleteDeityPopup";
-import { deityListItemToInput } from "@/lib/admin/deityInput";
+import { emptyDeityInput } from "@/lib/admin/deityInput";
+import type { DeityInput } from "@/lib/admin/deityContract";
 
 type Portfolio = DeityCardData & { id: string };
 
 export default function DeityListing({
   deities,
   isAdmin = false,
+  editSeeds,
 }: {
   deities: DeityListItem[];
   isAdmin?: boolean;
+  // Admin-only raw-row DeityInput per deity id, for the in-place editor.
+  editSeeds?: Record<string, DeityInput>;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("Deities");
+  const tAdmin = useTranslations("Admin");
 
   // 1. Map the pre-sorted DeityListItem[] into the portfolio shape the JSX consumes.
   // Index correspondence with `deities` is preserved (plain .map), so currentIndex
@@ -202,17 +209,17 @@ export default function DeityListing({
 
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs mb-3 z-10">
           <Sparkles size={11} className="text-torii" />
-          <span>Kami Pantheon Portfolio</span>
+          <span>{t("badgeLeft")}</span>
           <span className="w-1 h-1 rounded-full bg-torii/30" />
-          <span>八百万の神々</span>
+          <span>{t("badgeRight")}</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
-          Deity Chronicles
+          {t("title")}
         </h2>
 
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
-          “Trace the cosmological patronees, divine celestial chronicles, and localized regional mythologies of ancient spirits.”
+          {t("quote")}
         </p>
       </div>
 
@@ -225,7 +232,7 @@ export default function DeityListing({
             id="deity-search-box"
             ref={searchInputRef}
             type="text"
-            placeholder="Search deities by name, chronicled lore, or title..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -265,7 +272,7 @@ export default function DeityListing({
             >
               {searchResults.length === 0 ? (
                 <div className="p-4 text-center text-xs text-stone/50 font-sans">
-                  No deities found matching “{searchQuery}”
+                  {t("noneFound", { query: searchQuery })}
                 </div>
               ) : (
                 searchResults.map(({ deity, index }) => (
@@ -290,7 +297,7 @@ export default function DeityListing({
                       </p>
                     </div>
                     <div className="text-[9px] font-mono text-stone/40 group-hover:text-torii flex items-center gap-0.5 whitespace-nowrap">
-                      Reveal <ArrowUpRight size={10} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      {t("reveal")} <ArrowUpRight size={10} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </div>
                   </button>
                 ))
@@ -304,10 +311,10 @@ export default function DeityListing({
       {!editing && (
         <div data-reveal="fade-up" className="mb-5 select-none">
           <div className="text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center block xl:hidden">
-            Tip: Swipe left or right to cycle deities
+            {t("tipSwipe")}
           </div>
           <div className="text-stone/30 text-[10px] uppercase tracking-widest font-mono text-center hidden xl:block">
-            Tip: Press left ← or right → arrow key to cycle deities
+            {t("tipKeys")}
           </div>
         </div>
       )}
@@ -324,7 +331,7 @@ export default function DeityListing({
         {!editing && (
           <button
             onClick={handlePrev}
-            aria-label="Previous Deity Portfolio"
+            aria-label={t("prevDeity")}
             className="hidden xl:flex absolute top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1.5rem)] left-0 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
@@ -340,7 +347,7 @@ export default function DeityListing({
             <div className="w-full bg-washi rounded-2xl md:rounded-3xl border border-moss/10 shadow-3xs p-6 md:p-10 relative">
               <div className="absolute inset-2 border border-dashed border-moss/5 pointer-events-none rounded-xl md:rounded-2xl" />
               <DeityEditProvider
-                initialData={deityListItemToInput(deities[currentIndex])}
+                initialData={editSeeds?.[activeDeity.id] ?? emptyDeityInput()}
                 deityId={activeDeity.id}
                 mode="update"
                 onCancel={() => setEditing(false)}
@@ -383,7 +390,7 @@ export default function DeityListing({
                   {/* Lower Card Control bar — counter + dot nav */}
                   <div className="mt-8 pt-4 border-t border-stone/10 flex items-center justify-between text-xs font-mono select-none">
                     <span className="text-stone/40 font-bold">
-                      Kami {currentIndex + 1} of {deitiesList.length}
+                      {t("counter", { current: currentIndex + 1, total: deitiesList.length })}
                     </span>
 
                     <div className="flex items-center gap-1">
@@ -394,7 +401,7 @@ export default function DeityListing({
                           className={`h-1.5 rounded-full transition-all duration-300 focus:outline-hidden cursor-pointer ${
                             dotIdx === currentIndex ? "w-4 bg-torii" : "w-1.5 bg-stone/20 hover:bg-stone/40"
                           }`}
-                          title={`Navigate to ${deitiesList[dotIdx].name}`}
+                          title={t("navigateTo", { name: deitiesList[dotIdx].name })}
                         />
                       ))}
                     </div>
@@ -410,7 +417,7 @@ export default function DeityListing({
         {!editing && (
           <button
             onClick={handleNext}
-            aria-label="Next Deity Portfolio"
+            aria-label={t("nextDeity")}
             className="hidden xl:flex absolute top-1/2 -translate-y-1/2 translate-x-[calc(100%+1.5rem)] right-0 z-20 w-12 h-12 rounded-full border border-moss/10 bg-washi hover:bg-white hover:text-torii text-stone/50 shadow-3xs items-center justify-center transition-all cursor-pointer hover:border-torii/30 focus:outline-hidden"
             style={{ minWidth: "44px", minHeight: "44px" }}
           >
@@ -428,7 +435,7 @@ export default function DeityListing({
           <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
             <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
-                Admin Controls
+                {tAdmin("adminControls")}
               </span>
               <span className="text-stone/25 font-mono select-none text-xs">|</span>
               {activeDeity && (
@@ -438,14 +445,14 @@ export default function DeityListing({
                     className="flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-stone/70 transition-colors hover:border-stone/40 hover:text-stone"
                   >
                     <Pencil size={12} />
-                    <span>Edit</span>
+                    <span>{tAdmin("edit")}</span>
                   </button>
                   <button
                     onClick={() => setDeleteOpen(true)}
                     className="flex items-center gap-1.5 rounded-full border border-red-300 px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:bg-red-50"
                   >
                     <Trash2 size={12} />
-                    <span>Delete</span>
+                    <span>{tAdmin("delete")}</span>
                   </button>
                 </>
               )}
@@ -454,7 +461,7 @@ export default function DeityListing({
                 className="flex items-center gap-1.5 rounded-full bg-moss px-3 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-moss/90"
               >
                 <Plus size={12} />
-                <span>New deity</span>
+                <span>{tAdmin("newDeity")}</span>
               </button>
             </div>
           </div>

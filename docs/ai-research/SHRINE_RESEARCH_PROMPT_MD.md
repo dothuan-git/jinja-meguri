@@ -206,3 +206,18 @@ If the shrine name is ambiguous (several shrines share it), ask one brief clarif
 
 > Research and produce the form sheet for: **<shrine name>** (<prefecture / city / disambiguator>).
 > Official site (if known): <url>
+
+---
+
+## Japanese translation pass (optional)
+
+The shrine editor's EN / 日本語 toggle lets you enter a Japanese version of every prose field
+(history, description, prayer focus, best time, quote, geographic notes, highlights, festival
+prose, regional deity lore) alongside the English one — the site falls back to English for any
+field left blank in Japanese, so this pass is entirely optional and can be done shrine-by-shrine,
+field-by-field, whenever convenient. To request it, once the English sheet above is complete, ask:
+
+> Translate the field sheet for **<shrine name>** into natural, idiomatic Japanese — same section
+> and field labels and order, but the labels themselves stay in English so the mapping to editor
+> fields is unambiguous. Keep it a faithful translation of the *same* facts already researched —
+> do not research or add anything new in this pass.

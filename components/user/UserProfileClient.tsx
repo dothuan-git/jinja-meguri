@@ -49,6 +49,7 @@ import {
   Waves,
   type LucideIcon,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/ui/Toast";
 import { saveCrestAction } from "@/app/users/actions";
@@ -361,8 +362,8 @@ export const CRESTS: Crest[] = [
 ];
 
 // Helper to format date
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === "ja" ? "ja-JP" : "en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 // On mobile (<768px) force a hard navigation so the (.)shrines interceptor is bypassed and
@@ -395,6 +396,8 @@ export default function UserProfileClient({
 }: UserProfileClientProps) {
   const router = useRouter();
   const toast = useToast();
+  const t = useTranslations("Profile");
+  const locale = useLocale();
   const [isPending, startTransition] = useTransition();
 
   // Modals portal to document.body so they escape the page's stacking context
@@ -503,11 +506,11 @@ export default function UserProfileClient({
     setSigningOut(true);
     try {
       await authClient.signOut();
-      toast.notify("Signed out successfully", "success");
+      toast.notify(t("toast.signedOut"), "success");
       router.push("/");
       router.refresh();
     } catch {
-      toast.notify("Could not sign out", "error");
+      toast.notify(t("toast.signOutFailed"), "error");
       setSigningOut(false);
     }
   }
@@ -516,7 +519,7 @@ export default function UserProfileClient({
   function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     if (!editName.trim()) {
-      toast.notify("Name cannot be empty", "error");
+      toast.notify(t("toast.nameEmpty"), "error");
       return;
     }
 
@@ -527,22 +530,22 @@ export default function UserProfileClient({
         });
 
         if (error) {
-          toast.notify(error.message || "Failed to update profile", "error");
+          toast.notify(error.message || t("toast.updateFailed"), "error");
           return;
         }
 
         // Persist the chosen crest to the backend (user_profile table).
         const crestResult = await saveCrestAction(selectedCrestId);
         if (crestResult.error) {
-          toast.notify(crestResult.error || "Failed to save crest", "error");
+          toast.notify(crestResult.error || t("toast.crestFailed"), "error");
           return;
         }
 
-        toast.notify("Pilgrim pass updated successfully", "success");
+        toast.notify(t("toast.passUpdated"), "success");
         setIsEditOpen(false);
         router.refresh();
-      } catch (err) {
-        toast.notify("An unexpected error occurred", "error");
+      } catch {
+        toast.notify(t("toast.unexpected"), "error");
       }
     });
   }
@@ -572,7 +575,7 @@ export default function UserProfileClient({
           type="button"
           disabled={signingOut}
           onClick={() => setConfirmSignOut(true)}
-          aria-label={signingOut ? "Signing out" : "Sign out"}
+          aria-label={signingOut ? t("signingOut") : t("signOut")}
           className="md:hidden absolute top-3.5 right-3.5 z-20 p-2 rounded-full border border-moss/20 bg-washi/90 text-moss-light shadow-xs hover:text-torii hover:border-torii/40 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
         >
           <LogOut size={14} className={signingOut ? "animate-pulse" : ""} />
@@ -614,7 +617,7 @@ export default function UserProfileClient({
             <button
               onClick={() => setIsEditOpen(true)}
               className="absolute bottom-0 right-0 p-2 rounded-full border border-moss/10 bg-washi text-moss-light shadow-xs hover:text-torii hover:scale-110 transition-all cursor-pointer"
-              aria-label="Edit Profile"
+              aria-label={t("editProfile")}
             >
               <Edit2 size={13} />
             </button>
@@ -626,7 +629,7 @@ export default function UserProfileClient({
               <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 md:gap-4 w-full">
                 <div className="flex flex-row flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 text-center md:text-left">
                   <h1 className="font-display text-2xl md:text-3xl font-black tracking-wide text-stone">
-                    {user.name || "Anonymous Pilgrim"}
+                    {user.name || t("anonymousPilgrim")}
                   </h1>
                   <span
                     className={`rounded-full px-3 py-0.5 text-[9px] font-bold uppercase tracking-widest border border-dashed ${
@@ -635,7 +638,7 @@ export default function UserProfileClient({
                         : "border-moss/30 bg-moss/5 text-moss-light"
                     }`}
                   >
-                    {user.isAdmin ? "Sanctuary Guardian" : "Pilgrim"}
+                    {user.isAdmin ? t("sanctuaryGuardian") : t("pilgrim")}
                   </span>
                 </div>
 
@@ -647,7 +650,7 @@ export default function UserProfileClient({
                     className="flex items-center gap-1.5 rounded-lg border border-dashed border-moss/25 hover:bg-torii/5 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-moss-light hover:text-torii hover:border-torii/40 transition-colors cursor-pointer"
                   >
                     <LogOut size={11} />
-                    {signingOut ? "Leaving…" : "Leave"}
+                    {signingOut ? t("leaving") : t("leave")}
                   </button>
                 </div>
               </div>
@@ -674,10 +677,10 @@ export default function UserProfileClient({
                   <div className="w-full space-y-1.5">
                     <div className="flex justify-between text-[9px] font-mono tracking-widest text-moss-light/80">
                       <span>
-                        <span className="md:hidden">NEXT RANK</span>
-                        <span className="hidden md:inline">PROGRESS TO NEXT RANK</span>
+                        <span className="md:hidden">{t("nextRank")}</span>
+                        <span className="hidden md:inline">{t("progressToNextRank")}</span>
                       </span>
-                      <span>{stampCount} / {nextGoal} STAMPS</span>
+                      <span>{t("stampsProgress", { current: stampCount, goal: nextGoal })}</span>
                     </div>
                     <div className="h-1.5 w-full bg-washi rounded-full border border-moss/5 overflow-hidden">
                       <motion.div
@@ -701,7 +704,7 @@ export default function UserProfileClient({
               <Stamp size={16} />
             </div>
             <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{stampCount}</div>
-            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Stamps</div>
+            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">{t("statStamps")}</div>
           </div>
 
           <div className="text-center p-3 rounded-xl bg-washi/50 border border-moss/5">
@@ -709,7 +712,7 @@ export default function UserProfileClient({
               <Heart size={16} />
             </div>
             <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{wishlistCount}</div>
-            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Wishlist</div>
+            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">{t("statWishlist")}</div>
           </div>
 
           <div className="text-center p-3 rounded-xl bg-washi/50 border border-moss/5">
@@ -717,7 +720,7 @@ export default function UserProfileClient({
               <Award size={16} />
             </div>
             <div className="font-sans text-xl md:text-2xl font-extrabold text-stone">{coveragePercentage}%</div>
-            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">Coverage</div>
+            <div className="text-[9px] font-mono tracking-widest text-moss-light uppercase font-bold">{t("statCoverage")}</div>
           </div>
         </div>
 
@@ -734,9 +737,9 @@ export default function UserProfileClient({
       >
         <div className="flex justify-around md:justify-center border-b border-moss/15 gap-1 md:gap-8 select-none pb-px">
           {([
-            { id: "stamps", label: "御朱印帳", sub: "Stamp Book", count: stampCount },
-            { id: "saved", label: "お気に入り", sub: "Wishlist", count: wishlistCount },
-            { id: "journey", label: "巡礼の旅路", sub: "Pilgrim Log", count: null },
+            { id: "stamps", label: "御朱印帳", sub: t("tabStampBook"), count: stampCount },
+            { id: "saved", label: "お気に入り", sub: t("tabWishlist"), count: wishlistCount },
+            { id: "journey", label: "巡礼の旅路", sub: t("tabPilgrimLog"), count: null },
           ] as const).map((tab) => (
             <button
               key={tab.id}
@@ -788,15 +791,15 @@ export default function UserProfileClient({
                 {stamped.length === 0 ? (
                   <div className="wabi-sabi-card rounded-2xl bg-washi/40 border border-dashed border-moss/20 px-6 py-16 text-center">
                     <Stamp className="mx-auto text-moss-light/40 mb-3" size={32} />
-                    <h3 className="font-serif text-base font-bold text-stone">No sacred seals collected</h3>
+                    <h3 className="font-serif text-base font-bold text-stone">{t("noStampsTitle")}</h3>
                     <p className="text-xs text-stone/60 max-w-xs mx-auto mt-2 leading-relaxed">
-                      Your goshuin stamp book is currently empty. Visit one of the sanctuaries to receive their red hanko seals.
+                      {t("noStampsBody")}
                     </p>
                     <Link
                       href="/shrines"
                       className="inline-flex items-center gap-1 mt-6 text-xs font-mono font-black uppercase tracking-widest text-torii hover:text-torii-dark hover:underline"
                     >
-                      Search Sanctuaries <ChevronRight size={14} />
+                      {t("searchSanctuaries")} <ChevronRight size={14} />
                     </Link>
                   </div>
                 ) : (
@@ -850,7 +853,7 @@ export default function UserProfileClient({
 
                             <div className="flex items-center gap-1 text-[9px] font-mono tracking-widest text-moss-light uppercase mt-1">
                               <Calendar size={10} className="opacity-70" />
-                              <span>COLLECTED {formatDate(item.stamped_at)}</span>
+                              <span>{t("collected", { date: formatDate(item.stamped_at, locale) })}</span>
                             </div>
                           </div>
                           
@@ -859,7 +862,7 @@ export default function UserProfileClient({
                             href={`/shrines/${item.slug}`}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="p-1 rounded-full border border-moss/10 bg-washi opacity-0 group-hover:opacity-100 group-hover:text-torii hover:scale-110 transition-all ml-2"
-                            aria-label={`View ${item.name_en}`}
+                            aria-label={t("viewShrine", { name: item.name_en })}
                           >
                             <ChevronRight size={14} />
                           </Link>
@@ -883,15 +886,15 @@ export default function UserProfileClient({
                 {saved.length === 0 ? (
                   <div className="wabi-sabi-card rounded-2xl bg-washi/40 border border-dashed border-moss/20 px-6 py-16 text-center">
                     <Heart className="mx-auto text-moss-light/40 mb-3" size={32} />
-                    <h3 className="font-serif text-base font-bold text-stone">Wishlist is empty</h3>
+                    <h3 className="font-serif text-base font-bold text-stone">{t("wishlistEmptyTitle")}</h3>
                     <p className="text-xs text-stone/60 max-w-xs mx-auto mt-2 leading-relaxed">
-                      Tap the heart icon on any shrine detail page to save it for your next pilgrimage visit.
+                      {t("wishlistEmptyBody")}
                     </p>
                     <Link
                       href="/shrines"
                       className="inline-flex items-center gap-1 mt-6 text-xs font-mono font-black uppercase tracking-widest text-torii hover:text-torii-dark hover:underline"
                     >
-                      Search Sanctuaries <ChevronRight size={14} />
+                      {t("searchSanctuaries")} <ChevronRight size={14} />
                     </Link>
                   </div>
                 ) : (
@@ -930,14 +933,14 @@ export default function UserProfileClient({
 
                         <div className="border-t border-moss/5 mt-4 pt-3.5 flex justify-between items-center">
                           <span className="text-[8px] font-mono tracking-widest text-moss-light/70 uppercase">
-                            SAVED {formatDate(item.saved_at)}
+                            {t("saved", { date: formatDate(item.saved_at, locale) })}
                           </span>
                           <Link
                             href={`/shrines/${item.slug}`}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="text-[10px] font-mono font-black uppercase tracking-widest text-stone hover:text-torii inline-flex items-center gap-0.5"
                           >
-                            VISIT <ChevronRight size={10} />
+                            {t("visit")} <ChevronRight size={10} />
                           </Link>
                         </div>
                       </motion.div>
@@ -960,9 +963,9 @@ export default function UserProfileClient({
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-6">
                     <Award size={18} className="text-torii" />
-                    <h3 className="font-serif text-md font-black text-stone">Sacred Milestones</h3>
+                    <h3 className="font-serif text-md font-black text-stone">{t("sacredMilestones")}</h3>
                     <span className="ml-auto text-[10px] font-mono font-bold tracking-widest rounded-full bg-bamboo-light/50 border border-moss/10 px-2 py-0.5 text-moss">
-                      {unlockedCount} / {milestones.length} earned
+                      {t("earned", { unlocked: unlockedCount, total: milestones.length })}
                     </span>
                   </div>
 
@@ -982,8 +985,8 @@ export default function UserProfileClient({
                   </div>
 
                   <p className="flex items-center justify-end gap-1 text-[10px] font-mono uppercase tracking-widest text-moss-light/60">
-                    <span className="sm:hidden">Swipe to reveal more</span>
-                    <span className="hidden sm:inline">Drag or shift + scroll to reveal more</span>
+                    <span className="sm:hidden">{t("swipeMore")}</span>
+                    <span className="hidden sm:inline">{t("dragMore")}</span>
                     <span aria-hidden>→</span>
                   </p>
                 </div>
@@ -992,12 +995,12 @@ export default function UserProfileClient({
                 <div className="border-t border-moss/10 pt-8 mt-4">
                   <div className="flex items-center gap-2 mb-6">
                     <BookOpen size={18} className="text-torii" />
-                    <h3 className="font-serif text-md font-black text-stone">Pilgrimage Chronicle</h3>
+                    <h3 className="font-serif text-md font-black text-stone">{t("pilgrimageChronicle")}</h3>
                   </div>
 
                   {stamped.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-moss/20 bg-stone/5 p-8 text-center text-xs text-stone/55 italic">
-                      Your chronicle is unwritten. Visit a sanctuary and collect a seal to begin.
+                      {t("chronicleEmpty")}
                     </div>
                   ) : (
                     <div className="relative pl-4 md:pl-6 border-l border-moss/15 ml-2 md:ml-3 space-y-8">
@@ -1039,7 +1042,7 @@ export default function UserProfileClient({
                                 </span>
                               </h4>
                               <span className="text-[9px] font-mono tracking-widest text-moss-light/60 uppercase font-bold shrink-0 group-hover:text-torii transition-colors select-none">
-                                {isCollapsed ? "Expand" : "Collapse"} ({prefStamps.length})
+                                {isCollapsed ? t("expand") : t("collapse")} ({prefStamps.length})
                               </span>
                             </button>
 
@@ -1077,7 +1080,7 @@ export default function UserProfileClient({
                                             </span>
                                           )}
                                           <span className="text-[8px] font-mono tracking-widest text-stone/45 uppercase mt-1 block">
-                                            {formatDate(stamp.stamped_at)}
+                                            {formatDate(stamp.stamped_at, locale)}
                                           </span>
                                         </div>
                                         <ChevronRight size={13} className="text-moss-light/40 group-hover:text-torii shrink-0 transition-colors" />
@@ -1092,8 +1095,8 @@ export default function UserProfileClient({
                                       className="w-full mt-2 py-2.5 rounded-xl border border-dashed border-moss/20 hover:border-torii/40 text-[9px] font-mono font-bold tracking-widest text-moss-light/80 hover:text-torii bg-washi/40 transition-colors uppercase cursor-pointer"
                                     >
                                       {isExpanded
-                                        ? "Collapse extra entries"
-                                        : `Show ${prefStamps.length - 6} more entries`}
+                                        ? t("collapseExtra")
+                                        : t("showMoreEntries", { count: prefStamps.length - 6 })}
                                     </button>
                                   )}
                                 </motion.div>
@@ -1139,11 +1142,11 @@ export default function UserProfileClient({
 
               <div className="p-6 md:p-8 overflow-y-auto flex-1 min-h-0">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="font-display text-xl font-black text-stone">Edit Pilgrimage Record</h2>
+                <h2 className="font-display text-xl font-black text-stone">{t("editRecord")}</h2>
                 <button
                   onClick={() => setIsEditOpen(false)}
                   className="p-1 rounded-full text-stone/50 hover:text-torii hover:bg-stone/5 transition-colors cursor-pointer"
-                  aria-label="Close modal"
+                  aria-label={t("closeModal")}
                 >
                   <X size={18} />
                 </button>
@@ -1153,7 +1156,7 @@ export default function UserProfileClient({
                 {/* Display Name Input */}
                 <div className="space-y-1.5">
                   <label htmlFor="pilgrim-name" className="block text-[11px] font-bold uppercase tracking-widest text-moss-light">
-                    Pilgrim Name (お名前)
+                    {t("pilgrimName")}
                   </label>
                   <input
                     id="pilgrim-name"
@@ -1162,17 +1165,17 @@ export default function UserProfileClient({
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     className="w-full rounded-xl border border-moss/20 bg-washi/60 px-4 py-2.5 text-sm text-stone outline-none transition-all placeholder:text-moss-light/50 focus:border-torii focus:ring-3 focus:ring-torii/10 focus:bg-washi/90"
-                    placeholder="Enter your name"
+                    placeholder={t("enterName")}
                   />
                 </div>
 
                 {/* Crest Selector */}
                 <div className="space-y-2">
                   <label className="block text-[11px] font-bold uppercase tracking-widest text-moss-light">
-                    Pilgrim Crest (紋章 / アバター)
+                    {t("pilgrimCrest")}
                   </label>
                   <p className="text-[10px] text-stone/60 leading-normal mb-3">
-                    Choose a traditional Kamon symbol to represent your spirit on this pilgrimage pass.
+                    {t("crestHint")}
                   </p>
 
                   <div className="grid grid-cols-3 gap-3">
@@ -1204,7 +1207,7 @@ export default function UserProfileClient({
                 {/* Active crest meaning */}
                 <div className="p-3.5 rounded-xl border border-dashed border-bamboo/20 bg-bamboo-light/10 text-stone/80 text-[11px] leading-relaxed">
                   <div className="font-bold text-moss-light uppercase tracking-wider text-[9px] mb-1 font-mono">
-                    SIGNIFICANCE OF {activeCrest.name_en} ({activeCrest.name_ja})
+                    {t("significanceOf", { en: activeCrest.name_en, ja: activeCrest.name_ja })}
                   </div>
                   <div className="font-bold text-stone">{activeCrest.meaning}</div>
                   <div className="mt-0.5 text-stone/70">{activeCrest.description}</div>
@@ -1217,7 +1220,7 @@ export default function UserProfileClient({
                     onClick={() => setIsEditOpen(false)}
                     className="rounded-xl border border-moss/20 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-stone hover:bg-stone/5 transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -1230,10 +1233,10 @@ export default function UserProfileClient({
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Applying…
+                        {t("applying")}
                       </>
                     ) : (
-                      "Apply Changes"
+                      t("applyChanges")
                     )}
                   </button>
                 </div>
@@ -1280,7 +1283,7 @@ export default function UserProfileClient({
               {/* Close button — absolute top-right on all sizes */}
               <button
                 type="button"
-                aria-label="Close sign-out confirmation"
+                aria-label={t("closeSignOut")}
                 onClick={() => setConfirmSignOut(false)}
                 disabled={signingOut}
                 className="absolute top-3.5 right-3.5 z-10 rounded-full p-1 text-stone/35 hover:text-stone hover:bg-stone/5 transition-colors disabled:opacity-40 cursor-pointer"
@@ -1299,19 +1302,19 @@ export default function UserProfileClient({
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-display text-base md:text-xl font-black tracking-wide text-stone leading-tight">
-                    Leave the sanctuary?
+                    {t("leaveSanctuary")}
                   </h3>
                   <p
                     className="font-serif text-[10px] md:text-sm tracking-[0.2em] text-torii md:mt-1"
                     style={{ fontFamily: "'Noto Serif JP', serif" }}
                   >
-                    またのお参りを
+                    {t("leaveSanctuaryJa")}
                   </p>
                 </div>
               </div>
 
               <p className="relative z-10 mt-2.5 md:mt-4 text-[11px] md:text-sm text-stone/65 leading-relaxed md:text-center">
-                You&rsquo;ll be signed out. Stamps and saved shrines stay safe — return anytime.
+                {t("leaveConfirm")}
               </p>
 
               {/* Actions */}
@@ -1322,7 +1325,7 @@ export default function UserProfileClient({
                   disabled={signingOut}
                   className="flex-1 rounded-lg md:rounded-xl border border-dashed border-moss/30 px-3 md:px-4 py-2 md:py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-moss-light hover:text-stone hover:border-moss/50 hover:bg-stone/5 transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  Stay
+                  {t("stay")}
                 </button>
                 <button
                   type="button"
@@ -1331,7 +1334,7 @@ export default function UserProfileClient({
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-lg md:rounded-xl bg-torii px-3 md:px-4 py-2 md:py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-washi hover:bg-torii-dark transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   <LogOut size={12} className={signingOut ? "animate-pulse" : ""} />
-                  {signingOut ? "Leaving…" : "Sign out"}
+                  {signingOut ? t("leaving") : t("signOut")}
                 </button>
               </div>
             </motion.div>

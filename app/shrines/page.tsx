@@ -1,16 +1,19 @@
 import { Suspense } from "react";
+import { getLocale } from "next-intl/server";
 import { loadStore } from "@/lib/db/store";
 import { getShrineCards, getFacetCatalogs } from "@/lib/db/repo";
 import { getCurrentUser } from "@/lib/auth/server";
 import { loadUserMarks, savedSlugs, stampedSlugs } from "@/lib/db/userRepo";
+import type { Locale } from "@/lib/i18n";
 import ShrineListing from "@/components/ShrineListing";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShrinesPage() {
   const store = await loadStore();
-  const cards = getShrineCards(store);
-  const facets = getFacetCatalogs(store);
+  const locale = (await getLocale()) as Locale;
+  const cards = getShrineCards(store, locale);
+  const facets = getFacetCatalogs(store, locale);
   const user = await getCurrentUser();
   const isAdmin = Boolean(user?.isAdmin);
 

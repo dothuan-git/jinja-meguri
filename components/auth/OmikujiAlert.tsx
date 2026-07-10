@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface OmikujiAlertProps {
   type: "error" | "success";
@@ -9,6 +9,7 @@ interface OmikujiAlertProps {
 }
 
 export default function OmikujiAlert({ type, message }: OmikujiAlertProps) {
+  const t = useTranslations("Auth");
   const isError = type === "error";
 
   return (
@@ -43,7 +44,7 @@ export default function OmikujiAlert({ type, message }: OmikujiAlertProps) {
 
       <div className="flex-1 space-y-1 pr-1">
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-          {isError ? "Omikuji: Bad Fortune" : "Omikuji: Good Fortune"}
+          {isError ? t("omikujiBad") : t("omikujiGood")}
         </div>
         <p className="font-sans leading-relaxed text-xs font-medium">{message}</p>
       </div>

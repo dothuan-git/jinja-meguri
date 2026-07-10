@@ -41,7 +41,7 @@ function shrineContext(store: Store, shrineId: string) {
   const category_codes = store.prayer_categories
     .filter((c) => catIdsByShrine.includes(c.id))
     .map((c) => c.name_en);
-  return { slug: s.slug, name_en: s.name_en, region: region?.name_en ?? "", region_id: s.region_id, category_codes };
+  return { slug: s.slug, name_en: s.name_en, name_ja: s.name_ja, region: region?.name_en ?? "", region_id: s.region_id, category_codes };
 }
 
 export function entriesForMonth(store: Store, year: number, month: number): CalendarEntry[] {
@@ -68,6 +68,7 @@ export function entriesForMonth(store: Store, year: number, month: number): Cale
           festival_id: f.id,
           shrine_slug: ctx.slug,
           shrine_name_en: ctx.name_en,
+          shrine_name_ja: ctx.name_ja,
           festival_name_en: f.name_en,
           festival_name_ja: f.name_ja,
           region: ctx.region,
@@ -85,6 +86,7 @@ export function entriesForMonth(store: Store, year: number, month: number): Cale
         festival_id: f.id,
         shrine_slug: ctx.slug,
         shrine_name_en: ctx.name_en,
+        shrine_name_ja: ctx.name_ja,
         festival_name_en: f.name_en,
         festival_name_ja: f.name_ja,
         region: ctx.region,

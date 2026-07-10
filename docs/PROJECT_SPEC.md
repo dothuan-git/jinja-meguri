@@ -163,6 +163,7 @@ Detail pages are real routed pages shown as a **side modal when opened from the 
 1. **Data layer** — ✅ Neon provisioned; schema v3 + catalog seed applied; read layer (`lib/db/store.ts` → `repo.ts`) queries Neon at request time.
 2. **Frontend** — ✅ Next.js app built: landing, shrine listing/detail, deity browse, calendar, search.
 3. **Admin** — ✅ admin = Neon Auth user role (`role === 'admin'`) + `getAdminEmail`/`requireAdmin` guards; shrine & deity create/edit/delete entirely in place. Public sign-in/up + owner-only profile rebuilt (`/sign-in`, `/sign-up`, `/users/[id]`).
+4. **i18n** — ✅ English default + Japanese via a cookie-based locale toggle (`next-intl`, no URL segment). UI chrome from `messages/en.json`/`ja.json`; DB prose from parallel `*_ja` columns (`docs/migrations/`, `npm run db:migrate`) with English fallback — see `DATA_MODEL.md` §1.5.
 
 ---
 
@@ -173,6 +174,7 @@ Detail pages are real routed pages shown as a **side modal when opened from the 
 | `PROJECT_SPEC.md` | This document — master reference. |
 | `schema.sql` | DDL (schema v3, applied to Neon). |
 | `seed.sql` | Catalog seed (applied to Neon). |
+| `migrations/` | Additive, idempotent post-v3 migrations (e.g. the i18n `*_ja` columns); applied via `npm run db:migrate`. |
 | `ai-research/` | AI research prompts + example JSON for authoring shrine/deity records. |
 | `ACCOUNTS.md` | Admin auth model and onboarding (high level). |
 | `erd.html` | Visual ERD. |

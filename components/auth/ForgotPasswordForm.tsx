@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "motion/react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import OmikujiAlert from "./OmikujiAlert";
 
@@ -31,6 +32,7 @@ const itemVariants: Variants = {
 
 
 export default function ForgotPasswordForm() {
+  const t = useTranslations("Auth");
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +45,12 @@ export default function ForgotPasswordForm() {
     try {
       const { error } = await authClient.forgetPassword.emailOtp({ email });
       if (error) {
-        setError(error.message ?? "Could not send the password reset email.");
+        setError(error.message ?? t("errForgot"));
         return;
       }
       setDone(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
     } finally {
       setPending(false);
     }
@@ -63,18 +65,18 @@ export default function ForgotPasswordForm() {
       >
         <OmikujiAlert
           type="success"
-          message={`We sent a password reset link to ${email}. Please check your inbox.`}
+          message={t("resetSent", { email })}
         />
-        
+
         <p className="text-xs text-moss-light/80 leading-relaxed pt-2">
-          The link will remain active for 1 hour. If you don&apos;t receive it shortly, check your spam folder or try again.
+          {t("resetSentNote")}
         </p>
 
         <Link
           href="/sign-in"
           className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm animate-pulse"
         >
-          Return to sign in
+          {t("returnToSignIn")}
         </Link>
       </motion.div>
     );
@@ -100,7 +102,7 @@ export default function ForgotPasswordForm() {
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="email" className={LABEL}>
-            Email Address
+            {t("emailAddress")}
           </label>
           <input
             id="email"
@@ -110,7 +112,7 @@ export default function ForgotPasswordForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={INPUT}
-            placeholder="you@example.com"
+            placeholder={t("emailPh")}
           />
         </motion.div>
 
@@ -121,16 +123,16 @@ export default function ForgotPasswordForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Sending Link…" : "Send Reset Link"}
+          {pending ? t("sendingLink") : t("sendResetLink")}
         </motion.button>
 
         <motion.p
           variants={itemVariants}
           className="text-center text-xs tracking-widest uppercase text-moss-light"
         >
-          Remember your password?{" "}
+          {t("rememberPassword")}{" "}
           <Link href="/sign-in" className="font-bold text-torii hover:underline">
-            Sign in
+            {t("signIn")}
           </Link>
         </motion.p>
       </motion.form>

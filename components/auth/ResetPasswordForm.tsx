@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, type Variants } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import OmikujiAlert from "./OmikujiAlert";
 
@@ -33,6 +34,7 @@ const itemVariants: Variants = {
 
 
 export default function ResetPasswordForm() {
+  const t = useTranslations("Auth");
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -46,15 +48,15 @@ export default function ResetPasswordForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token) {
-      setError("Reset token is missing or invalid. Please check your email link.");
+      setError(t("errResetMissingToken"));
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("errPasswordShort"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("errPasswordMismatch"));
       return;
     }
 
@@ -66,12 +68,12 @@ export default function ResetPasswordForm() {
         token,
       });
       if (error) {
-        setError(error.message ?? "Could not reset password. Your link may have expired.");
+        setError(error.message ?? t("errResetFailed"));
         return;
       }
       setDone(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
     } finally {
       setPending(false);
     }
@@ -82,14 +84,14 @@ export default function ResetPasswordForm() {
       <div className="space-y-4 text-center">
         <OmikujiAlert
           type="error"
-          message="Invalid or missing reset token. Please request a new password reset link."
+          message={t("invalidToken")}
         />
         <div className="pt-4">
           <Link
             href="/forgot-password"
             className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
           >
-            Request new link
+            {t("requestNewLink")}
           </Link>
         </div>
       </div>
@@ -105,14 +107,14 @@ export default function ResetPasswordForm() {
       >
         <OmikujiAlert
           type="success"
-          message="Your password has been reset successfully. You can now sign in with your new password."
+          message={t("resetSuccess")}
         />
 
         <Link
           href="/sign-in"
           className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
         >
-          Sign in
+          {t("signIn")}
         </Link>
       </motion.div>
     );
@@ -138,7 +140,7 @@ export default function ResetPasswordForm() {
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="password" className={LABEL}>
-            New Password
+            {t("newPassword")}
           </label>
           <div className="relative">
             <input
@@ -149,7 +151,7 @@ export default function ResetPasswordForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`${INPUT} pr-11`}
-              placeholder="At least 8 characters"
+              placeholder={t("min8Ph")}
             />
             <button
               type="button"
@@ -164,7 +166,7 @@ export default function ResetPasswordForm() {
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="confirmPassword" className={LABEL}>
-            Confirm New Password
+            {t("confirmNewPassword")}
           </label>
           <input
             id="confirmPassword"
@@ -173,7 +175,7 @@ export default function ResetPasswordForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={INPUT}
-            placeholder="Re-enter your password"
+            placeholder={t("reenterPh")}
           />
         </motion.div>
 
@@ -184,7 +186,7 @@ export default function ResetPasswordForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Resetting password…" : "Reset Password"}
+          {pending ? t("resettingPassword") : t("resetPassword")}
         </motion.button>
       </motion.form>
     </motion.div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { saveShrineAction } from "@/app/admin/actions";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import { useToast } from "@/components/ui/Toast";
@@ -19,6 +20,7 @@ export function useShrineSave(opts: {
   const { mode, onSaved } = opts;
   const [saving, startTransition] = useTransition();
   const toast = useToast();
+  const t = useTranslations("Toasts");
 
   function save(data: ShrineInput) {
     const formData = new FormData();
@@ -28,12 +30,12 @@ export function useShrineSave(opts: {
       if (result?.success && result.slug) {
         toast.success(
           mode === "update"
-            ? `Shrine "${data.name_en}" updated.`
-            : `Shrine "${data.name_en}" added.`,
+            ? t("shrineUpdated", { name: data.name_en })
+            : t("shrineAdded", { name: data.name_en }),
         );
         onSaved?.(result.slug);
       } else if (result?.error) {
-        toast.error(`Couldn't save "${data.name_en}": ${result.error}`);
+        toast.error(t("shrineSaveFailed", { name: data.name_en, error: result.error }));
       }
     });
   }

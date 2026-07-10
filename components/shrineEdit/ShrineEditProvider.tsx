@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { EditCatalogs } from "@/lib/types";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
 import { useShrineSave } from "@/components/admin/useShrineSave";
 import { ShrineEditContext, type ShrineEditApi } from "@/components/shrineEdit/context";
+import EditLangToggle from "@/components/shrineEdit/EditLangToggle";
 
 function getAtPath(root: unknown, path: string): unknown {
   return path
@@ -44,7 +46,9 @@ export default function ShrineEditProvider(props: Props) {
 
 function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, children }: Props) {
   const [draft, setDraft] = useState<ShrineInput>(initialData);
+  const [editLang, setEditLang] = useState<"en" | "ja">("en");
   const { save, saving } = useShrineSave({ mode, onSaved });
+  const t = useTranslations("Admin");
   const creating = mode === "create";
   // Slug is immutable when editing an existing shrine, editable when creating.
   const slugLocked = !creating;
@@ -70,8 +74,10 @@ function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, 
       },
       findDeityIndex: (nameJa) => draft.deities.findIndex((d) => d.name_ja === nameJa),
       catalogs,
+      editLang,
+      setEditLang,
     }),
-    [draft, catalogs, mode, slugLocked],
+    [draft, catalogs, mode, slugLocked, editLang],
   );
 
   return (
@@ -82,8 +88,10 @@ function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, 
       <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-5 pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii">
-            {creating ? "New shrine" : "Editing"}
+            {creating ? t("newShrine") : t("editing")}
           </span>
+          <span className="text-stone/25 font-mono select-none text-xs">|</span>
+          <EditLangToggle value={editLang} onChange={setEditLang} />
           <span className="text-stone/25 font-mono select-none text-xs">|</span>
           <button
             onClick={onCancel}
@@ -91,7 +99,7 @@ function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, 
             className="flex items-center gap-1.5 rounded-full border border-stone/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-stone/70 transition-colors hover:border-stone/40 hover:text-stone disabled:opacity-50"
           >
             <X size={13} />
-            <span>Cancel</span>
+            <span>{t("cancel")}</span>
           </button>
           <button
             onClick={() => save(creating ? draft : { ...draft, slug: initialData.slug })}
@@ -99,7 +107,7 @@ function EditFrame({ initialData, catalogs, mode = "update", onCancel, onSaved, 
             className="flex items-center gap-1.5 rounded-full bg-moss px-4 py-1 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-moss/90 disabled:opacity-60"
           >
             <Check size={13} />
-            <span>{saving ? "Saving…" : creating ? "Create" : "Save"}</span>
+            <span>{saving ? t("saving") : creating ? t("create") : t("save")}</span>
           </button>
         </div>
       </div>

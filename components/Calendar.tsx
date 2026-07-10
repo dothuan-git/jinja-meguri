@@ -24,8 +24,8 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { CalendarFestival, FestivalOccurrenceRow } from "@/lib/types";
-import { FESTIVAL_TYPE_LABEL } from "@/lib/labels";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import type { OccurrenceShrineOption } from "@/components/admin/OccurrenceModal";
 
@@ -42,34 +42,37 @@ interface PoeticMonth {
   meaning: string;
 }
 
-const POETIC_MONTHS: Record<number, PoeticMonth> = {
-  1: { number: 1, name: "January", wamei: "Mutsuki", kanji: "睦月", meaning: "Month of Love/Harmony" },
-  2: { number: 2, name: "February", wamei: "Kisaragi", kanji: "如月", meaning: "Shedding & Warming Layers" },
-  3: { number: 3, name: "March", wamei: "Yayoi", kanji: "弥生", meaning: "Sprouting of Fresh Flowers" },
-  4: { number: 4, name: "April", wamei: "Uzuki", kanji: "卯月", meaning: "Deutzia Flower Blossoms" },
-  5: { number: 5, name: "May", wamei: "Satsuki", kanji: "皐月", meaning: "Rice Sprout Cultivation" },
-  6: { number: 6, name: "June", wamei: "Minazuki", kanji: "水無月", meaning: "Water For Swelling Fields" },
-  7: { number: 7, name: "July", wamei: "Fumizuki", kanji: "文月", meaning: "Scribe Letters & Wheat Harvest" },
-  8: { number: 8, name: "August", wamei: "Hazuki", kanji: "葉月", meaning: "Falling Leaves of Autumn" },
-  9: { number: 9, name: "September", wamei: "Nagatsuki", kanji: "長月", meaning: "The Elongation of Nights" },
-  10: { number: 10, name: "October", wamei: "Kannazuki", kanji: "神無月", meaning: "Month of No Gods" },
-  11: { number: 11, name: "November", wamei: "Shimotsuki", kanji: "霜月", meaning: "Descent of Silver Frost" },
-  12: { number: 12, name: "December", wamei: "Shiwasu", kanji: "師走", meaning: "Priests Running Pageant" },
+// Static wamei/kanji per month — the localized name/meaning come from the
+// Calendar.months messages and are merged in per render (see POETIC_MONTHS below).
+const POETIC_MONTHS_STATIC: Record<number, Omit<PoeticMonth, "name" | "meaning">> = {
+  1: { number: 1, wamei: "Mutsuki", kanji: "睦月" },
+  2: { number: 2, wamei: "Kisaragi", kanji: "如月" },
+  3: { number: 3, wamei: "Yayoi", kanji: "弥生" },
+  4: { number: 4, wamei: "Uzuki", kanji: "卯月" },
+  5: { number: 5, wamei: "Satsuki", kanji: "皐月" },
+  6: { number: 6, wamei: "Minazuki", kanji: "水無月" },
+  7: { number: 7, wamei: "Fumizuki", kanji: "文月" },
+  8: { number: 8, wamei: "Hazuki", kanji: "葉月" },
+  9: { number: 9, wamei: "Nagatsuki", kanji: "長月" },
+  10: { number: 10, wamei: "Kannazuki", kanji: "神無月" },
+  11: { number: 11, wamei: "Shimotsuki", kanji: "霜月" },
+  12: { number: 12, wamei: "Shiwasu", kanji: "師走" },
 };
 
-const SEASONS: Record<number, { kanji: string; name: string; color: string; bg: string }> = {
-  1: { kanji: "冬", name: "Fuyu • Winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
-  2: { kanji: "冬", name: "Fuyu • Winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
-  3: { kanji: "春", name: "Haru • Spring", color: "text-torii", bg: "bg-torii/[0.04]" },
-  4: { kanji: "春", name: "Haru • Spring", color: "text-torii", bg: "bg-torii/[0.04]" },
-  5: { kanji: "春", name: "Haru • Spring", color: "text-torii", bg: "bg-torii/[0.04]" },
-  6: { kanji: "夏", name: "Natsu • Summer", color: "text-bamboo", bg: "bg-bamboo/10" },
-  7: { kanji: "夏", name: "Natsu • Summer", color: "text-bamboo", bg: "bg-bamboo/10" },
-  8: { kanji: "夏", name: "Natsu • Summer", color: "text-bamboo", bg: "bg-bamboo/10" },
-  9: { kanji: "秋", name: "Aki • Autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
-  10: { kanji: "秋", name: "Aki • Autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
-  11: { kanji: "秋", name: "Aki • Autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
-  12: { kanji: "冬", name: "Fuyu • Winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
+type SeasonKey = "spring" | "summer" | "autumn" | "winter";
+const SEASONS: Record<number, { kanji: string; key: SeasonKey; color: string; bg: string }> = {
+  1: { kanji: "冬", key: "winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
+  2: { kanji: "冬", key: "winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
+  3: { kanji: "春", key: "spring", color: "text-torii", bg: "bg-torii/[0.04]" },
+  4: { kanji: "春", key: "spring", color: "text-torii", bg: "bg-torii/[0.04]" },
+  5: { kanji: "春", key: "spring", color: "text-torii", bg: "bg-torii/[0.04]" },
+  6: { kanji: "夏", key: "summer", color: "text-bamboo", bg: "bg-bamboo/10" },
+  7: { kanji: "夏", key: "summer", color: "text-bamboo", bg: "bg-bamboo/10" },
+  8: { kanji: "夏", key: "summer", color: "text-bamboo", bg: "bg-bamboo/10" },
+  9: { kanji: "秋", key: "autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
+  10: { kanji: "秋", key: "autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
+  11: { kanji: "秋", key: "autumn", color: "text-torii-dark", bg: "bg-orange-100/30" },
+  12: { kanji: "冬", key: "winter", color: "text-[#4f5c6b]", bg: "bg-[#eceef0]" },
 };
 
 // Local shape the ported JSX consumes, adapted from CalendarFestival
@@ -100,8 +103,25 @@ export default function Calendar({
   occurrenceSeed?: FestivalOccurrenceRow[];
 }) {
   const router = useRouter();
+  const t = useTranslations("Calendar");
+  const tEnums = useTranslations("Enums");
+  const tAdmin = useTranslations("Admin");
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
+
+  // Locale-resolved month info; key shape mirrors the old module-level constant
+  // so the JSX below reads unchanged.
+  const POETIC_MONTHS = useMemo<Record<number, PoeticMonth>>(() => {
+    const out: Record<number, PoeticMonth> = {};
+    for (let m = 1; m <= 12; m++) {
+      out[m] = {
+        ...POETIC_MONTHS_STATIC[m],
+        name: t(`months.${m}.name` as Parameters<typeof t>[0]),
+        meaning: t(`months.${m}.meaning` as Parameters<typeof t>[0]),
+      };
+    }
+    return out;
+  }, [t]);
 
   const [occModalOpen, setOccModalOpen] = useState(false);
 
@@ -270,9 +290,9 @@ export default function Calendar({
   };
 
   const FESTIVAL_TYPE_OPTIONS: { value: string; label: string }[] = [
-    { value: "all", label: "All Rites" },
-    { value: "spectacle", label: FESTIVAL_TYPE_LABEL.spectacle },
-    { value: "pilgrimage", label: FESTIVAL_TYPE_LABEL.pilgrimage },
+    { value: "all", label: t("allRites") },
+    { value: "spectacle", label: tEnums("festivalType.spectacle") },
+    { value: "pilgrimage", label: tEnums("festivalType.pilgrimage") },
   ];
 
   // Helper to choose high craft contextual icons based on keywords in Name/Meaning
@@ -312,16 +332,16 @@ export default function Calendar({
 
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs mb-3 z-10">
           <CalendarIcon size={11} className="text-torii" />
-          <span>Solar Term Liturgy</span>
+          <span>{t("badgeLeft")}</span>
           <span className="w-1 h-1 rounded-full bg-torii/30" />
-          <span>祭時暦</span>
+          <span>{t("badgeRight")}</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
-          Festival Liturgy
+          {t("title")}
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
-          “Synchronize with ancient rhythms. Discover where the deities perform their sacred alignments across the annual rotation of natural terms.”
+          {t("quote")}
         </p>
       </div>
 
@@ -333,10 +353,10 @@ export default function Calendar({
           </div>
           <div>
             <h3 className="text-[11px] lg:text-xs font-mono font-black uppercase tracking-[0.15em] text-torii-dark flex items-center gap-1.5">
-              <span>Sacred Nature Resonance (自然融和)</span>
+              <span>{t("bannerTitle")}</span>
             </h3>
             <p className="text-stone/80 text-[10.5px] lg:text-[11.5px] font-serif tracking-wider leading-relaxed mt-0.5 max-w-md lg:max-w-xl">
-              In traditional Shinto worship, seasonal cycles serve as portals of divine arrival. The calendar below tracks grand processions and intimate rituals aligned with natural crop coordinates.
+              {t("bannerBody")}
             </p>
           </div>
         </div>
@@ -352,7 +372,7 @@ export default function Calendar({
               >
                 <span className={`text-xs font-display font-black ${firstSeasonMatch.color}`}>{kanji}</span>
                 <span className="text-[8px] font-mono tracking-widest uppercase font-black text-[#5c685f]">
-                  {firstSeasonMatch.name.split(" • ")[1]}
+                  {t(`seasons.${firstSeasonMatch.key}`)}
                 </span>
               </div>
             );
@@ -399,7 +419,7 @@ export default function Calendar({
           <Search className="absolute left-3 text-stone/40" size={14} />
           <input
             type="text"
-            placeholder="Search by deity name, shrine origin, or ceremony terms..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full text-xs font-sans pl-9 pr-12 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
@@ -408,7 +428,7 @@ export default function Calendar({
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-3 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors"
-              title="Clear Search"
+              title={t("clearSearch")}
             >
               <X size={13} />
             </button>
@@ -427,7 +447,7 @@ export default function Calendar({
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              All Rites
+              {t("allRites")}
             </button>
             <button
               onClick={() => setActiveCategory("spectacle")}
@@ -437,7 +457,7 @@ export default function Calendar({
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              {FESTIVAL_TYPE_LABEL.spectacle}
+              {tEnums("festivalType.spectacle")}
             </button>
             <button
               onClick={() => setActiveCategory("pilgrimage")}
@@ -447,7 +467,7 @@ export default function Calendar({
                   : "text-[#5c685f] hover:text-stone hover:bg-white/40"
               }`}
             >
-              {FESTIVAL_TYPE_LABEL.pilgrimage}
+              {tEnums("festivalType.pilgrimage")}
             </button>
           </div>
 
@@ -462,7 +482,7 @@ export default function Calendar({
               }`}
             >
               <span className="font-sans whitespace-nowrap">
-                {FESTIVAL_TYPE_OPTIONS.find((o) => o.value === activeCategory)?.label ?? "All Rites"}
+                {FESTIVAL_TYPE_OPTIONS.find((o) => o.value === activeCategory)?.label ?? t("allRites")}
               </span>
               {typeMenuOpen ? <ChevronUp size={11} className="text-moss-light" /> : <ChevronDown size={11} className="text-moss-light" />}
             </button>
@@ -478,7 +498,7 @@ export default function Calendar({
                     className="absolute right-0 mt-2 w-48 bg-sand border border-moss/15 rounded-xl shadow-xl p-3.5 z-50"
                   >
                     <span className="block text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black pb-2 border-b border-moss/10 mb-2">
-                      Select Rite Type
+                      {t("selectRiteType")}
                     </span>
                     <div className="space-y-0.5">
                       {FESTIVAL_TYPE_OPTIONS.map((option) => {
@@ -505,12 +525,12 @@ export default function Calendar({
           {/* Interactive Month Grid / Google Calendar style popup button (icon-only on mobile) */}
           <button
             onClick={() => { setMobileAgendaOpen(false); setIsCalendarOpen(true); }}
-            aria-label="Lunar Month Calendar"
-            title="Lunar Month Calendar (月暦画)"
+            aria-label={t("lunarMonthCalendar")}
+            title={t("lunarMonthCalendarTitle")}
             className="flex items-center justify-center gap-2 px-3 md:px-4 h-full bg-white border border-[#dfdbd2] hover:border-torii/40 hover:bg-torii/[0.02] text-torii-dark rounded-xl text-[10.5px] font-serif font-black tracking-wider shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer shrink-0"
           >
             <CalendarIcon size={13} className="shrink-0 text-torii" />
-            <span className="hidden lg:inline">Lunar Month Calendar</span>
+            <span className="hidden lg:inline">{t("lunarMonthCalendar")}</span>
           </button>
         </div>
 
@@ -533,14 +553,14 @@ export default function Calendar({
                   契合無効
                 </div>
                 <p className="text-stone/60 font-sans text-xs tracking-wide">
-                  No matching spiritual assemblies found for your current alignment filters.
+                  {t("emptyBody")}
                 </p>
               </motion.div>
             ) : (
               activeMonths.map((mNum) => {
                 const monthInfo = POETIC_MONTHS[mNum] || { number: mNum, name: `Term ${mNum}`, wamei: "Seisaku", kanji: "祝", meaning: "Festivals" };
                 const fList = festivalsGrouped[mNum] || [];
-                const seasonInfo = SEASONS[mNum] || { kanji: "春", name: "Spring", color: "text-torii", bg: "bg-torii/5" };
+                const seasonInfo = SEASONS[mNum] || { kanji: "春", key: "spring" as SeasonKey, color: "text-torii", bg: "bg-torii/5" };
 
                 return (
                   <motion.div
@@ -583,7 +603,7 @@ export default function Calendar({
 
                         {/* Traditional Season Tag */}
                         <div className={`mt-3 px-2 py-0.5 rounded text-[8px] font-mono font-bold tracking-widest uppercase inline-block border border-moss/5 self-start ${seasonInfo.bg} ${seasonInfo.color}`}>
-                          {seasonInfo.kanji} • {seasonInfo.name.split(" • ")[1]}
+                          {seasonInfo.kanji} • {t(`seasons.${seasonInfo.key}`)}
                         </div>
                       </div>
 
@@ -608,7 +628,7 @@ export default function Calendar({
                           </div>
 
                           <div className={`px-2 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-widest uppercase inline-block border border-moss/5 shrink-0 ${seasonInfo.bg} ${seasonInfo.color}`}>
-                            {seasonInfo.kanji} • {seasonInfo.name.split(" • ")[1]}
+                            {seasonInfo.kanji} • {t(`seasons.${seasonInfo.key}`)}
                           </div>
                         </div>
 
@@ -672,7 +692,7 @@ export default function Calendar({
                                           ? "bg-torii/[0.03] text-torii-dark border-torii/15"
                                           : "bg-bamboo-light text-moss/90 border-bamboo/15"
                                       }`}>
-                                        {fest.type.category === "pilgrimage" ? "深参密儀 • Pilgrimage" : "衆民観祭 • Public Festival"}
+                                        {fest.type.category === "pilgrimage" ? t("pilgrimageBadge") : t("spectacleBadge")}
                                       </span>
                                     </div>
                                   )}
@@ -688,7 +708,7 @@ export default function Calendar({
                                     >
                                       <MapPin size={11} className="text-moss-light group-hover/host:text-torii transition-colors shrink-0" />
                                       <span className="underline decoration-torii/15 group-hover/host:decoration-torii/50">
-                                        {fest.shrine.name} • {fest.shrine.location} ({fest.shrine.prefecture} Pref.)
+                                        {t("shrineLink", { name: fest.shrine.name, location: fest.shrine.location, prefecture: fest.shrine.prefecture })}
                                       </span>
                                     </button>
                                   </div>
@@ -718,7 +738,7 @@ export default function Calendar({
                                   }}
                                   className="group/btn text-[10.5px] text-stone/80 hover:text-torii font-semibold font-sans tracking-wider flex items-center gap-1 cursor-pointer py-1"
                                 >
-                                  <span>Portal of Origin</span>
+                                  <span>{t("portalOfOrigin")}</span>
                                   <ArrowRight size={11} className="transform group-hover/btn:translate-x-1.5 transition-transform" />
                                 </button>
                               </div>
@@ -743,7 +763,7 @@ export default function Calendar({
                                           <div>
                                             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
                                               <Scroll size={11} className="text-torii/70" />
-                                              Origins & Lore
+                                              {t("originsLore")}
                                             </span>
                                             <p className="text-[11.5px] leading-relaxed text-[#2c3e32] tracking-wide font-sans pl-3.5 border-l border-[#5e7f5a]/30 select-text">
                                               {fest.origin}
@@ -756,7 +776,7 @@ export default function Calendar({
                                           <div>
                                             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
                                               <Flame size={11} className="text-torii/70" />
-                                              Ceremonies & Rituals
+                                              {t("ceremoniesRituals")}
                                             </span>
                                             <p className="text-[11.5px] leading-relaxed text-[#2c3e32] tracking-wide font-sans pl-3.5 border-l border-[#5e7f5a]/30 select-text">
                                               {fest.ritual}
@@ -769,7 +789,7 @@ export default function Calendar({
                                           <div>
                                             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-moss-light flex items-center gap-1.5 mb-2 select-none">
                                               <BookOpen size={11} className="text-[#48624f]" />
-                                              Prayers & Intentions
+                                              {t("prayersIntentions")}
                                             </span>
                                             <p className="text-[11.5px] leading-relaxed text-stone/80 tracking-wide font-sans pl-3.5 border-l border-moss/15 select-text">
                                               {fest.prayer}
@@ -782,7 +802,7 @@ export default function Calendar({
                                           <div className="bg-torii/[0.02] border border-torii/15 rounded-xl p-4.5">
                                             <span className="text-[9px] font-mono font-black uppercase tracking-[0.15em] text-torii flex items-center gap-1.5 mb-2 select-none">
                                               <ShieldAlert size={12} className="text-torii" />
-                                              Visitor Tips & Etiquette
+                                              {t("visitorTips")}
                                             </span>
                                             <p className="text-[11px] leading-relaxed text-stone/85 tracking-wide font-sans select-text">
                                               {fest.type.notes}
@@ -798,7 +818,7 @@ export default function Calendar({
                                           onClick={(e) => toggleFestival(fest.id, e)}
                                           className="text-[9.5px] uppercase font-mono tracking-widest text-moss/80 hover:text-torii flex items-center gap-1 py-1 px-2.5 rounded hover:bg-sand/80 cursor-pointer transition-all"
                                         >
-                                          <span>Close Sacred Scroll</span>
+                                          <span>{t("closeScroll")}</span>
                                           <ChevronUp size={12} />
                                         </button>
                                       </div>
@@ -829,7 +849,7 @@ export default function Calendar({
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-torii" />
 
             <span className="text-[9.5px] tracking-widest font-mono text-moss-light uppercase block text-center font-black mb-4 select-none">
-              Solar Cycle Index
+              {t("solarCycleIndex")}
             </span>
 
             <div className="flex flex-col gap-2.5 relative z-10">
@@ -855,7 +875,7 @@ export default function Calendar({
                         {mInfo.wamei}
                       </span>
                       <span className="text-[7.5px] font-mono text-moss-light uppercase tracking-widest block mt-0.5 font-bold">
-                        Month {mNum}
+                        {t("monthN", { n: mNum })}
                       </span>
                     </div>
                   </button>
@@ -868,7 +888,7 @@ export default function Calendar({
 
           {/* Minimal design philosophy quote sticker below the index */}
           <div className="mt-4 p-3 border border-moss/5 rounded-lg bg-white/40 text-center text-[10px] text-stone/60 font-display italic leading-relaxed select-none">
-            “The sun rises over the Eastern Torii; the term cycles and the seasons balance.”
+            {t("railQuote")}
           </div>
 
         </div>
@@ -959,13 +979,13 @@ export default function Calendar({
 
                     {/* Calendar Days Header */}
                     <div className="grid grid-cols-7 border-b border-[#e5dfd3]/60 text-center font-mono text-[9px] md:text-[10px] tracking-widest uppercase font-bold text-moss/70 bg-sand/15 py-2 shrink-0">
-                      <div>Sun (日)</div>
-                      <div>Mon (月)</div>
-                      <div>Tue (火)</div>
-                      <div>Wed (水)</div>
-                      <div>Thu (木)</div>
-                      <div>Fri (金)</div>
-                      <div>Sat (土)</div>
+                      <div>{t("weekdays.sun")}</div>
+                      <div>{t("weekdays.mon")}</div>
+                      <div>{t("weekdays.tue")}</div>
+                      <div>{t("weekdays.wed")}</div>
+                      <div>{t("weekdays.thu")}</div>
+                      <div>{t("weekdays.fri")}</div>
+                      <div>{t("weekdays.sat")}</div>
                     </div>
 
                     {/* Calendar Days Cells Grid */}
@@ -1034,7 +1054,7 @@ export default function Calendar({
                               {/* Day Header Row */}
                               <div className="flex items-center justify-between w-full select-none">
                                 {isToday ? (
-                                  <div className="bg-torii text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-3xs" title="Today">
+                                  <div className="bg-torii text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-3xs" title={t("today")}>
                                     {cell.day}
                                   </div>
                                 ) : (
@@ -1084,14 +1104,12 @@ export default function Calendar({
                     {/* Column Header */}
                     <div className="bg-sand/35 border-b border-[#e5dfd3] px-4.5 py-4 flex flex-col shrink-0 select-none">
                       <span className="text-[9px] font-mono tracking-widest uppercase font-black text-moss-light">
-                        Liturgy Agenda • 御暦簿
+                        {t("agendaHeader")}
                       </span>
                       <h4 className="text-stone font-display text-base font-black mt-1" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                        {selectedDay ? (
-                          <>
-                            {POETIC_MONTHS[selectedDay.month]?.name} {selectedDay.day}
-                          </>
-                        ) : "Select A Day"}
+                        {selectedDay
+                          ? t("agendaDate", { month: POETIC_MONTHS[selectedDay.month]?.name ?? "", day: selectedDay.day })
+                          : t("selectADay")}
                       </h4>
                       {selectedDay && (
                         <span className="text-[10px] italic text-stone/60 mt-0.5">
@@ -1129,10 +1147,10 @@ export default function Calendar({
                                 静
                               </span>
                               <h5 className="text-[11.5px] font-serif font-black text-stone/70 mt-2">
-                                A Silent Devotion Coordinate
+                                {t("silentTitle")}
                               </h5>
                               <p className="text-stone/55 text-[11px] font-sans leading-relaxed tracking-wide mt-1.5">
-                                No public assemblies or grand processions are scheduled for this date. The forest sanctuaries remain quiet, carrying whispers of eternal wind and stone. Perfect for mindful reflection.
+                                {t("silentBody")}
                               </p>
                             </div>
                           );
@@ -1183,7 +1201,7 @@ export default function Calendar({
                                   </div>
                                   <span className="text-[8px] font-mono tracking-widest text-stone/60 uppercase flex items-center gap-1 shrink-0">
                                     <span className={`w-1.5 h-1.5 rounded-full ${isPilgrimage ? "bg-torii" : "bg-moss"}`} />
-                                    {isPilgrimage ? "Pilgrimage" : "Public Event"}
+                                    {isPilgrimage ? t("pilgrimage") : t("publicEvent")}
                                   </span>
                                 </div>
 
@@ -1216,7 +1234,7 @@ export default function Calendar({
 
                     {/* Footstamp */}
                     <div className="p-3 border-t border-[#e5dfd3] bg-white text-center text-[8.5px] font-mono text-stone/40 select-none">
-                      *Alignments calculated for Solar Year {year}
+                      {t("footstamp", { year })}
                     </div>
 
                         </motion.div>
@@ -1239,7 +1257,7 @@ export default function Calendar({
         <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-20 md:pb-5 pointer-events-none">
           <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss/15 bg-washi/75 backdrop-blur-md px-4 py-2.5 shadow-lg">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
-              Admin Controls
+              {tAdmin("adminControls")}
             </span>
             <span className="text-stone/25 font-mono select-none text-xs">|</span>
             <button
@@ -1247,7 +1265,7 @@ export default function Calendar({
               className="group flex items-center gap-1.5 rounded-full border border-moss/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-moss transition-colors hover:border-moss hover:bg-moss/10 cursor-pointer"
             >
               <CalendarPlus size={12} />
-              <span>Edit events</span>
+              <span>{tAdmin("editEvents")}</span>
             </button>
           </div>
         </div>

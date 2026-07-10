@@ -131,3 +131,18 @@ If the deity name is ambiguous (several kami share a reading, or a name maps to 
 ## Per-deity message template
 
 > Research and produce the form sheet for the canonical deity: **<deity name>** (<kanji / disambiguator if known>).
+
+---
+
+## Japanese translation pass (optional)
+
+The deity editor's EN / 日本語 toggle lets you enter a Japanese version of every prose field
+(`Titles`, `Canonical lore`, `Mythic sphere`) alongside the English one — the site falls back to
+English for any field left blank in Japanese, so this pass is entirely optional and can be done
+shrine-by-shrine, deity-by-deity, whenever convenient. To request it, once the English sheet above
+is complete, ask:
+
+> Translate the field sheet for **<deity name>** into natural, idiomatic Japanese — same section
+> labels and order, but the labels themselves stay in English so the mapping to editor fields is
+> unambiguous (e.g. `Mythic sphere: 農業・商業`). Keep it a faithful translation of the *same*
+> facts already researched — do not research or add anything new in this pass.

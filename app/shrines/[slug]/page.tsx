@@ -1,23 +1,27 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { loadStore } from "@/lib/db/store";
 import { getShrineDetail } from "@/lib/db/repo";
+import type { Locale } from "@/lib/i18n";
 import ShrineDetailView, { type ShrineDetailEditor, type ShrineMarkInfo } from "@/components/ShrineDetailView";
 import { getCurrentUser } from "@/lib/auth/server";
 import { loadUserMarks } from "@/lib/db/userRepo";
-import { shrineDetailToInput, buildEditCatalogs } from "@/lib/admin/shrineInput";
+import { buildShrineInput, buildEditCatalogs } from "@/lib/admin/shrineInput";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const store = await loadStore();
-  const detail = getShrineDetail(store, slug);
+  const locale = (await getLocale()) as Locale;
+  const detail = getShrineDetail(store, slug, locale);
   if (!detail) notFound();
 
   const user = await getCurrentUser();
-  // Admins get the in-place edit draft seed; everyone else gets nothing extra.
+  // Admins get the in-place edit draft seed built from RAW rows (both languages),
+  // never from the localized `detail` — that would round-trip JA into EN columns.
   const editor: ShrineDetailEditor | undefined = user?.isAdmin
-    ? { initialData: shrineDetailToInput(detail), catalogs: buildEditCatalogs(store) }
+    ? { initialData: buildShrineInput(store, slug)!, catalogs: buildEditCatalogs(store) }
     : undefined;
 
   // Any signed-in account can favorite / collect a goshuin (non-cached per-user read).

@@ -25,6 +25,7 @@ npm run test:watch   # Vitest in watch mode
 npm run test:e2e     # Playwright acceptance tests (builds + serves first)
 npm run db:setup     # apply docs/schema.sql + docs/seed.sql to Neon (scripts/db/apply-schema.mjs)
 npm run db:reset     # drop the public schema, then reapply schema + seed
+npm run db:migrate   # apply docs/migrations/*.sql (additive, idempotent) to Neon (scripts/db/apply-migration.mjs)
 ```
 
 Run a single unit test file: `npx vitest run lib/calendar.test.ts`
@@ -78,6 +79,55 @@ reasoning about the data model. **Whenever you change the DB or schema** — `do
 `docs/seed.sql`, the row/view-model types in `lib/types.ts`, or the admin contracts in
 `lib/admin/` — **update `docs/DATA_MODEL.md` in the same change** so it never drifts. The
 research prompts and examples in `docs/ai-research/` should stay consistent with it too.
+
+### Multi-language (English default, Japanese opt-in)
+
+The site is bilingual with **no URL change** — locale is a `locale` cookie (`lib/i18n.ts`:
+`LOCALES`, `Locale`, `DEFAULT_LOCALE`, `LOCALE_COOKIE`), read by `i18n/request.ts`
+(`next-intl`'s `getRequestConfig`, wired via `createNextIntlPlugin()` in `next.config.mjs`) and
+switched by `components/LocaleSwitcher.tsx` → `app/i18n/actions.ts` (`setLocaleAction`) →
+`router.refresh()`. This deliberately avoids a `[locale]` route segment, which would have forced
+relocating the `@modal` intercepting routes and rewriting every internal `<Link>`.
+
+- **UI chrome** (buttons, labels, nav, toasts — everything that isn't DB content) comes from
+  `next-intl` message catalogs, `messages/en.json` / `messages/ja.json`, one flat namespaced file
+  per locale. `global.d.ts` augments `next-intl`'s `AppConfig` with `typeof en`, so a wrong or
+  missing message key fails `npm run typecheck` — this is the mechanism that keeps the two files
+  in sync. Client components call `useTranslations("Namespace")`; server components/pages call
+  `getTranslations`/`getLocale` from `next-intl/server`. Adding a language later needs a new
+  `messages/<locale>.json` + one `LOCALES` entry — no component changes required.
+- **DB narrative prose** (shrine history, festival lore, deity chronicles, etc.) uses parallel
+  nullable `*_ja` columns beside the existing English column, matching the pre-existing
+  `name_en`/`name_ja` convention — see `docs/DATA_MODEL.md` §1.5 for the full column list and the
+  `loc()`/`locArr()` fallback rules. Every `lib/db/repo.ts` view-model builder (`getShrineCards`,
+  `getShrineDetail`, `getFestivalYear`, `getDeityList`, `getFacetCatalogs`; `getUserCollections` in
+  `userRepo.ts`) takes an optional `locale: Locale = "en"` and localizes prose **at assembly time**
+  — the view-model shapes are unchanged, so `ShrineDetailView` needs no changes for DB content.
+  Every page under `app/` that calls these does `const locale = (await getLocale()) as Locale`.
+- **The `Store` cache is locale-agnostic.** `fetchStore`/`loadStore` never read `cookies()` and are
+  never keyed by locale — they fetch every column (both languages) once; locale is applied
+  per-request in the repo layer. Never key the Next Data Cache or `unstable_cache` by locale.
+- **Admin editing bypasses the localized view model.** `buildShrineInput(store, slug)` /
+  `buildDeityInput(store, id)` (`lib/admin/shrineInput.ts` / `deityInput.ts`) build the editor's
+  draft straight from **raw** `Store` rows (both languages), never from `ShrineDetail`/
+  `DeityListItem` — round-tripping through a locale-picked view model would write the displayed
+  language back into the English columns. The in-place editors (`ShrineEditProvider`,
+  `DeityEditProvider`) expose an EN / 日本語 segmented toggle (`editLang` on `ShrineEditApi` /
+  `DeityEditApi`, `components/shrineEdit/EditLangToggle.tsx`) on their floating Save/Cancel bar.
+  Prose fields opt in with a `bilingual` prop on `EditableText`/`EditableProse`
+  (`components/shrineEdit/context.tsx`): in JA mode the bound dotted path is rewritten leaf-wise
+  (`details.history` → `details.history_ja`) via the exported `resolvePath` helper, so the same
+  field/layout edits either language. Name fields (`name_en`/`name_ja`) are explicit and ignore the
+  toggle. Japanese is always optional — a blank `_ja` field falls back to English on the public site.
+- **Enum labels** (`deity_type`, `festival_type`) are not DB columns with `_ja` siblings — their
+  display strings live in the `Enums` message namespace and are looked up by code
+  (`tEnums("deityType.mythological")`, etc.); `lib/labels.ts`'s old `DEITY_TYPE_LABEL`/
+  `FESTIVAL_TYPE_LABEL` maps are superseded by this for localized surfaces.
+- **Map labels** follow the cookie too: `ShrineMapView` passes `language={useLocale()}` to
+  `ShrineMapCanvas`, which already had the `applyLabelLanguage` plumbing (see the Maps § below).
+- **JA typography:** `html[lang="ja"]` overrides in `app/globals.css` soften `tracking-widest` /
+  wide-letter-spacing utilities that read as broken spacing between kana/kanji; `app/layout.tsx`
+  sets `<html lang={locale}>` and loads Noto Sans JP alongside the existing Latin/Noto Serif JP stack.
 
 ### Shrine detail: intercepting + parallel route
 
@@ -212,8 +262,8 @@ pre-rendered image. This is the reason for the vector-tile approach: raster base
 tried first, and the Esri World Terrain base before that) render international/English names for
 large regions at low zoom but the raw local-script `name` tag for street/POI-level detail at high
 zoom, with no way to override that per viewer — zooming in on Japan flipped labels to Japanese.
-`ShrineMapCanvas`'s `language` prop (an ISO 639-1 code, default `"en"`) is a placeholder until the
-site has its own i18n locale to drive it; wire that locale in once it exists. Two Esri raster
+`ShrineMapCanvas`'s `language` prop (an ISO 639-1 code, default `"en"`) is driven by the site's
+`Locale` (`useLocale()` in `ShrineMapView`) — see the Multi-language § below. Two Esri raster
 basemaps were tried and dropped before the CARTO/OpenFreeMap line: Canvas/World_Light_Gray
 (zoom-level gaps that surface Esri's "map data not yet available" placeholder when zoomed out) and
 World_Street_Map (tone didn't fit). The map is

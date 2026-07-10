@@ -27,12 +27,25 @@ export interface ShrineEditApi {
   findDeityIndex: (nameJa: string) => number;
   /** Catalog option lists for the bounded dropdowns (ranks, categories, prefectures). */
   catalogs: EditCatalogs;
+  /** Which language the `bilingual` prose primitives currently bind to. */
+  editLang: "en" | "ja";
+  setEditLang: (lang: "en" | "ja") => void;
 }
 
 export const ShrineEditContext = createContext<ShrineEditApi | null>(null);
 
 export function useShrineEdit(): ShrineEditApi | null {
   return useContext(ShrineEditContext);
+}
+
+// For a bilingual prose field, JA mode binds to the `_ja` sibling column by
+// appending `_ja` to the dotted path's leaf: `details.history` → `details.history_ja`,
+// `festivals.0.meaning` → `festivals.0.meaning_ja`. Exported for the hand-rolled
+// array editors (deity alter_titles / regional_lore) that bind to the draft
+// directly instead of through EditableText/EditableProse.
+export function resolvePath(path: string, bilingual: boolean, editLang: "en" | "ja"): string {
+  if (!bilingual || editLang !== "ja") return path;
+  return path.replace(/([^.]+)$/, "$1_ja");
 }
 
 const editBase =
@@ -46,6 +59,7 @@ export function EditableText({
   editClassName,
   placeholder,
   ariaLabel,
+  bilingual = false,
 }: {
   path: string;
   children: React.ReactNode;
@@ -54,14 +68,17 @@ export function EditableText({
   editClassName?: string;
   placeholder?: string;
   ariaLabel?: string;
+  /** When true, JA edit-language binds to the `_ja` sibling column. */
+  bilingual?: boolean;
 }) {
   const api = useShrineEdit();
   if (!api?.editing) return <>{children}</>;
+  const p = resolvePath(path, bilingual, api.editLang);
   return (
     <input
       aria-label={ariaLabel}
-      value={api.getField(path)}
-      onChange={(e) => api.setField(path, e.target.value)}
+      value={api.getField(p)}
+      onChange={(e) => api.setField(p, e.target.value)}
       placeholder={placeholder}
       className={`${editClassName ?? className ?? ""} ${editBase} border-b border-dashed border-torii/40 focus:border-torii px-1`}
     />
@@ -77,6 +94,7 @@ export function EditableProse({
   rows = 3,
   placeholder,
   ariaLabel,
+  bilingual = false,
 }: {
   path: string;
   children: React.ReactNode;
@@ -85,11 +103,14 @@ export function EditableProse({
   rows?: number;
   placeholder?: string;
   ariaLabel?: string;
+  /** When true, JA edit-language binds to the `_ja` sibling column. */
+  bilingual?: boolean;
 }) {
   const api = useShrineEdit();
   if (!api?.editing) return <>{children}</>;
-  // Leaf segment of the dotted path = the DB column name (e.g. "details.history" → "history").
-  const fieldName = path.split(".").pop() ?? path;
+  const p = resolvePath(path, bilingual, api.editLang);
+  // Leaf segment of the resolved path = the DB column name (shows the _ja suffix in JA mode).
+  const fieldName = p.split(".").pop() ?? p;
   return (
     <span className="block">
       <span className="mb-0.5 block text-[9px] font-mono uppercase tracking-wider text-stone/40">
@@ -97,8 +118,8 @@ export function EditableProse({
       </span>
       <textarea
         aria-label={ariaLabel}
-        value={api.getField(path)}
-        onChange={(e) => api.setField(path, e.target.value)}
+        value={api.getField(p)}
+        onChange={(e) => api.setField(p, e.target.value)}
         rows={rows}
         placeholder={placeholder}
         className={`${editClassName ?? className ?? ""} ${editBase} block w-full border border-dashed border-torii/30 focus:border-torii p-2 resize-y`}

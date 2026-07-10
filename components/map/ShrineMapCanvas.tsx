@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Map, Marker, Popup, type MapRef } from "react-map-gl/maplibre";
 import type { Map as MaplibreMap } from "maplibre-gl";
 import { MapPin, ArrowRight, PartyPopper, Heart, Stamp } from "lucide-react";
+import { useTranslations } from "next-intl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { ShrineMapPoint } from "@/components/map/ShrineMapView";
 
@@ -87,6 +88,7 @@ export default function ShrineMapCanvas({
   isStamped?: (slug: string) => boolean;
   language?: string;
 }) {
+  const t = useTranslations("Map.popup");
   const mapRef = useRef<MapRef | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [interacting, setInteracting] = useState(false);
@@ -226,7 +228,7 @@ export default function ShrineMapCanvas({
 
             {selected.primary_deity && (
               <p className="text-[11px] text-stone/70 italic mt-1.5 mb-0 pt-1.5 border-t border-moss/10">
-                Enshrines {selected.primary_deity.name_en}
+                {t("enshrines", { name: selected.primary_deity.name_en })}
                 {selected.primary_deity.name_ja ? ` · ${selected.primary_deity.name_ja}` : ""}
               </p>
             )}
@@ -235,10 +237,10 @@ export default function ShrineMapCanvas({
               <div className="mt-2 pt-2 border-t border-moss/10">
                 <p className="flex items-center gap-1 text-[9px] font-mono font-bold uppercase tracking-widest text-moss-light m-0">
                   <PartyPopper size={10} className="shrink-0 text-torii/70" />
-                  Festivals
+                  {t("festivals")}
                 </p>
                 {selected.festivals_brief.length === 0 ? (
-                  <p className="text-[11px] text-stone/50 italic mt-1 mb-0">No festivals recorded.</p>
+                  <p className="text-[11px] text-stone/50 italic mt-1 mb-0">{t("noFestivals")}</p>
                 ) : (
                   <ul className="list-none p-0 mt-1 mb-0 space-y-1.5">
                     {selected.festivals_brief.map((f, i) => (
@@ -259,7 +261,7 @@ export default function ShrineMapCanvas({
               href={`/shrines/${selected.slug}`}
               className="mt-2.5 pt-2 border-t border-moss/10 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest !text-torii hover:!text-torii-dark transition-colors"
             >
-              View shrine
+              {t("viewShrine")}
               <ArrowRight size={12} />
             </Link>
           </div>

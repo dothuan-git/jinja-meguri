@@ -1,6 +1,7 @@
 import "server-only";
 import { pool } from "@/lib/db/store";
 import { getShrineCards } from "@/lib/db/repo";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
 import {
   CREST_IDS,
   type Store,
@@ -56,8 +57,8 @@ export function stampedSlugs(marks: UserMark[]): string[] {
  * exists (deleted) are dropped — the JOIN in `loadUserMarks` already excludes
  * them, but this is also resilient to a stale card index.
  */
-export function getUserCollections(store: Store, marks: UserMark[]): UserCollections {
-  const cardBySlug = new Map(getShrineCards(store).map((c) => [c.slug, c]));
+export function getUserCollections(store: Store, marks: UserMark[], locale: Locale = DEFAULT_LOCALE): UserCollections {
+  const cardBySlug = new Map(getShrineCards(store, locale).map((c) => [c.slug, c]));
 
   const stamped: StampEntry[] = marks
     .filter((m) => m.stamped_at && cardBySlug.has(m.slug))

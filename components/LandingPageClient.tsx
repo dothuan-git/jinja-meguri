@@ -6,7 +6,9 @@ import { Volume2, VolumeX, Music, Flower, Sun, Leaf, Snowflake } from "lucide-re
 import { motion } from "motion/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useTranslations } from "next-intl";
 import { shintoSynth } from "@/lib/audioSynthesizer";
+import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 const MotionLink = motion.create(Link);
 
@@ -29,6 +31,7 @@ const SEASON_BG_BASE: Record<Season, string> = {
 };
 
 export default function LandingPageClient() {
+  const t = useTranslations("Landing");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -298,7 +301,7 @@ export default function LandingPageClient() {
       moonGlow: "",
       moonColor: "",
       moonType: "",
-      tagLabel: "春和景明 • VERBANT SPRING WIND CHIMES",
+      tagLabel: t("seasonTag.spring"),
       textMain: "text-[#3c2a2f]",
       titleText: "text-[#5e192c] drop-shadow-[0_2px_8px_rgba(230,120,140,0.1)]",
       proseText: "text-[#4a353b]/90",
@@ -329,7 +332,7 @@ export default function LandingPageClient() {
       moonGlow: "bg-[#ffda73]/25 shadow-[0_0_100px_rgba(255,214,102,0.3)]",
       moonColor: "text-[#ffda73]/65",
       moonType: "crescent",
-      tagLabel: "螢火瑠璃 • TWILIGHT BLUE HOUR HOTARU SILENCE",
+      tagLabel: t("seasonTag.summer"),
       textMain: "text-[#edf2f7]",
       titleText: "text-[#ffebad] drop-shadow-[0_2px_10px_rgba(255,235,173,0.15)]",
       proseText: "text-[#e2e8f0]/95",
@@ -360,7 +363,7 @@ export default function LandingPageClient() {
       moonGlow: "",
       moonColor: "",
       moonType: "",
-      tagLabel: "秋風雁啼 • GOLDEN DAYTIME MOMIJI WINDS",
+      tagLabel: t("seasonTag.autumn"),
       textMain: "text-[#451a03]",
       titleText: "text-[#78350f] drop-shadow-[0_2px_8px_rgba(217,119,6,0.15)]",
       proseText: "text-[#7c2d12]/90",
@@ -391,7 +394,7 @@ export default function LandingPageClient() {
       moonGlow: "bg-[#90e0ef]/25 shadow-[0_0_100px_rgba(144,224,239,0.3)]",
       moonColor: "text-[#90e0ef]/65",
       moonType: "full",
-      tagLabel: "冬雪寂然 • SILENT SACRED FROZEN PEAK",
+      tagLabel: t("seasonTag.winter"),
       textMain: "text-[#e2eafc]",
       titleText: "text-[#90e0ef] drop-shadow-[0_2px_10px_rgba(144,224,239,0.25)]",
       proseText: "text-[#c5d3e8]/95",
@@ -563,24 +566,25 @@ export default function LandingPageClient() {
         
         {/* Sacred pathways title */}
         <div className={`text-[9px] sm:text-xs font-mono tracking-[0.4em] uppercase font-semibold select-none transition-colors duration-1000 ${seasonStyles.upperGuide}`}>
-          古今巡礼 <span className="mx-2 opacity-50">|</span> SACRED PATHWAYS
+          古今巡礼 <span className="mx-2 opacity-50">|</span> {t("sacredPathways")}
         </div>
 
         {/* Dynamic Season Selector and Voice controllers */}
         <div className="flex items-center gap-3 select-none pointer-events-auto">
-          
+          <LocaleSwitcher />
+
           {/* Audio trigger */}
           <div className="relative flex items-center">
             {showAudioTip && (
               <span className={`absolute -left-32 top-1/2 -translate-y-1/2 hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 border text-[8.5px] font-serif uppercase tracking-widest shadow-xs rounded-md select-none animate-bounce transition-all duration-1000 ${seasonStyles.audioTip}`}>
-                <Music size={10} className="text-torii animate-spin" /> Click for Sound
+                <Music size={10} className="text-torii animate-spin" /> {t("clickForSound")}
               </span>
             )}
             
             <button
               onClick={handleAudioToggle}
               className={`flex items-center justify-center p-2 rounded-full border transition-all duration-300 cursor-pointer ${seasonStyles.iconBtn}`}
-              title="Toggle Ambient Audio"
+              title={t("toggleAudio")}
             >
               {isAudioPlaying ? <Volume2 size={12} /> : <VolumeX size={12} />}
             </button>
@@ -590,7 +594,7 @@ export default function LandingPageClient() {
           <div className={`flex items-center border rounded-full px-1.5 py-0.5 gap-1 transition-all duration-1000 ${seasonStyles.tabBg}`}>
             {(["spring", "summer", "autumn", "winter"] as const).map((s) => {
               const char = { spring: "春", summer: "夏", autumn: "秋", winter: "冬" }[s];
-              const title = { spring: "Spring", summer: "Summer", autumn: "Autumn", winter: "Winter" }[s];
+              const title = t(`seasons.${s}`);
               const isActive = currentSeason === s;
 
               const activeClass = isActive 
@@ -689,9 +693,7 @@ export default function LandingPageClient() {
             {/* English Narrative in modern thin typography */}
             <div className={`prose-col-eng max-w-xs md:max-w-sm space-y-3 text-center lg:text-left text-[11px] sm:text-xs md:text-sm font-display italic leading-relaxed transition-colors duration-1000 ${seasonStyles.engText}`}>
               <p className="border-l-2 lg:border-l-0 lg:border-r-2 border-torii px-3 lg:px-0 lg:pr-3">
-                "Ma (間) specifies that beauty remains in empty space while light dances. 
-                Step beyond the vermilion gateway, where centuries of silence, moss garden spirits, 
-                and traditional ritual fires breathe."
+                {t("narrative")}
               </p>
               <div className="flex items-center justify-center lg:justify-start gap-2.5 opacity-45">
                 <span className="w-1 h-1 rounded-full bg-torii" />
@@ -758,7 +760,7 @@ export default function LandingPageClient() {
                     縁起を巡る
                   </span>
                   <span className={`text-[7px] sm:text-[8px] font-sans tracking-[0.12em] font-semibold mt-1 transition-colors duration-1000 ${seasonStyles.accentText}`}>
-                    ENTER PRECINCTS
+                    {t("enterPrecincts")}
                   </span>
                 </div>
               </MotionLink>
@@ -819,7 +821,7 @@ export default function LandingPageClient() {
                     神事歳時記
                   </span>
                   <span className={`text-[7px] sm:text-[8px] font-sans tracking-[0.12em] font-semibold mt-1 transition-colors duration-1000 ${seasonStyles.accentText}`}>
-                    FESTIVAL LISTS
+                    {t("festivalLists")}
                   </span>
                 </div>
               </MotionLink>

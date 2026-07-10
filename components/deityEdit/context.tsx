@@ -17,6 +17,9 @@ export interface DeityEditApi {
   mode: "create" | "update";
   draft: DeityInput;
   update: (patch: Partial<DeityInput>) => void;
+  /** Which language the bilingual canonical fields (lore, titles, sphere) bind to. */
+  editLang: "en" | "ja";
+  setEditLang: (lang: "en" | "ja") => void;
 }
 
 export const DeityEditContext = createContext<DeityEditApi | null>(null);

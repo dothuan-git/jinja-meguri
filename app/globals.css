@@ -5,9 +5,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-serif: "Noto Serif JP", serif;
-  --font-display: "Cormorant Garamond", serif;
+  --font-display: "Cormorant Garamond", "Noto Serif JP", serif;
   --font-quote: "Spectral", "Noto Serif JP", serif;
 
   /* Traditional Japanese Sanctuary Color Palette */
@@ -34,6 +34,12 @@
    mirrors the prototype's combined serif so English renders in Cormorant while
    Japanese glyphs use Noto. */
 .font-display-jp { font-family: "Cormorant Garamond", "Noto Serif JP", serif !important; }
+
+/* Japanese locale: ultra-wide Latin tracking reads as broken spacing between
+   kana/kanji, so soften the widest treatments site-wide when lang="ja".
+   (uppercase is a no-op for CJK and needs no override.) */
+html[lang="ja"] .tracking-widest { letter-spacing: 0.06em; }
+html[lang="ja"] .tracking-\[0\.25em\] { letter-spacing: 0.14em; }
 
 .writing-mode-vertical {
   writing-mode: vertical-rl;

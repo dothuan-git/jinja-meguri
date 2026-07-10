@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Filter, Heart, MapPinned, Search, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
 import {
@@ -23,12 +24,17 @@ export type ShrineMapPoint = ShrineCard & { coordinates: Coordinates };
 // MapLibre GL touches `window` at import time — client-only.
 const ShrineMapCanvas = dynamic(() => import("@/components/map/ShrineMapCanvas"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center text-xs font-mono uppercase tracking-widest text-moss-light">
-      Preparing the map…
-    </div>
-  ),
+  loading: () => <MapLoading />,
 });
+
+function MapLoading() {
+  const t = useTranslations("Map");
+  return (
+    <div className="w-full h-full flex items-center justify-center text-xs font-mono uppercase tracking-widest text-moss-light">
+      {t("preparingMap")}
+    </div>
+  );
+}
 
 export default function ShrineMapView({
   cards,
@@ -47,6 +53,8 @@ export default function ShrineMapView({
 }) {
   const router = useRouter();
   const params = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations("Map");
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
 
@@ -102,18 +110,18 @@ export default function ShrineMapView({
   }
 
   const dropdowns: FacetDropdown[] = [
-    { id: "region", label: "Region", options: facets.regions.map((r) => r.name_en) },
+    { id: "region", label: t("facets.region"), options: facets.regions.map((r) => r.name_en) },
     {
       id: "prefecture",
-      label: "Prefecture",
+      label: t("facets.prefecture"),
       options: Object.values(facets.prefecturesByRegion).flat().map((p) => p.name_en),
     },
     {
       id: "prayerFocus",
-      label: "Focus",
+      label: t("facets.focus"),
       options: facets.categoryGroups.flatMap((g) => g.categories.map((c) => c.name_en)),
     },
-    { id: "ranks", label: "Rank", options: facets.ranks.map((r) => r.name_en) },
+    { id: "ranks", label: t("facets.rank"), options: facets.ranks.map((r) => r.name_en) },
   ];
 
   const filtered = cards.filter((card) => {
@@ -156,16 +164,16 @@ export default function ShrineMapView({
 
         <div className="inline-flex items-center gap-2 text-[9px] font-mono tracking-widest uppercase text-moss-light/85 font-black bg-washi px-3 py-1 rounded-full border border-moss/10 shadow-3xs mb-3 z-10">
           <MapPinned size={11} className="text-torii" />
-          <span>Sacred Geography</span>
+          <span>{t("badgeLeft")}</span>
           <span className="w-1 h-1 rounded-full bg-torii/30" />
-          <span>神社地図</span>
+          <span>{t("badgeRight")}</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl font-serif text-stone font-black tracking-[0.25em] pl-[0.25em] uppercase mb-3 relative z-10">
-          Shrine Map
+          {t("title")}
         </h2>
         <p className="text-stone/85 text-xs font-display italic tracking-wider max-w-md mx-auto leading-relaxed relative z-10 border-t border-moss/10 pt-4">
-          "Trace the sacred landscape — every vermilion mark is a torii waiting on your path."
+          {t("quote")}
         </p>
       </div>
 
@@ -180,7 +188,7 @@ export default function ShrineMapView({
             <Search className="absolute left-3 text-stone/40" size={14} />
             <input
               type="text"
-              placeholder="Search shrines, deities, places..."
+              placeholder={t("searchPlaceholder")}
               value={filters.searchQuery}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs font-sans pl-9 pr-9 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
@@ -189,7 +197,7 @@ export default function ShrineMapView({
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                aria-label="Clear search"
+                aria-label={t("clearSearch")}
                 className="absolute right-2.5 text-stone/40 hover:text-torii p-1.5 rounded-full transition-colors cursor-pointer"
               >
                 <X size={13} />
@@ -202,7 +210,7 @@ export default function ShrineMapView({
               type="button"
               onClick={() => setShowFavoriteMarkers((v) => !v)}
               aria-pressed={showFavoriteMarkers}
-              aria-label="Toggle favorite markers"
+              aria-label={t("toggleFavorites")}
               className={`relative flex items-center gap-2 px-4 border rounded-xl text-xs tracking-wide transition-all duration-200 cursor-pointer shrink-0 ${
                 showFavoriteMarkers
                   ? "border-torii bg-torii/5 text-torii font-extrabold"
@@ -210,14 +218,14 @@ export default function ShrineMapView({
               }`}
             >
               <Heart size={14} className={showFavoriteMarkers ? "fill-torii" : ""} />
-              <span className="hidden xl:inline font-sans whitespace-nowrap">Favorites</span>
+              <span className="hidden xl:inline font-sans whitespace-nowrap">{t("favorites")}</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
-            aria-label="Filter shrines"
+            aria-label={t("filters")}
             className={`relative flex items-center gap-2 px-4 border rounded-xl text-xs tracking-wide transition-all duration-200 cursor-pointer shrink-0 ${
               hasActiveFacetFilters
                 ? "border-torii bg-torii/5 text-torii font-extrabold"
@@ -226,7 +234,7 @@ export default function ShrineMapView({
           >
             <Filter size={14} />
             <span className="hidden xl:inline font-sans whitespace-nowrap">
-              {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
+              {activeFilterCount > 0 ? t("filtersCount", { count: activeFilterCount }) : t("filters")}
             </span>
             {activeFilterCount > 0 && (
               <span className="xl:hidden absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-torii text-white text-[9px] font-bold leading-none">
@@ -237,8 +245,8 @@ export default function ShrineMapView({
         </div>
 
         <p className="text-[10px] font-mono uppercase tracking-widest text-moss-light">
-          {points.length} of {cards.length} shrines
-          {missingCoords > 0 && <span className="text-stone/40"> · {missingCoords} w/o coords</span>}
+          {t("shrineCount", { shown: points.length, total: cards.length })}
+          {missingCoords > 0 && <span className="text-stone/40"> {t("noCoords", { count: missingCoords })}</span>}
         </p>
       </section>
 
@@ -252,6 +260,7 @@ export default function ShrineMapView({
       >
         <ShrineMapCanvas
           points={points}
+          language={locale}
           showFestivals={showFestivals}
           showFavoriteMarkers={showFavoriteMarkers}
           isSaved={marks.isSaved}
@@ -260,7 +269,7 @@ export default function ShrineMapView({
         {points.length === 0 && (
           <div className="absolute inset-0 z-[500] flex items-center justify-center bg-washi/70 backdrop-blur-[2px] pointer-events-none">
             <p className="text-xs font-mono uppercase tracking-widest text-stone/60">
-              No shrines match the current filters
+              {t("noMatch")}
             </p>
           </div>
         )}

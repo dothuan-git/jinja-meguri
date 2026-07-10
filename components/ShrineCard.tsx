@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ShrineCard as Card } from "@/lib/types";
 import Chip from "@/components/ui/Chip";
 import PinHint from "@/components/ui/PinHint";
 
 export default function ShrineCard({ card }: { card: Card }) {
+  const t = useTranslations("ShrineCard");
   const extraCats = Math.max(0, card.categories.length - 3);
   return (
     <Link
@@ -28,7 +30,7 @@ export default function ShrineCard({ card }: { card: Card }) {
 
       {card.primary_deity && (
         <p className="mt-3 text-sm text-sumi-soft">
-          <span className="text-sumi-soft/70">Enshrines </span>
+          <span className="text-sumi-soft/70">{t("enshrines")} </span>
           <span className="italic text-sumi">{card.primary_deity.name_en}</span>
           {card.primary_deity.name_ja && (
             <span className="jp ml-1 text-sumi-soft">{card.primary_deity.name_ja}</span>
@@ -42,7 +44,7 @@ export default function ShrineCard({ card }: { card: Card }) {
             <Chip key={c.name_en} label={c.name_en} sub={c.name_ja} tone="accent" />
           ))}
           {extraCats > 0 && (
-            <span className="self-center text-xs text-sumi-soft/70">+{extraCats} more</span>
+            <span className="self-center text-xs text-sumi-soft/70">{t("more", { count: extraCats })}</span>
           )}
         </div>
       )}
