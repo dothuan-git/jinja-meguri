@@ -26,20 +26,20 @@ export function toSearchDocs(store: Store): SearchDoc[] {
     const blob = [
       s.name_en,
       s.name_ja,
-      s.name_romaji,
+      s.name_hiragana,
       s.city,
       ...deities.map((d) => d.name_en),
       ...deities.map((d) => d.name_ja).filter(Boolean),
-      ...deities.map((d) => d.name_romaji).filter(Boolean),
+      ...deities.map((d) => d.name_hiragana).filter(Boolean),
       ...categories.map((c) => c.name_en),
       ...festivals.map((f) => f.name_en),
       ...festivals.map((f) => f.name_ja).filter(Boolean),
-      ...festivals.map((f) => f.name_romaji).filter(Boolean),
+      ...festivals.map((f) => f.name_hiragana).filter(Boolean),
     ]
       .filter(Boolean)
       .join(" ");
 
-    return { slug: s.slug, name_en: s.name_en, name_ja: s.name_ja, name_romaji: s.name_romaji, city: s.city, blob };
+    return { slug: s.slug, name_en: s.name_en, name_ja: s.name_ja, name_hiragana: s.name_hiragana, city: s.city, blob };
   });
 }
 
@@ -72,7 +72,7 @@ export function makeSearcher(docs: SearchDoc[]): (query: string) => SearchResult
       slug: res.item.doc.slug,
       name_en: res.item.doc.name_en,
       name_ja: res.item.doc.name_ja,
-      name_romaji: res.item.doc.name_romaji,
+      name_hiragana: res.item.doc.name_hiragana,
       city: res.item.doc.city,
       score: res.score ?? 1,
     }));

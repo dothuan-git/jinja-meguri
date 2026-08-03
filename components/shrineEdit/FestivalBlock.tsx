@@ -125,11 +125,11 @@ export default function FestivalBlock({
                 </span>
               )}
             </EditableText>
-            {/* Romaji reading — edit-only input (read mode shows it via display). */}
+            {/* Hiragana reading — edit-only input (read mode shows it via display). */}
             <EditableText
-              path={`festivals.${idx}.name_romaji`}
-              ariaLabel={t("nameRomajiAria")}
-              placeholder={t("nameRomajiPh")}
+              path={`festivals.${idx}.name_hiragana`}
+              ariaLabel={t("nameHiraganaAria")}
+              placeholder={t("nameHiraganaPh")}
               editClassName="text-xs font-sans text-stone/70 w-32"
             >
               {null}

@@ -20,7 +20,7 @@ function stamp(
     slug: p.slug,
     name_en: p.name_en ?? p.slug,
     name_ja: p.name_ja ?? null,
-    name_romaji: p.name_romaji ?? null,
+    name_hiragana: p.name_hiragana ?? null,
     city: p.city ?? null,
     prefecture: { name_en: p.prefecture ?? "Tokyo", name_ja: null },
     region: { name_en: p.region ?? "Kanto", name_ja: null },
@@ -60,9 +60,9 @@ describe("buildMilestoneContext", () => {
       [
         stamp({ slug: "a", stamped_at: "2026-01-01T09:00:00Z", prefecture: "Kyoto", region: "Kansai",
           rank_codes: ["Myojin-Taisha"], categories: [{ name_en: "Matchmaking", name_ja: "縁結び", group_label: "Love & Family" }],
-          primary_deity: { name_en: "Inari Ōkami", name_ja: "稲荷大神", name_romaji: null }, deity_ja: ["稲荷大神"] }),
+          primary_deity: { name_en: "Inari Ōkami", name_ja: "稲荷大神", name_hiragana: null }, deity_ja: ["稲荷大神"] }),
         stamp({ slug: "b", stamped_at: "2026-01-01T12:00:00Z", prefecture: "Tokyo", region: "Kanto",
-          rank_codes: ["Ichinomiya"], primary_deity: { name_en: "Amaterasu", name_ja: "天照大神", name_romaji: null } }),
+          rank_codes: ["Ichinomiya"], primary_deity: { name_en: "Amaterasu", name_ja: "天照大神", name_hiragana: null } }),
       ],
       [saved("x")],
       TOTALS,
@@ -131,14 +131,14 @@ describe("rank, deity, and blessing milestones", () => {
   });
 
   it("matches deities by English or kanji", () => {
-    const en = ids([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Hachiman", name_ja: null, name_romaji: null } })], []);
+    const en = ids([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Hachiman", name_ja: null, name_hiragana: null } })], []);
     expect(en.has("hachiman")).toBe(true);
     const ja = ids([stamp({ slug: "b", stamped_at: "2026-06-01T10:00:00Z", deity_ja: ["菅原道真"] })], []);
     expect(ja.has("tenjin")).toBe(true);
   });
 
   it("matches Ōkuninushi by macron'd English name and by kanji", () => {
-    const en = ids([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Ōkuninushi-no-Ōkami", name_ja: null, name_romaji: null } })], []);
+    const en = ids([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Ōkuninushi-no-Ōkami", name_ja: null, name_hiragana: null } })], []);
     expect(en.has("okuninushi")).toBe(true); // diacritic-insensitive
     const ja = ids([stamp({ slug: "b", stamped_at: "2026-06-01T10:00:00Z", deity_ja: ["大国主大神"] })], []);
     expect(ja.has("okuninushi")).toBe(true);
@@ -147,7 +147,7 @@ describe("rank, deity, and blessing milestones", () => {
   it("matches other major kami (Konohanasakuya, Ebisu, Tsukuyomi)", () => {
     const konohana = ids([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", deity_ja: ["木花咲耶姫"] })], []);
     expect(konohana.has("konohana")).toBe(true);
-    const ebisu = ids([stamp({ slug: "b", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Ebisu", name_ja: null, name_romaji: null } })], []);
+    const ebisu = ids([stamp({ slug: "b", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Ebisu", name_ja: null, name_hiragana: null } })], []);
     expect(ebisu.has("ebisu")).toBe(true);
     const tsukuyomi = ids([stamp({ slug: "c", stamped_at: "2026-06-01T10:00:00Z", deity_ja: ["月読命"] })], []);
     expect(tsukuyomi.has("tsukuyomi")).toBe(true);
@@ -201,7 +201,7 @@ describe("hard / high-tier milestones", () => {
         // Vary both month (all 12) and day so visits are spread across distinct days.
         stamped_at: `2026-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}T10:00:00Z`,
         rank_codes: [`Rank${i % 5}`],
-        primary_deity: { name_en: `Deity ${i % 10}`, name_ja: null, name_romaji: null },
+        primary_deity: { name_en: `Deity ${i % 10}`, name_ja: null, name_hiragana: null },
       }));
     const got = ids(stamps, [], { totalShrines: 100, totalRegions: 8, totalPrefectures: 47 });
     expect(got.has("coverage_50")).toBe(true);
@@ -247,7 +247,7 @@ describe("milestone progress", () => {
     const locked = find(ev([], []), "amaterasu");
     expect(locked).toMatchObject({ unlocked: false, current: 0, target: 1, percent: 0 });
     const unlocked = find(
-      ev([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Amaterasu", name_ja: "天照大神", name_romaji: null } })], []),
+      ev([stamp({ slug: "a", stamped_at: "2026-06-01T10:00:00Z", primary_deity: { name_en: "Amaterasu", name_ja: "天照大神", name_hiragana: null } })], []),
       "amaterasu",
     );
     expect(unlocked).toMatchObject({ unlocked: true, current: 1, target: 1, percent: 100 });

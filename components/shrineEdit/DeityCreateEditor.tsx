@@ -170,12 +170,12 @@ export default function DeityCreateEditor() {
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className={`${typo.fieldLabel} block`}>Romaji reading (optional)</span>
+                    <span className={`${typo.fieldLabel} block`}>Hiragana reading (optional)</span>
                     <input
-                      value={d.canonical?.name_romaji ?? ""}
-                      onChange={(e) => update(i, { canonical: { ...d.canonical!, name_romaji: e.target.value || null } })}
+                      value={d.canonical?.name_hiragana ?? ""}
+                      onChange={(e) => update(i, { canonical: { ...d.canonical!, name_hiragana: e.target.value || null } })}
                       placeholder="Shown as the sub-name in Japanese mode"
-                      aria-label="Deity romaji reading"
+                      aria-label="Deity hiragana reading"
                       className={`${inputBase} w-full`}
                     />
                   </label>

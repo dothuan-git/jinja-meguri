@@ -25,9 +25,9 @@ describe("buildEditCatalogs", () => {
   it("exposes existing deities (name_ja-keyed) with canonical info for the create picker", () => {
     // sorted by name_en: One, Three, Two
     expect(catalogs.deities).toEqual([
-      { id: "deity-1", name_en: "Deity One", name_ja: "神一", name_romaji: null, deity_type: "mythological", titles: ["Lord of the Sun", "Divine Ancestor"], titles_ja: null, canonical_lore: "canon-1", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
-      { id: "deity-3", name_en: "Deity Three", name_ja: "神三", name_romaji: null, deity_type: "mythological", titles: ["Unenshrined Spirit"], titles_ja: null, canonical_lore: "canon-3", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
-      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", name_romaji: null, deity_type: "mythological", titles: ["Guardian of the Sea"], titles_ja: null, canonical_lore: "canon-2", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
+      { id: "deity-1", name_en: "Deity One", name_ja: "神一", name_hiragana: null, deity_type: "mythological", titles: ["Lord of the Sun", "Divine Ancestor"], titles_ja: null, canonical_lore: "canon-1", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
+      { id: "deity-3", name_en: "Deity Three", name_ja: "神三", name_hiragana: null, deity_type: "mythological", titles: ["Unenshrined Spirit"], titles_ja: null, canonical_lore: "canon-3", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
+      { id: "deity-2", name_en: "Deity Two", name_ja: "神二", name_hiragana: null, deity_type: "mythological", titles: ["Guardian of the Sea"], titles_ja: null, canonical_lore: "canon-2", canonical_lore_ja: null, mythic_sphere: null, mythic_sphere_ja: null },
     ]);
   });
 });

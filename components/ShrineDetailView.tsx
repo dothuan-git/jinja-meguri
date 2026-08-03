@@ -111,13 +111,13 @@ function deityHref(nameJa: string) {
 // bindings need the raw values); the locale-ordered heading pair is `displayName`.
 function toView(shrine: ShrineDetail, locale: Locale) {
   const primary = primaryOf(shrine);
-  // The enshrined (alter) name has no stored romaji — alter_name_en is already
-  // the romaji form, so the pair falls back to it as the JA-mode sub.
+  // The enshrined (alter) name has no stored hiragana — alter_name_en is
+  // already a display-ready form, so the pair falls back to it as the JA-mode sub.
   const deityPair = (d: NonNullable<ReturnType<typeof primaryOf>>) =>
     namePair(locale, {
       name_en: d.alter_name_en || d.name_en,
       name_ja: d.alter_name_ja || d.name_ja,
-      name_romaji: d.alter_name_en ? null : d.name_romaji,
+      name_hiragana: d.alter_name_en ? null : d.name_hiragana,
     });
   return {
     slug: shrine.slug,
@@ -515,11 +515,11 @@ function PageBody({
               >
                 <>{shrine.displayName.sub}</>
               </EditableText>{" "}
-              {/* Romaji reading — edit-only input (read mode shows it via displayName). */}
+              {/* Hiragana reading — edit-only input (read mode shows it via displayName). */}
               <EditableText
-                path="name_romaji"
-                ariaLabel={t("edit.nameRomajiAria")}
-                placeholder={t("edit.nameRomajiPh")}
+                path="name_hiragana"
+                ariaLabel={t("edit.nameHiraganaAria")}
+                placeholder={t("edit.nameHiraganaPh")}
                 editClassName="w-56 max-w-full text-sm font-sans font-normal text-stone/70"
               >
                 {null}

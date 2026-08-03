@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { namePair } from "./names";
 
-const full = { name_en: "Fushimi Inari Grand Shrine", name_ja: "伏見稲荷大社", name_romaji: "Fushimi Inari Taisha" };
+const full = { name_en: "Fushimi Inari Grand Shrine", name_ja: "伏見稲荷大社", name_hiragana: "ふしみいなりたいしゃ" };
 
 describe("namePair", () => {
   it("EN: english main, kanji sub", () => {
@@ -17,16 +17,16 @@ describe("namePair", () => {
     expect(namePair("en", { name_en: "X Shrine" }).sub).toBeNull();
   });
 
-  it("JA: kanji main, romaji sub", () => {
+  it("JA: kanji main, hiragana sub", () => {
     expect(namePair("ja", full)).toEqual({
       main: "伏見稲荷大社",
-      sub: "Fushimi Inari Taisha",
+      sub: "ふしみいなりたいしゃ",
       mainIsJa: true,
-      subIsJa: false,
+      subIsJa: true,
     });
   });
 
-  it("JA: missing romaji falls back to name_en as sub", () => {
+  it("JA: missing hiragana falls back to name_en as sub", () => {
     expect(namePair("ja", { name_en: "Ise Grand Shrine", name_ja: "伊勢神宮" })).toEqual({
       main: "伊勢神宮",
       sub: "Ise Grand Shrine",
@@ -44,12 +44,12 @@ describe("namePair", () => {
     });
   });
 
-  it("JA: missing kanji but distinct romaji still shows romaji sub", () => {
-    expect(namePair("ja", { name_en: "Grand Festival", name_romaji: "Reitaisai" })).toEqual({
+  it("JA: missing kanji but distinct hiragana still shows hiragana sub", () => {
+    expect(namePair("ja", { name_en: "Grand Festival", name_hiragana: "れいたいさい" })).toEqual({
       main: "Grand Festival",
-      sub: "Reitaisai",
+      sub: "れいたいさい",
       mainIsJa: false,
-      subIsJa: false,
+      subIsJa: true,
     });
   });
 });

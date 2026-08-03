@@ -9,7 +9,7 @@ export function emptyDeityInput(): DeityInput {
   return {
     name_en: "",
     name_ja: "",
-    name_romaji: null,
+    name_hiragana: null,
     deity_type: "mythological",
     titles: [],
     titles_ja: null,
@@ -33,7 +33,7 @@ export function buildDeityInput(store: Store, deityId: string): DeityInput | nul
   return {
     name_en: d.name_en,
     name_ja: d.name_ja ?? "",
-    name_romaji: d.name_romaji,
+    name_hiragana: d.name_hiragana,
     deity_type: d.deity_type as DeityInput["deity_type"],
     titles: d.titles ?? [],
     titles_ja: d.titles_ja,

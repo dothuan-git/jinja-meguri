@@ -29,7 +29,7 @@ export interface Deity {
   id: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   titles: string[] | null;
   titles_ja: string[] | null;
   deity_type: string;
@@ -47,7 +47,7 @@ export interface ShrineRow {
   slug: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   prefecture_id: number;
   region_id: number;
   city: string | null;
@@ -111,7 +111,7 @@ export interface FestivalRow {
   shrine_id: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   time_prose: string | null;
   time_prose_ja: string | null;
   start_date: string | null;
@@ -176,7 +176,7 @@ export interface EditCatalogs {
     id: string;
     name_en: string;
     name_ja: string | null;
-    name_romaji: string | null;
+    name_hiragana: string | null;
     deity_type: string;
     titles: string[];
     titles_ja: string[] | null;
@@ -204,7 +204,7 @@ export interface DeityView {
   id: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   // Canonical titles (deities.titles); raw, pre-fallback — see alter_titles.
   titles: string[];
   deity_type: string;
@@ -224,7 +224,7 @@ export interface DeityView {
 export interface FestivalBrief {
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   // Human date/time: time_prose when present, else a "Jul 30 – Aug 2" span from
   // the fixed start/end dates, else null (undated lunar / Nth-weekday festival).
   when: string | null;
@@ -233,7 +233,7 @@ export interface FestivalView {
   id: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   time_prose: string | null;
   start_date: string | null;
   end_date: string | null;
@@ -249,11 +249,11 @@ export interface ShrineCard {
   slug: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   city: string | null;
   prefecture: { name_en: string; name_ja: string | null };
   region: { name_en: string; name_ja: string | null };
-  primary_deity: { name_en: string; name_ja: string | null; name_romaji: string | null } | null;
+  primary_deity: { name_en: string; name_ja: string | null; name_hiragana: string | null } | null;
   categories: CategoryView[];
   ranks: RankView[];
   highest_rank: RankView | null;
@@ -302,14 +302,14 @@ export interface FacetCatalogs {
   ranks: RankView[];
   regions: Region[];
   prefecturesByRegion: Record<number, Prefecture[]>;
-  deities: { name_en: string; name_ja: string; name_romaji: string | null }[];
+  deities: { name_en: string; name_ja: string; name_hiragana: string | null }[];
 }
 
 export interface DeityShrineLink {
   slug: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   city: string | null;
   prefecture: { name_en: string; name_ja: string | null };
   region: { name_en: string; name_ja: string | null };
@@ -320,7 +320,7 @@ export interface DeityListItem {
   id: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   titles: string[];
   deity_type: string;
   canonical_lore: string | null;
@@ -333,14 +333,14 @@ export interface CalendarFestival {
   shrine_slug: string;
   shrine_name_en: string;
   shrine_name_ja: string | null;
-  shrine_name_romaji: string | null;
+  shrine_name_hiragana: string | null;
   shrine_city: string | null;
   shrine_prefecture: { name_en: string; name_ja: string | null };
   shrine_region: { name_en: string; name_ja: string | null };
   region_id: number;
   festival_name_en: string;
   festival_name_ja: string | null;
-  festival_name_romaji: string | null;
+  festival_name_hiragana: string | null;
   festival_type: string | null;
   time_prose: string | null;
   start_date: string | null;
@@ -359,10 +359,10 @@ export interface CalendarEntry {
   shrine_slug: string;
   shrine_name_en: string;
   shrine_name_ja: string | null;
-  shrine_name_romaji: string | null;
+  shrine_name_hiragana: string | null;
   festival_name_en: string;
   festival_name_ja: string | null;
-  festival_name_romaji: string | null;
+  festival_name_hiragana: string | null;
   region: string;
   region_id: number;
   category_codes: string[];
@@ -417,7 +417,7 @@ export interface SearchDoc {
   slug: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   city: string | null;
   blob: string;
 }
@@ -425,7 +425,7 @@ export interface SearchResult {
   slug: string;
   name_en: string;
   name_ja: string | null;
-  name_romaji: string | null;
+  name_hiragana: string | null;
   city: string | null;
   score: number;
 }

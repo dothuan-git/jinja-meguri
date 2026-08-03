@@ -132,7 +132,7 @@ function ShrineItem({
 export interface DeityCardData {
   name: string;
   japaneseName: string;
-  // Locale-ordered display pair (kanji-main/romaji-sub under the JA locale);
+  // Locale-ordered display pair (kanji-main/hiragana-sub under the JA locale);
   // `name`/`japaneseName` stay semantic for the hanko stamp and edit inputs.
   display: NamePair;
   deityType: string;
@@ -231,10 +231,10 @@ export default function DeityCardBody({
                     style={{ fontFamily: "'Noto Serif JP', serif" }}
                   />
                   <input
-                    value={edit!.draft.name_romaji ?? ""}
-                    onChange={(e) => edit!.update({ name_romaji: e.target.value || null })}
-                    placeholder={t("edit.nameRomajiPh")}
-                    aria-label={t("edit.nameRomajiAria")}
+                    value={edit!.draft.name_hiragana ?? ""}
+                    onChange={(e) => edit!.update({ name_hiragana: e.target.value || null })}
+                    placeholder={t("edit.nameHiraganaPh")}
+                    aria-label={t("edit.nameHiraganaAria")}
                     className={`${inputBase} text-sm font-sans text-stone/70`}
                   />
                 </>

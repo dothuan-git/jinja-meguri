@@ -49,7 +49,7 @@ CREATE TABLE deities (
     id                uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     name_en           text NOT NULL,             -- romaji / English name
     name_ja           text UNIQUE,               -- kanji; dedup key on ingest
-    name_romaji       text,                      -- romaji reading (JA-mode subname; null => fall back to name_en)
+    name_hiragana       text,                      -- hiragana reading (JA-mode subname; null => fall back to name_en)
     titles            text[],                    -- domain/role epithets (sphere of patronage)
     titles_ja         text[],                    -- JA epithets (i18n; null => fall back to whole titles array)
     deity_type        text NOT NULL
@@ -68,7 +68,7 @@ CREATE TABLE shrines (
     slug          text NOT NULL UNIQUE,          -- URL key for detail-page routing
     name_en       text NOT NULL,
     name_ja       text,
-    name_romaji   text,                          -- romaji reading (JA-mode subname; null => fall back to name_en)
+    name_hiragana   text,                          -- hiragana reading (JA-mode subname; null => fall back to name_en)
     prefecture_id smallint NOT NULL REFERENCES prefectures(id),
     region_id     smallint NOT NULL REFERENCES regions(id),  -- denormalized for cheap region filter
     city          text,
@@ -167,7 +167,7 @@ CREATE TABLE festivals (
     shrine_id     uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
     name_en          text NOT NULL,
     name_ja          text,
-    name_romaji      text,         -- romaji reading (JA-mode subname; null => fall back to name_en)
+    name_hiragana      text,         -- hiragana reading (JA-mode subname; null => fall back to name_en)
     time_prose       text,         -- display label: 'dawn, 2nd Sunday of May', lunar...
     time_prose_ja    text,         -- JA (i18n; null => fall back to time_prose)
     start_date       date,         -- structured start date; null if undated

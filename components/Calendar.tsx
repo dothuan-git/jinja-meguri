@@ -184,12 +184,12 @@ export default function Calendar({
     const festName = namePair(locale, {
       name_en: f.festival_name_en,
       name_ja: f.festival_name_ja,
-      name_romaji: f.festival_name_romaji,
+      name_hiragana: f.festival_name_hiragana,
     });
     const shrineName = namePair(locale, {
       name_en: f.shrine_name_en,
       name_ja: f.shrine_name_ja,
-      name_romaji: f.shrine_name_romaji,
+      name_hiragana: f.shrine_name_hiragana,
     });
     return {
     id: f.festival_id,

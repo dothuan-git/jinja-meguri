@@ -33,7 +33,7 @@ Authorization uses the Neon Auth user role, not an application table (see §7).
 - Catalog table = bare plural noun (`ranks`, `prayer_categories`, `deities`).
 - Junction table = `shrine_` + that noun (`shrine_ranks`, `shrine_prayer_categories`, `shrine_deities`).
 - `name_en` = romaji / English; `name_ja` = kanji/kana (preserved everywhere). Shrines,
-  deities, and festivals also carry a nullable `name_romaji` (the pure romaji reading, shown
+  deities, and festivals also carry a nullable `name_hiragana` (the kana reading, shown
   as the subname in Japanese mode — §1.5).
 
 **Design principles**
@@ -85,10 +85,10 @@ nullable `*_ja` sibling added by `docs/migrations/001-i18n-ja-prose.sql` (mirror
   what's rendered, never which categories bucket together.
 - **Proper nouns (`name_en`/`name_ja`) are untouched** by this migration — they already had a
   dedicated bilingual pair. Their **display order** is locale-aware, though: shrines, deities,
-  and festivals carry a third `name_romaji` column (`docs/migrations/002-name-romaji.sql`) and
+  and festivals carry a third `name_hiragana` column (`docs/migrations/002-name-hiragana.sql`) and
   the shared `namePair()` helper (`lib/names.ts`) picks the pair per locale —
   EN: main = `name_en`, sub = `name_ja` (kanji); JA: main = `name_ja ?? name_en`,
-  sub = `name_romaji ?? name_en` (a sub that would duplicate the main is dropped). Every
+  sub = `name_hiragana ?? name_en` (a sub that would duplicate the main is dropped). Every
   name-pair render site calls `namePair(locale, …)` instead of hardcoding the EN-first order.
 - **The `Store` cache stays locale-agnostic.** `loadStore()`/`fetchStore()` never reads
   `cookies()` and is never keyed by locale — it fetches every column (including all `_ja`
@@ -191,7 +191,7 @@ Canonical, one row per kami. Deduped on `name_ja` at ingest.
 | `id`                | `uuid`   | No       | PK, `gen_random_uuid()` | Surrogate key.                                                          |
 | `name_en`           | `text`   | No       | —                       | Romaji / English name.                                                 |
 | `name_ja`           | `text`   | Yes      | UNIQUE                  | Kanji name; the **dedup key** on ingest.                               |
-| `name_romaji`       | `text`   | Yes      | —                       | Romaji reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
+| `name_hiragana`       | `text`   | Yes      | —                       | Hiragana reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
 | `titles`            | `text[]` | Yes      | —                       | Domain/role epithets (sphere of patronage); empty for primordial kami. |
 | `titles_ja`         | `text[]` | Yes      | —                       | JA epithets (i18n, whole-array fallback — §1.5).                       |
 | `deity_type`        | `text`   | No       | CHECK (enum)            | Current official status only (not historical syncretism).              |
@@ -215,7 +215,7 @@ The central entity.
 | `slug`          | `text`             | No       | UNIQUE                  | URL key for detail-page routing.                       |
 | `name_en`       | `text`             | No       | —                       | Shrine name in romaji / English.                       |
 | `name_ja`       | `text`             | Yes      | —                       | Shrine name in kanji.                                  |
-| `name_romaji`   | `text`             | Yes      | —                       | Romaji reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
+| `name_hiragana`   | `text`             | Yes      | —                       | Hiragana reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
 | `prefecture_id` | `smallint`         | No       | → `prefectures(id)`     | Prefecture the shrine is located in.                  |
 | `region_id`     | `smallint`         | No       | → `regions(id)`         | **Denormalized** region (derivable from prefecture) for cheap filtering. |
 | `city`          | `text`             | Yes      | —                       | City / town.                                          |
@@ -333,7 +333,7 @@ Index `idx_shrine_highlights_shrine` on `(shrine_id, sort_order)`. Delete-and-re
 | `shrine_id`     | `uuid` | No       | → `shrines(id)` ON DELETE CASCADE          | Owning shrine.                                                |
 | `name_en`       | `text` | No       | —                                          | Festival name in romaji / English.                           |
 | `name_ja`       | `text` | Yes      | —                                          | Festival name in kanji.                                       |
-| `name_romaji`   | `text` | Yes      | —                                          | Romaji reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
+| `name_hiragana`   | `text` | Yes      | —                                          | Hiragana reading (JA-mode subname; null ⇒ falls back to `name_en` — §1.5). |
 | `time_prose`    | `text` | Yes      | —                                          | Display label for timing, cycle ('dawn, 2nd Sunday of May', lunar…). |
 | `time_prose_ja` | `text` | Yes      | —                                          | JA (i18n; null ⇒ falls back to `time_prose` — §1.5).          |
 | `start_date`    | `date` | Yes      | —                                          | Structured start date; `null` if undated.                    |

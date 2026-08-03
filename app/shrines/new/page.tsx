@@ -12,7 +12,7 @@ const EMPTY_DETAIL: ShrineDetail = {
   slug: "",
   name_en: "",
   name_ja: null,
-  name_romaji: null,
+  name_hiragana: null,
   city: null,
   prefecture: { name_en: "", name_ja: null },
   region: { name_en: "", name_ja: null },

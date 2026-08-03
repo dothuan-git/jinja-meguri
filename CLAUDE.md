@@ -105,13 +105,13 @@ relocating the `@modal` intercepting routes and rewriting every internal `<Link>
   — the view-model shapes are unchanged, so `ShrineDetailView` needs no changes for DB content.
   Every page under `app/` that calls these does `const locale = (await getLocale()) as Locale`.
 - **Name pairs swap order per locale.** Shrines, deities, and festivals carry a third
-  `name_romaji` column (migration `002-name-romaji.sql`); the shared `namePair(locale, …)` helper
-  (`lib/names.ts`) returns the ordered `{ main, sub }` pair — EN: `name_en` main + kanji sub;
-  JA: kanji main + `name_romaji ?? name_en` sub (duplicate subs dropped). View models pass all
-  three name fields through **unswapped**; every render site calls `namePair` (never hardcode
+  `name_hiragana` column (migration `002-name-hiragana.sql`); the shared `namePair(locale, …)`
+  helper (`lib/names.ts`) returns the ordered `{ main, sub }` pair — EN: `name_en` main + kanji
+  sub; JA: kanji main + `name_hiragana ?? name_en` sub (duplicate subs dropped). View models pass
+  all three name fields through **unswapped**; every render site calls `namePair` (never hardcode
   EN-first). Decorative kanji (hanko stamps, the ofuda placard, vertical seals) intentionally
-  stays bound to raw `name_ja`. Romaji is entered in the in-place editors next to the kanji
-  name field (edit-mode-only inputs).
+  stays bound to raw `name_ja`. The hiragana reading is entered in the in-place editors next to
+  the kanji name field (edit-mode-only inputs).
 - **The `Store` cache is locale-agnostic.** `fetchStore`/`loadStore` never read `cookies()` and are
   never keyed by locale — they fetch every column (both languages) once; locale is applied
   per-request in the repo layer. Never key the Next Data Cache or `unstable_cache` by locale.
