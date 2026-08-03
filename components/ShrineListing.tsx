@@ -17,8 +17,10 @@ import {
   Plus,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ShrineCard, FacetCatalogs } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import {
   FILTER_PARAM_KEY,
   hasActiveShrineFilters,
@@ -64,6 +66,7 @@ export default function ShrineListing({
   const t = useTranslations("ShrineListing");
   const tCommon = useTranslations("Common");
   const tAdmin = useTranslations("Admin");
+  const locale = useLocale() as Locale;
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
 
@@ -234,14 +237,14 @@ export default function ShrineListing({
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <span className="font-display font-black text-stone text-[15px] leading-snug">
-                    {card.name_en}
+                    {namePair(locale, card).main}
                   </span>
                   <span className="text-[10.5px] text-torii font-display tracking-widest shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                    {card.name_ja ?? ""}
+                    {namePair(locale, card).sub ?? ""}
                   </span>
                 </div>
                 <div className="text-[11px] text-stone/55 font-mono tracking-wide mt-0.5">
-                  {card.primary_deity?.name_en ? `${card.primary_deity.name_en} · ` : ""}
+                  {card.primary_deity ? `${namePair(locale, card.primary_deity).main} · ` : ""}
                   {card.city ?? ""}, {card.prefecture}
                 </div>
                 {card.category_codes.length > 0 && (
@@ -358,7 +361,7 @@ export default function ShrineListing({
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="text-base sm:text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
-                    {card.name_en}
+                    {namePair(locale, card).main}
                   </h4>
                   {card.rank_codes.length > 0 && (
                     <div className="flex flex-wrap justify-end gap-1 shrink-0">
@@ -379,9 +382,11 @@ export default function ShrineListing({
               <div className="space-y-1 pt-1.5 border-t border-moss/5">
                 <span className="text-[9px] font-mono tracking-widest text-[#5c685f]/50 uppercase font-black block">{t("mainDeity")}</span>
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-sm font-bold text-stone tracking-wide">{card.primary_deity?.name_en ?? ""}</span>
+                  <span className="text-sm font-bold text-stone tracking-wide">
+                    {card.primary_deity ? namePair(locale, card.primary_deity).main : ""}
+                  </span>
                   <span className="text-[10.5px] text-torii font-display font-semibold tracking-wider" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                    {card.primary_deity?.name_ja ?? ""}
+                    {(card.primary_deity && namePair(locale, card.primary_deity).sub) ?? ""}
                   </span>
                 </div>
               </div>
@@ -713,12 +718,12 @@ export default function ShrineListing({
                             <div className="flex flex-col space-y-1">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="font-display font-black text-[15px] text-stone group-hover:text-torii transition-colors leading-snug">
-                                  {card.name_en}
+                                  {namePair(locale, card).main}
                                 </div>
                                 {renderHeart(card.slug, card.name_en, "shrink-0 -mt-0.5 cursor-pointer disabled:cursor-wait")}
                               </div>
                               <div className="text-[11px] text-[#5c685f]/70 font-display tracking-widest block leading-none pt-0.5 group-hover:text-torii transition-colors duration-200" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {card.name_ja ?? ""}
+                                {namePair(locale, card).sub ?? ""}
                               </div>
                               <span className="text-[11px] text-stone/50 font-sans tracking-wide block pt-1.5">
                                 {card.city ?? ""}, {card.prefecture}
@@ -737,10 +742,10 @@ export default function ShrineListing({
                           <td className="py-6 px-4 align-top">
                             <div className="flex flex-col space-y-1">
                               <span className="text-[13px] text-stone font-extrabold tracking-wide leading-tight">
-                                {card.primary_deity?.name_en ?? ""}
+                                {card.primary_deity ? namePair(locale, card.primary_deity).main : ""}
                               </span>
                               <span className="text-[10.5px] text-[#8a7a5f] font-display font-semibold tracking-widest block leading-none pt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                {card.primary_deity?.name_ja ?? ""}
+                                {(card.primary_deity && namePair(locale, card.primary_deity).sub) ?? ""}
                               </span>
                               <div className="flex flex-col gap-1 pt-2">
                                 {card.primary_deity_titles.map((title, tIdx) => (

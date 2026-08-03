@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Map, Marker, Popup, type MapRef } from "react-map-gl/maplibre";
 import type { Map as MaplibreMap } from "maplibre-gl";
 import { MapPin, ArrowRight, PartyPopper, Heart, Stamp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import type { ShrineMapPoint } from "@/components/map/ShrineMapView";
 
 // OpenFreeMap's "liberty" vector style — free, keyless, unrestricted (no
@@ -89,6 +91,7 @@ export default function ShrineMapCanvas({
   language?: string;
 }) {
   const t = useTranslations("Map.popup");
+  const locale = useLocale() as Locale;
   const mapRef = useRef<MapRef | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [interacting, setInteracting] = useState(false);
@@ -131,6 +134,7 @@ export default function ShrineMapCanvas({
     [points, hoveredSlug, selectedSlug, interacting],
   );
   const selected = useMemo(() => points.find((p) => p.slug === selectedSlug), [points, selectedSlug]);
+  const selectedName = selected ? namePair(locale, selected) : null;
 
   return (
     <Map
@@ -197,7 +201,7 @@ export default function ShrineMapCanvas({
           offset={12}
           className="shrine-tooltip"
         >
-          <span className="font-bold text-xs">{hovered.name_en}</span>
+          <span className="font-bold text-xs">{namePair(locale, hovered).main}</span>
         </Popup>
       )}
 
@@ -218,20 +222,25 @@ export default function ShrineMapCanvas({
                 {selected.highest_rank.name_en}
               </span>
             )}
-            <p className="text-sm font-serif font-bold text-stone leading-tight m-0">{selected.name_en}</p>
-            {selected.name_ja && <p className="text-xs text-stone/60 mt-0.5 mb-0">{selected.name_ja}</p>}
+            <p className="text-sm font-serif font-bold text-stone leading-tight m-0">{selectedName!.main}</p>
+            {selectedName!.sub && (
+              <p className="text-xs text-stone/60 mt-0.5 mb-0">{selectedName!.sub}</p>
+            )}
 
             <p className="flex items-center gap-1 text-[11px] text-moss mt-2 mb-0">
               <MapPin size={11} className="shrink-0 text-torii/70" />
               {[selected.city, selected.prefecture].filter(Boolean).join(", ")}
             </p>
 
-            {selected.primary_deity && (
-              <p className="text-[11px] text-stone/70 italic mt-1.5 mb-0 pt-1.5 border-t border-moss/10">
-                {t("enshrines", { name: selected.primary_deity.name_en })}
-                {selected.primary_deity.name_ja ? ` · ${selected.primary_deity.name_ja}` : ""}
-              </p>
-            )}
+            {selected.primary_deity && (() => {
+              const dn = namePair(locale, selected.primary_deity);
+              return (
+                <p className="text-[11px] text-stone/70 italic mt-1.5 mb-0 pt-1.5 border-t border-moss/10">
+                  {t("enshrines", { name: dn.main })}
+                  {dn.sub ? ` · ${dn.sub}` : ""}
+                </p>
+              );
+            })()}
 
             {showFestivals && (
               <div className="mt-2 pt-2 border-t border-moss/10">
@@ -247,7 +256,7 @@ export default function ShrineMapCanvas({
                       <li key={i} className="flex items-start gap-1.5 text-[11px] leading-tight">
                         <span className="mt-1 w-1 h-1 rounded-full bg-torii/60 shrink-0" />
                         <span className="flex flex-col">
-                          <span className="text-stone font-semibold">{f.name_en}</span>
+                          <span className="text-stone font-semibold">{namePair(locale, f).main}</span>
                           {f.when && <span className="text-moss">{f.when}</span>}
                         </span>
                       </li>

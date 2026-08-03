@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { getDeityTypeTextColor } from "@/lib/facetColors";
 import { DEITY_TYPES } from "@/lib/admin/deityContract";
 import { useDeityEdit } from "@/components/deityEdit/context";
+import type { NamePair } from "@/lib/names";
 
 export interface DeityCardShrine {
   id: string;
@@ -131,6 +132,9 @@ function ShrineItem({
 export interface DeityCardData {
   name: string;
   japaneseName: string;
+  // Locale-ordered display pair (kanji-main/romaji-sub under the JA locale);
+  // `name`/`japaneseName` stay semantic for the hanko stamp and edit inputs.
+  display: NamePair;
   deityType: string;
   titles: string[];
   canonicalLore: string;
@@ -212,23 +216,34 @@ export default function DeityCardBody({
               />
             ) : (
               <h3 className="text-3xl md:text-4xl font-display font-black text-stone tracking-tight leading-tight select-all">
-                {name}
+                {deity.display.main}
               </h3>
             )}
             <div className="flex items-center gap-2">
               {editing ? (
-                <input
-                  value={japaneseName}
-                  onChange={(e) => edit!.update({ name_ja: e.target.value })}
-                  placeholder={t("edit.nameJaPh")}
-                  aria-label={t("edit.nameJaAria")}
-                  className={`${inputBase} text-sm font-display text-moss font-medium`}
-                  style={{ fontFamily: "'Noto Serif JP', serif" }}
-                />
+                <>
+                  <input
+                    value={japaneseName}
+                    onChange={(e) => edit!.update({ name_ja: e.target.value })}
+                    placeholder={t("edit.nameJaPh")}
+                    aria-label={t("edit.nameJaAria")}
+                    className={`${inputBase} text-sm font-display text-moss font-medium`}
+                    style={{ fontFamily: "'Noto Serif JP', serif" }}
+                  />
+                  <input
+                    value={edit!.draft.name_romaji ?? ""}
+                    onChange={(e) => edit!.update({ name_romaji: e.target.value || null })}
+                    placeholder={t("edit.nameRomajiPh")}
+                    aria-label={t("edit.nameRomajiAria")}
+                    className={`${inputBase} text-sm font-sans text-stone/70`}
+                  />
+                </>
               ) : (
-                <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                  {japaneseName}
-                </span>
+                deity.display.sub && (
+                  <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    {deity.display.sub}
+                  </span>
+                )
               )}
               {editing ? (
                 <select

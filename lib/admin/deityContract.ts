@@ -7,6 +7,7 @@ export const DEITY_TYPES = ["mythological", "deified_human", "syncretic"] as con
 export const DeityInputSchema = z.object({
   name_en: z.string().min(1),
   name_ja: z.string().min(1, "name_ja (kanji dedup key) is required"),
+  name_romaji: z.string().nullable().optional(),
   deity_type: z.enum(DEITY_TYPES),
   titles: z.array(z.string()).nullable().optional(),
   titles_ja: z.array(z.string()).nullable().optional(),

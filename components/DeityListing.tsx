@@ -14,8 +14,10 @@ import {
   Trash2,
   Plus,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { DeityListItem } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import { fold } from "@/lib/search";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import DeityCardBody, { type DeityCardData } from "@/components/DeityCardBody";
@@ -40,6 +42,7 @@ export default function DeityListing({
   const searchParams = useSearchParams();
   const t = useTranslations("Deities");
   const tAdmin = useTranslations("Admin");
+  const locale = useLocale() as Locale;
 
   // 1. Map the pre-sorted DeityListItem[] into the portfolio shape the JSX consumes.
   // Index correspondence with `deities` is preserved (plain .map), so currentIndex
@@ -50,13 +53,14 @@ export default function DeityListing({
         id: d.id,
         name: d.name_en,
         japaneseName: d.name_ja ?? "",
+        display: namePair(locale, d),
         deityType: d.deity_type,
         titles: d.titles,
         canonicalLore: d.canonical_lore ?? "",
         mythicSphere: d.mythic_sphere,
         shrines: d.shrines.map((s) => ({
           id: s.slug,
-          name: s.name_en,
+          name: namePair(locale, s).main,
           location: s.city ?? "",
           prefecture: s.prefecture,
           region: s.region,
@@ -65,7 +69,7 @@ export default function DeityListing({
           regionalLore: s.regional_lore ?? "",
         })),
       })),
-    [deities],
+    [deities, locale],
   );
 
   // Deep-link: ?deity=<id> focuses a deity, ?edit=1 (admin) opens it in edit mode.
@@ -286,11 +290,13 @@ export default function DeityListing({
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-display font-black text-stone group-hover:text-torii transition-colors">
-                          {deity.name}
+                          {deity.display.main}
                         </span>
-                        <span className="text-[10px] font-display text-moss-light">
-                          ({deity.japaneseName})
-                        </span>
+                        {deity.display.sub && (
+                          <span className="text-[10px] font-display text-moss-light">
+                            ({deity.display.sub})
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10px] text-stone/50 truncate font-sans max-w-[20rem] md:max-w-[28rem]">
                         {deity.titles[0] || deity.canonicalLore}

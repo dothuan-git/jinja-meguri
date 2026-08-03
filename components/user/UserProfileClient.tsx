@@ -55,6 +55,8 @@ import { useToast } from "@/components/ui/Toast";
 import { saveCrestAction } from "@/app/users/actions";
 import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, type Milestone } from "@/lib/milestones";
 import type { StampEntry, SavedEntry } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 
 // Maps a milestone's `icon` string key (kept React-free in lib/milestones.ts) to a
 // lucide component. Unknown keys fall back to a generic award icon.
@@ -397,7 +399,7 @@ export default function UserProfileClient({
   const router = useRouter();
   const toast = useToast();
   const t = useTranslations("Profile");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
 
   // Modals portal to document.body so they escape the page's stacking context
@@ -832,14 +834,14 @@ export default function UserProfileClient({
                           <div className="flex-1 min-w-0">
                             <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
                               <h4 className="font-serif text-sm font-bold text-stone truncate leading-snug tracking-wide">
-                                {item.name_en}
+                                {namePair(locale, item).main}
                               </h4>
-                              {item.name_ja && (
+                              {namePair(locale, item).sub && (
                                 <p
                                   className="font-serif text-xs text-torii-dark/70 tracking-wider leading-none mt-0.5"
                                   style={{ fontFamily: "'Noto Serif JP', serif" }}
                                 >
-                                  {item.name_ja}
+                                  {namePair(locale, item).sub}
                                 </p>
                               )}
                             </Link>
@@ -909,14 +911,14 @@ export default function UserProfileClient({
                           <div className="flex justify-between items-start gap-2">
                             <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
                               <h4 className="font-serif text-sm font-bold text-stone leading-snug group-hover:text-torii truncate tracking-wide">
-                                {item.name_en}
+                                {namePair(locale, item).main}
                               </h4>
-                              {item.name_ja && (
+                              {namePair(locale, item).sub && (
                                 <p
                                   className="font-serif text-[11px] text-torii-dark/70 tracking-wider mt-0.5 truncate"
                                   style={{ fontFamily: "'Noto Serif JP', serif" }}
                                 >
-                                  {item.name_ja}
+                                  {namePair(locale, item).sub}
                                 </p>
                               )}
                             </Link>
@@ -1066,17 +1068,17 @@ export default function UserProfileClient({
                                       >
                                         <div className="min-w-0 flex-1">
                                           <span className="font-serif text-[13px] font-bold text-stone truncate block group-hover:text-torii tracking-wide leading-tight">
-                                            {stamp.name_en}
+                                            {namePair(locale, stamp).main}
                                           </span>
-                                          {stamp.name_ja && (
+                                          {namePair(locale, stamp).sub && (
                                             <span className="font-serif text-[10px] text-torii-dark/70 tracking-wider truncate block mt-0.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                              {stamp.name_ja}
+                                              {namePair(locale, stamp).sub}
                                             </span>
                                           )}
                                           {stamp.primary_deity && (
                                             <span className="flex items-center gap-0.5 mt-0.5 text-[10px] text-moss-light/80 truncate">
                                               <Sparkles size={9} className="text-torii/70 shrink-0" />
-                                              {stamp.primary_deity.name_en}
+                                              {namePair(locale, stamp.primary_deity).main}
                                             </span>
                                           )}
                                           <span className="text-[8px] font-mono tracking-widest text-stone/45 uppercase mt-1 block">

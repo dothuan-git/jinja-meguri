@@ -11,6 +11,7 @@ export const OccurrenceSchema = z.object({
 const FestivalSchema = z.object({
   name_en: z.string().min(1),
   name_ja: z.string().nullable().optional(),
+  name_romaji: z.string().nullable().optional(),
   time_prose: z.string().nullable().optional(),
   time_prose_ja: z.string().nullable().optional(),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
@@ -32,6 +33,7 @@ const FestivalSchema = z.object({
 const DeityCanonicalSchema = z.object({
   name_en: z.string().min(1),
   name_ja: z.string().nullable().optional(),
+  name_romaji: z.string().nullable().optional(),
   deity_type: z.enum(["mythological", "deified_human", "syncretic"]),
   titles: z.array(z.string()).nullable().optional(),
   titles_ja: z.array(z.string()).nullable().optional(),
@@ -74,6 +76,7 @@ export const ShrineInputSchema = z.object({
   slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "slug must be lowercase letters, digits, or hyphens"),
   name_en: z.string().min(1),
   name_ja: z.string().nullable().optional(),
+  name_romaji: z.string().nullable().optional(),
   region: z.string().min(1),
   prefecture: z.string().min(1),
   city: z.string().nullable().optional(),

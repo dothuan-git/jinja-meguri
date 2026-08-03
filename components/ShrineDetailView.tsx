@@ -25,6 +25,8 @@ import {
   X,
 } from "lucide-react";
 import type { ShrineDetail, EditCatalogs, Coordinates } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import { useShrineMarks } from "@/components/user/useShrineMark";
 import { buildEmbedUrl } from "@/lib/maps";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
@@ -105,12 +107,23 @@ function deityHref(nameJa: string) {
 }
 
 // Adapts the ShrineDetail view model to the shape the ported front-end JSX consumes.
-function toView(shrine: ShrineDetail) {
+// `name`/`japaneseName` stay semantic (EN / kanji — the stamp art and edit
+// bindings need the raw values); the locale-ordered heading pair is `displayName`.
+function toView(shrine: ShrineDetail, locale: Locale) {
   const primary = primaryOf(shrine);
+  // The enshrined (alter) name has no stored romaji — alter_name_en is already
+  // the romaji form, so the pair falls back to it as the JA-mode sub.
+  const deityPair = (d: NonNullable<ReturnType<typeof primaryOf>>) =>
+    namePair(locale, {
+      name_en: d.alter_name_en || d.name_en,
+      name_ja: d.alter_name_ja || d.name_ja,
+      name_romaji: d.alter_name_en ? null : d.name_romaji,
+    });
   return {
     slug: shrine.slug,
     name: shrine.name_en,
     japaneseName: shrine.name_ja ?? "",
+    displayName: namePair(locale, shrine),
     location: shrine.city ?? "",
     prefecture: shrine.prefecture,
     region: shrine.region,
@@ -128,6 +141,7 @@ function toView(shrine: ShrineDetail) {
       // falling back to the canonical deity name.
       name: primary?.alter_name_en || primary?.name_en || "",
       japaneseName: primary?.alter_name_ja || primary?.name_ja || "",
+      display: primary ? deityPair(primary) : namePair(locale, { name_en: "" }),
       deityType: primary?.deity_type ?? "",
       titles: (primary?.alter_titles ?? primary?.titles) ?? [],
       canonicalLore: primary?.canonical_lore ?? "",
@@ -145,6 +159,7 @@ function toView(shrine: ShrineDetail) {
     secondaryDeities: companionsOf(shrine).map((d) => ({
       name: d.alter_name_en || d.name_en,
       japaneseName: d.alter_name_ja || d.name_ja || "",
+      display: deityPair(d),
       deityType: d.deity_type,
       titles: d.alter_titles ?? d.titles,
       regionalLore: d.regional_lore ?? "",
@@ -158,6 +173,7 @@ function toView(shrine: ShrineDetail) {
       id: f.id,
       name: f.name_en,
       name_ja: f.name_ja ?? "",
+      display: namePair(locale, f),
       time: f.time_prose ?? "",
       origin: f.origin ?? "",
       meaning: f.meaning ?? "",
@@ -219,10 +235,11 @@ export default function ShrineDetailView({
 }) {
   const [editing, setEditing] = useState(false);
   const router = useRouter();
+  const locale = useLocale() as Locale;
   const creating = editor?.mode === "create";
 
   if (variant === "modal")
-    return <ModalBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />;
+    return <ModalBody view={toView(shrine, locale)} mark={mark} isSignedIn={isSignedIn} />;
 
   // Create flow: mount the editor immediately on an empty draft (no read view).
   if (creating && editor) {
@@ -234,7 +251,7 @@ export default function ShrineDetailView({
         onCancel={() => { window.location.href = "/shrines"; }}
         onSaved={(savedSlug) => { window.location.href = `/shrines/${savedSlug}`; }}
       >
-        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
+        <PageBody view={toView(shrine, locale)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
@@ -254,14 +271,14 @@ export default function ShrineDetailView({
           else router.refresh();
         }}
       >
-        <PageBody view={toView(shrine)} mark={mark} isSignedIn={isSignedIn} />
+        <PageBody view={toView(shrine, locale)} mark={mark} isSignedIn={isSignedIn} />
       </ShrineEditProvider>
     );
   }
 
   return (
     <PageBody
-      view={toView(shrine)}
+      view={toView(shrine, locale)}
       canEdit={Boolean(editor)}
       onEdit={() => setEditing(true)}
       mark={mark}
@@ -445,7 +462,7 @@ function PageBody({
               editClassName="w-full max-w-2xl text-2xl md:text-4xl font-serif font-black tracking-tight leading-none text-white bg-stone/60 backdrop-blur-sm pointer-events-auto"
             >
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none text-white drop-shadow-xs select-text">
-                {shrine.name}
+                {shrine.displayName.main}
               </h1>
             </EditableText>
           </div>
@@ -496,7 +513,16 @@ function PageBody({
                 placeholder={t("edit.nameJaPh")}
                 editClassName="w-64 max-w-full text-xl md:text-2xl font-serif font-black text-stone"
               >
-                <>{shrine.japaneseName}</>
+                <>{shrine.displayName.sub}</>
+              </EditableText>{" "}
+              {/* Romaji reading — edit-only input (read mode shows it via displayName). */}
+              <EditableText
+                path="name_romaji"
+                ariaLabel={t("edit.nameRomajiAria")}
+                placeholder={t("edit.nameRomajiPh")}
+                editClassName="w-56 max-w-full text-sm font-sans font-normal text-stone/70"
+              >
+                {null}
               </EditableText>{" "}
               <span className="text-xs font-sans tracking-widest font-normal text-stone/40 ml-1.5">
                 {editing ? (
@@ -753,7 +779,7 @@ function PageBody({
                     >
                       <h4 className={typo.subheading}>
                         <Link href={deityHref(shrine.primaryDeity.canonicalNameJa)} className="transition-colors hover:text-torii">
-                          {shrine.primaryDeity.name}
+                          {shrine.primaryDeity.display.main}
                         </Link>
                       </h4>
                     </EditableText>
@@ -765,7 +791,7 @@ function PageBody({
                         editClassName="text-xs font-serif text-moss font-medium"
                       >
                         <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                          {shrine.primaryDeity.japaneseName}
+                          {shrine.primaryDeity.display.sub}
                         </span>
                       </EditableText>
                       <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
@@ -965,12 +991,12 @@ function PageBody({
                                   </span>
                                   <h4 className="text-sm font-serif font-black text-stone leading-tight">
                                     <Link href={deityHref(deity.canonicalNameJa)} className="transition-colors hover:text-torii">
-                                      {deity.name}
+                                      {deity.display.main}
                                     </Link>
                                   </h4>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                      {deity.japaneseName}
+                                      {deity.display.sub}
                                     </span>
                                     <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
                                       {deityTypeLabel(deity.deityType)}
@@ -1462,10 +1488,10 @@ function ModalBody({
 
             <div className="space-y-1">
               <h3 className="text-4xl sm:text-5xl lg:text-5xl font-serif font-black text-stone tracking-wide leading-tight">
-                {shrine.name}
+                {shrine.displayName.main}
               </h3>
               <div className="text-lg md:text-xl font-serif text-torii-dark/95 tracking-widest" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                {shrine.japaneseName}
+                {shrine.displayName.sub}
               </div>
             </div>
           </div>
@@ -1519,12 +1545,12 @@ function ModalBody({
                 </span>
                 <h4 className={typo.subheading}>
                   <Link href={deityHref(shrine.primaryDeity.canonicalNameJa)} className="transition-colors hover:text-torii">
-                    {shrine.primaryDeity.name}
+                    {shrine.primaryDeity.display.main}
                   </Link>
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs font-serif text-moss font-medium pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                    {shrine.primaryDeity.japaneseName}
+                    {shrine.primaryDeity.display.sub}
                   </span>
                   <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
                     {deityTypeLabel(shrine.primaryDeity.deityType)}
@@ -1575,12 +1601,12 @@ function ModalBody({
                         <div className="space-y-1">
                           <h4 className="text-sm font-serif font-black text-stone leading-tight">
                             <Link href={deityHref(deity.canonicalNameJa)} className="transition-colors hover:text-torii">
-                              {deity.name}
+                              {deity.display.main}
                             </Link>
                           </h4>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] font-serif text-moss-light pr-2 border-r border-stone/10" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                              {deity.japaneseName}
+                              {deity.display.sub}
                             </span>
                             <span className={`text-[9px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deity.deityType)}`}>
                               {deityTypeLabel(deity.deityType)}
@@ -1638,10 +1664,10 @@ function ModalBody({
                     <div key={fest.id} className={`space-y-2.5 ${fIdx > 0 ? "pt-5 border-t border-dashed border-moss/10" : ""}`}>
                       <div className="flex items-center justify-between gap-2.5 flex-wrap">
                         <h5 className={typo.subheadingSm}>
-                          {fest.name}
-                          {fest.name_ja && (
+                          {fest.display.main}
+                          {fest.display.sub && (
                             <span className="text-xs font-serif font-medium text-moss/70 ml-1.5" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                              ({fest.name_ja})
+                              ({fest.display.sub})
                             </span>
                           )}
                         </h5>

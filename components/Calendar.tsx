@@ -24,8 +24,10 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CalendarFestival, FestivalOccurrenceRow } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 import type { OccurrenceShrineOption } from "@/components/admin/OccurrenceModal";
 
@@ -106,6 +108,7 @@ export default function Calendar({
   const t = useTranslations("Calendar");
   const tEnums = useTranslations("Enums");
   const tAdmin = useTranslations("Admin");
+  const locale = useLocale() as Locale;
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
 
@@ -177,9 +180,20 @@ export default function Calendar({
     return () => mq.removeEventListener("change", sync);
   }, []);
 
-  const linked: LinkedFestival[] = festivals.map((f) => ({
+  const linked: LinkedFestival[] = festivals.map((f) => {
+    const festName = namePair(locale, {
+      name_en: f.festival_name_en,
+      name_ja: f.festival_name_ja,
+      name_romaji: f.festival_name_romaji,
+    });
+    const shrineName = namePair(locale, {
+      name_en: f.shrine_name_en,
+      name_ja: f.shrine_name_ja,
+      name_romaji: f.shrine_name_romaji,
+    });
+    return {
     id: f.festival_id,
-    name: f.festival_name_ja ? `${f.festival_name_en} (${f.festival_name_ja})` : f.festival_name_en,
+    name: festName.sub ? `${festName.main} (${festName.sub})` : festName.main,
     time: f.time_prose ?? "",
     origin: f.origin ?? "",
     meaning: f.meaning ?? "",
@@ -194,13 +208,14 @@ export default function Calendar({
     end_date: f.end_date,
     shrine: {
       id: f.shrine_slug,
-      name: f.shrine_name_en,
+      name: shrineName.main,
       location: f.shrine_city ?? "",
       prefecture: f.shrine_prefecture,
       region: f.shrine_region,
       slug: f.shrine_slug,
     },
-  }));
+  };
+  });
 
   const toggleFestival = (id: string, e: MouseEvent) => {
     e.stopPropagation();

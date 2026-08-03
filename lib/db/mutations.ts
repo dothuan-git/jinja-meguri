@@ -46,10 +46,10 @@ async function resolveDeity(
   if (existing.rows[0]) return existing.rows[0].id as string;
 
   if (!deity.canonical) throw new Error(`Deity "${deity.name_ja}" is not in the DB and no canonical block was provided`);
-  const { name_en, name_ja, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja } = deity.canonical;
+  const { name_en, name_ja, name_romaji, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja } = deity.canonical;
   const ins = await client.query(
-    "INSERT INTO deities (name_en, name_ja, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id",
-    [name_en, name_ja ?? deity.name_ja, deity_type, titles ?? null, titles_ja ?? null, canonical_lore ?? null, canonical_lore_ja ?? null, null, null],
+    "INSERT INTO deities (name_en, name_ja, name_romaji, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+    [name_en, name_ja ?? deity.name_ja, name_romaji ?? null, deity_type, titles ?? null, titles_ja ?? null, canonical_lore ?? null, canonical_lore_ja ?? null, null, null],
   );
   return ins.rows[0].id as string;
 }
@@ -84,11 +84,11 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
 
       await client.query(
         `UPDATE shrines SET
-          name_en=$1, name_ja=$2, prefecture_id=$3, region_id=$4,
-          city=$5, city_ja=$6, address=$7, address_ja=$8, lat=$9, lng=$10, image_urls=$11, updated_at=now()
-         WHERE id=$12`,
+          name_en=$1, name_ja=$2, name_romaji=$3, prefecture_id=$4, region_id=$5,
+          city=$6, city_ja=$7, address=$8, address_ja=$9, lat=$10, lng=$11, image_urls=$12, updated_at=now()
+         WHERE id=$13`,
         [
-          input.name_en, input.name_ja ?? null, prefectureId, regionId,
+          input.name_en, input.name_ja ?? null, input.name_romaji ?? null, prefectureId, regionId,
           input.city ?? null, input.city_ja ?? null, input.address ?? null, input.address_ja ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
           input.image_urls ?? null,
@@ -97,10 +97,10 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       );
     } else {
       const ins = await client.query(
-        `INSERT INTO shrines (slug,name_en,name_ja,prefecture_id,region_id,city,city_ja,address,address_ja,lat,lng,image_urls)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+        `INSERT INTO shrines (slug,name_en,name_ja,name_romaji,prefecture_id,region_id,city,city_ja,address,address_ja,lat,lng,image_urls)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
         [
-          input.slug, input.name_en, input.name_ja ?? null, prefectureId, regionId,
+          input.slug, input.name_en, input.name_ja ?? null, input.name_romaji ?? null, prefectureId, regionId,
           input.city ?? null, input.city_ja ?? null, input.address ?? null, input.address_ja ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
           input.image_urls ?? null,
@@ -171,10 +171,10 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     );
     for (const [i, f] of (input.festivals ?? []).entries()) {
       const fRes = await client.query(
-        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,time_prose_ja,start_date,end_date,origin,origin_ja,meaning,meaning_ja,ritual,ritual_ja,prayer,prayer_ja,festival_type,visitor_notes,visitor_notes_ja,sort_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+        `INSERT INTO festivals (shrine_id,name_en,name_ja,name_romaji,time_prose,time_prose_ja,start_date,end_date,origin,origin_ja,meaning,meaning_ja,ritual,ritual_ja,prayer,prayer_ja,festival_type,visitor_notes,visitor_notes_ja,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
          ON CONFLICT (shrine_id,name_en) DO UPDATE SET
-           name_ja=EXCLUDED.name_ja, time_prose=EXCLUDED.time_prose, time_prose_ja=EXCLUDED.time_prose_ja,
+           name_ja=EXCLUDED.name_ja, name_romaji=EXCLUDED.name_romaji, time_prose=EXCLUDED.time_prose, time_prose_ja=EXCLUDED.time_prose_ja,
            start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
            origin=EXCLUDED.origin, origin_ja=EXCLUDED.origin_ja, meaning=EXCLUDED.meaning, meaning_ja=EXCLUDED.meaning_ja,
            ritual=EXCLUDED.ritual, ritual_ja=EXCLUDED.ritual_ja,
@@ -183,7 +183,7 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
            sort_order=EXCLUDED.sort_order
          RETURNING id`,
         [
-          shrineId, f.name_en, f.name_ja ?? null, f.time_prose ?? null, f.time_prose_ja ?? null,
+          shrineId, f.name_en, f.name_ja ?? null, f.name_romaji ?? null, f.time_prose ?? null, f.time_prose_ja ?? null,
           f.start_date ?? null, f.end_date ?? null,
           f.origin ?? null, f.origin_ja ?? null, f.meaning ?? null, f.meaning_ja ?? null,
           f.ritual ?? null, f.ritual_ja ?? null,
@@ -227,14 +227,14 @@ export async function upsertDeity(input: DeityInput): Promise<{ id: string; name
   if (existing.rows[0]) {
     const id = existing.rows[0].id as string;
     await pool.query(
-      "UPDATE deities SET name_en=$1, deity_type=$2, titles=$3, titles_ja=$4, canonical_lore=$5, canonical_lore_ja=$6, mythic_sphere=$7, mythic_sphere_ja=$8 WHERE id=$9",
-      [input.name_en, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
+      "UPDATE deities SET name_en=$1, name_romaji=$2, deity_type=$3, titles=$4, titles_ja=$5, canonical_lore=$6, canonical_lore_ja=$7, mythic_sphere=$8, mythic_sphere_ja=$9 WHERE id=$10",
+      [input.name_en, input.name_romaji ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
     );
     return { id, name_ja: input.name_ja, created: false };
   }
   const ins = await pool.query(
-    "INSERT INTO deities (name_en, name_ja, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id",
-    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null],
+    "INSERT INTO deities (name_en, name_ja, name_romaji, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+    [input.name_en, input.name_ja, input.name_romaji ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null],
   );
   return { id: ins.rows[0].id as string, name_ja: input.name_ja, created: true };
 }
@@ -244,8 +244,8 @@ export async function upsertDeity(input: DeityInput): Promise<{ id: string; name
 // a UNIQUE-violation DB error.
 export async function updateDeity(id: string, input: DeityInput): Promise<void> {
   const res = await pool.query(
-    "UPDATE deities SET name_en=$1, name_ja=$2, deity_type=$3, titles=$4, titles_ja=$5, canonical_lore=$6, canonical_lore_ja=$7, mythic_sphere=$8, mythic_sphere_ja=$9 WHERE id=$10",
-    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
+    "UPDATE deities SET name_en=$1, name_ja=$2, name_romaji=$3, deity_type=$4, titles=$5, titles_ja=$6, canonical_lore=$7, canonical_lore_ja=$8, mythic_sphere=$9, mythic_sphere_ja=$10 WHERE id=$11",
+    [input.name_en, input.name_ja, input.name_romaji ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
   );
   if (res.rowCount === 0) throw new Error(`No deity with id "${id}"`);
 }

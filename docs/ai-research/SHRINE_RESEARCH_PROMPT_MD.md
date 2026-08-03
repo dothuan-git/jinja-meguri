@@ -75,6 +75,7 @@ Identity
 Slug: <lowercase-hyphenated, e.g. fushimi-inari-taisha>
 Name (English): <romaji name>
 Name (Japanese): <kanji>
+Name (romaji reading): <pure romaji reading when it differs from Name (English) — e.g. "Fushimi Inari Taisha" vs "Fushimi Inari Grand Shrine"; — if identical>
 City: <city/ward>
 Region: <one Region value>
 Prefecture: <one Prefecture value>
@@ -136,6 +137,7 @@ Regional lore:
 Festival 1
 Name (English): <name>
 Name (Japanese): <kanji, or —>
+Name (romaji reading): <pure romaji reading when it differs from Name (English) — e.g. "Reitaisai" vs "Grand Festival"; — if identical>
 Type: <spectacle (no limit) | pilgrimage (max 2 per shrine) | —>
 Time (display): <human-readable timing, e.g. "First Day of the Horse in February">
 Start date: <YYYY-MM-DD for fixed Gregorian, — for lunar/shifting>

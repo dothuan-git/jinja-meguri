@@ -144,7 +144,7 @@ function festivalWhen(f: FestivalRow, locale: Locale): string | null {
 function shrineFestivalsBrief(idx: StoreIndex, shrineId: string, locale: Locale): FestivalBrief[] {
   return [...(idx.festivalsByShrine.get(shrineId) ?? [])]
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((f) => ({ name_en: f.name_en, name_ja: f.name_ja, when: festivalWhen(f, locale) }));
+    .map((f) => ({ name_en: f.name_en, name_ja: f.name_ja, name_romaji: f.name_romaji, when: festivalWhen(f, locale) }));
 }
 
 function shrineRankViews(idx: StoreIndex, shrineId: string, locale: Locale): RankView[] {
@@ -179,6 +179,7 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string, locale: Locale): De
         id: d.id,
         name_en: d.name_en,
         name_ja: d.name_ja,
+        name_romaji: d.name_romaji,
         titles: locArr(locale, d.titles, d.titles_ja) ?? [],
         deity_type: d.deity_type,
         canonical_lore: loc(locale, d.canonical_lore, d.canonical_lore_ja),
@@ -205,12 +206,19 @@ function buildCard(idx: StoreIndex, s: ShrineRow, locale: Locale): ShrineCard {
     slug: s.slug,
     name_en: s.name_en,
     name_ja: s.name_ja,
+    name_romaji: s.name_romaji,
     city: loc(locale, s.city, s.city_ja),
     prefecture: pref?.name_en ?? "",
     region: region?.name_en ?? "",
     // Lead with the shrine's alternate (enshrined) name when set, else canonical.
+    // An alternate name has no stored romaji — alter_name_en is already the
+    // romaji form, so name_romaji is nulled and namePair falls back to it.
     primary_deity: primary
-      ? { name_en: primary.alter_name_en || primary.name_en, name_ja: primary.alter_name_ja || primary.name_ja }
+      ? {
+          name_en: primary.alter_name_en || primary.name_en,
+          name_ja: primary.alter_name_ja || primary.name_ja,
+          name_romaji: primary.alter_name_en ? null : primary.name_romaji,
+        }
       : null,
     categories,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
@@ -250,6 +258,7 @@ export function getShrineDetail(store: Store, slug: string, locale: Locale = DEF
       id: f.id,
       name_en: f.name_en,
       name_ja: f.name_ja,
+      name_romaji: f.name_romaji,
       time_prose: loc(locale, f.time_prose, f.time_prose_ja),
       start_date: f.start_date,
       end_date: f.end_date,
@@ -306,12 +315,14 @@ export function getFestivalYear(store: Store, year: number, locale: Locale = DEF
       shrine_slug: s.slug,
       shrine_name_en: s.name_en,
       shrine_name_ja: s.name_ja,
+      shrine_name_romaji: s.name_romaji,
       shrine_city: loc(locale, s.city, s.city_ja),
       shrine_prefecture: pref?.name_en ?? "",
       shrine_region: region?.name_en ?? "",
       region_id: s.region_id,
       festival_name_en: f.name_en,
       festival_name_ja: f.name_ja,
+      festival_name_romaji: f.name_romaji,
       festival_type: f.festival_type,
       time_prose: loc(locale, f.time_prose, f.time_prose_ja),
       start_date: startDate,
@@ -342,6 +353,7 @@ export function getDeityList(store: Store, locale: Locale = DEFAULT_LOCALE): Dei
           slug: s.slug,
           name_en: s.name_en,
           name_ja: s.name_ja,
+          name_romaji: s.name_romaji,
           city: loc(locale, s.city, s.city_ja),
           prefecture: pref?.name_en ?? "",
           region: region?.name_en ?? "",
@@ -354,6 +366,7 @@ export function getDeityList(store: Store, locale: Locale = DEFAULT_LOCALE): Dei
       id: d.id,
       name_en: d.name_en,
       name_ja: d.name_ja,
+      name_romaji: d.name_romaji,
       titles: locArr(locale, d.titles, d.titles_ja) ?? [],
       deity_type: d.deity_type,
       canonical_lore: loc(locale, d.canonical_lore, d.canonical_lore_ja),
@@ -393,10 +406,10 @@ export function getFacetCatalogs(store: Store, locale: Locale = DEFAULT_LOCALE):
   }
 
   const deityById = index(store.deities);
-  const deityJaInUse = new Map<string, { name_en: string; name_ja: string }>();
+  const deityJaInUse = new Map<string, { name_en: string; name_ja: string; name_romaji: string | null }>();
   for (const sd of store.shrine_deities) {
     const d = deityById.get(sd.deity_id);
-    if (d?.name_ja) deityJaInUse.set(d.name_ja, { name_en: d.name_en, name_ja: d.name_ja });
+    if (d?.name_ja) deityJaInUse.set(d.name_ja, { name_en: d.name_en, name_ja: d.name_ja, name_romaji: d.name_romaji });
   }
 
   const regionIdsInUse = new Set(store.shrines.map((s) => s.region_id));

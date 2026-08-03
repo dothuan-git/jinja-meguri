@@ -11,12 +11,14 @@ import {
   type ShrineEditApi,
 } from "@/components/shrineEdit/context";
 import { typo } from "@/components/shrineEdit/detailStyles";
+import type { NamePair } from "@/lib/names";
 
 /** View shape one festival block consumes — mirrors `toView()` festival entries in ShrineDetailView. */
 export interface FestivalForBlock {
   id: string;
   name: string;
   name_ja: string;
+  display: NamePair;
   time: string;
   origin: string;
   meaning: string;
@@ -108,7 +110,7 @@ export default function FestivalBlock({
               editClassName={`${typo.subheading} tracking-wide w-full`}
             >
               <h4 className={`${typo.subheading} tracking-wide select-text`}>
-                {fest.name}
+                {fest.display.main}
               </h4>
             </EditableText>
             <EditableText
@@ -117,11 +119,20 @@ export default function FestivalBlock({
               placeholder={t("nameJaPh")}
               editClassName="text-base font-serif font-medium text-moss w-36"
             >
-              {fest.name_ja && (
+              {fest.display.sub && (
                 <span className="text-base font-serif font-medium text-moss/70 select-text" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                  ({fest.name_ja})
+                  ({fest.display.sub})
                 </span>
               )}
+            </EditableText>
+            {/* Romaji reading — edit-only input (read mode shows it via display). */}
+            <EditableText
+              path={`festivals.${idx}.name_romaji`}
+              ariaLabel={t("nameRomajiAria")}
+              placeholder={t("nameRomajiPh")}
+              editClassName="text-xs font-sans text-stone/70 w-32"
+            >
+              {null}
             </EditableText>
           </div>
           <div className="flex items-center gap-3 shrink-0">

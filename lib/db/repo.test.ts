@@ -35,11 +35,11 @@ describe("getShrineCards", () => {
   });
   it("builds festivals_brief with a time_prose 'when' for the map popup", () => {
     expect(cards.find((c) => c.slug === "a")!.festivals_brief).toEqual([
-      { name_en: "Grand Festival", name_ja: "大祭", when: "early August" },
+      { name_en: "Grand Festival", name_ja: "大祭", name_romaji: null, when: "early August" },
     ]);
     // Undated lunar festival still lists, using its time_prose.
     expect(cards.find((c) => c.slug === "b")!.festivals_brief).toEqual([
-      { name_en: "Lunar Rite", name_ja: "旧暦祭", when: "2nd Sunday of the 6th lunar month" },
+      { name_en: "Lunar Rite", name_ja: "旧暦祭", name_romaji: null, when: "2nd Sunday of the 6th lunar month" },
     ]);
   });
 });
