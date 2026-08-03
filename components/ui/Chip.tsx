@@ -1,10 +1,14 @@
 export default function Chip({
   label,
   sub,
+  subIsJa = true,
   tone = "default",
 }: {
   label: string;
   sub?: string | null;
+  // Whether the sub is Japanese script (drives the `jp` font class) — false
+  // when the JA locale swaps a romaji/EN reading into the sub slot.
+  subIsJa?: boolean;
   tone?: "default" | "accent";
 }) {
   return (
@@ -17,7 +21,7 @@ export default function Chip({
       }
     >
       {label}
-      {sub ? <span className="jp text-[0.85em] opacity-70">{sub}</span> : null}
+      {sub ? <span className={`${subIsJa ? "jp " : ""}text-[0.85em] opacity-70`}>{sub}</span> : null}
     </span>
   );
 }

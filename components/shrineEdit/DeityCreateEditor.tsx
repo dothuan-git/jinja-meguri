@@ -1,10 +1,10 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useShrineEdit } from "@/components/shrineEdit/context";
 import { typo } from "@/components/shrineEdit/detailStyles";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
-import { DEITY_TYPE_LABEL } from "@/lib/labels";
 import { getDeityTypeTextColor } from "@/lib/facetColors";
 
 type DeityDraft = ShrineInput["deities"][number];
@@ -12,6 +12,19 @@ const DEITY_TYPES = ["mythological", "deified_human", "syncretic"] as const;
 
 function emptyCompanion(sortOrder: number): DeityDraft {
   return { name_ja: "", is_primary: false, sort_order: sortOrder, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null };
+}
+
+// alter_titles / regional_lore are shrine-specific overrides edited via raw
+// getValue/setValue (not the EditableText/EditableProse primitives), so the
+// EN/JA edit-language toggle is applied by hand for just these two fields.
+function bilingualField(d: DeityDraft, field: "alter_titles" | "regional_lore", lang: "en" | "ja") {
+  return lang === "ja"
+    ? (field === "alter_titles" ? d.alter_titles_ja : d.regional_lore_ja)
+    : (field === "alter_titles" ? d.alter_titles : d.regional_lore);
+}
+function setBilingualField(field: "alter_titles" | "regional_lore", lang: "en" | "ja", value: string[] | string | null): Partial<DeityDraft> {
+  if (field === "alter_titles") return lang === "ja" ? { alter_titles_ja: value as string[] | null } : { alter_titles: value as string[] | null };
+  return lang === "ja" ? { regional_lore_ja: value as string | null } : { regional_lore: value as string | null };
 }
 
 const inputBase =
@@ -30,6 +43,11 @@ const areaBase =
  */
 export default function DeityCreateEditor() {
   const api = useShrineEdit();
+  const tEnums = useTranslations("Enums");
+  const deityTypeLabel = (dt: string) =>
+    (DEITY_TYPES as readonly string[]).includes(dt)
+      ? tEnums(`deityType.${dt as (typeof DEITY_TYPES)[number]}`)
+      : dt;
   if (!api) return null;
 
   const deities = (api.getValue("deities") as DeityDraft[] | undefined) ?? [];
@@ -152,6 +170,16 @@ export default function DeityCreateEditor() {
                     />
                   </label>
                   <label className="space-y-1">
+                    <span className={`${typo.fieldLabel} block`}>Hiragana reading (optional)</span>
+                    <input
+                      value={d.canonical?.name_hiragana ?? ""}
+                      onChange={(e) => update(i, { canonical: { ...d.canonical!, name_hiragana: e.target.value || null } })}
+                      placeholder="Shown as the sub-name in Japanese mode"
+                      aria-label="Deity hiragana reading"
+                      className={`${inputBase} w-full`}
+                    />
+                  </label>
+                  <label className="space-y-1">
                     <span className={`${typo.fieldLabel} block`}>Deity type</span>
                     <select
                       value={d.canonical?.deity_type ?? "mythological"}
@@ -162,7 +190,7 @@ export default function DeityCreateEditor() {
                       className={`${selectBase} w-full`}
                     >
                       {DEITY_TYPES.map((t) => (
-                        <option key={t} value={t}>{DEITY_TYPE_LABEL[t] ?? t}</option>
+                        <option key={t} value={t}>{deityTypeLabel(t)}</option>
                       ))}
                     </select>
                   </label>
@@ -191,7 +219,7 @@ export default function DeityCreateEditor() {
                     {linked.name_ja}
                   </span>
                   <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(linked.deity_type)}`}>
-                    {DEITY_TYPE_LABEL[linked.deity_type] ?? linked.deity_type}
+                    {deityTypeLabel(linked.deity_type)}
                   </span>
                 </div>
                 {linked.titles.length > 0 && (
@@ -240,11 +268,13 @@ export default function DeityCreateEditor() {
                 </div>
               </div>
               <label className="space-y-1 block">
-                <span className={`${typo.fieldLabel} block`}>Alternate titles for this shrine (one per line, optional)</span>
+                <span className={`${typo.fieldLabel} block`}>
+                  Alternate titles for this shrine (one per line, optional){api.editLang === "ja" ? " — 日本語" : ""}
+                </span>
                 <textarea
-                  value={(d.alter_titles ?? []).join("\n")}
+                  value={((bilingualField(d, "alter_titles", api.editLang) as string[] | null) ?? []).join("\n")}
                   onChange={(e) =>
-                    update(i, { alter_titles: e.target.value.trim() === "" ? null : e.target.value.split("\n") })
+                    update(i, setBilingualField("alter_titles", api.editLang, e.target.value.trim() === "" ? null : e.target.value.split("\n")))
                   }
                   rows={2}
                   placeholder="Leave blank to use the deity's canonical titles"
@@ -256,10 +286,12 @@ export default function DeityCreateEditor() {
 
             {/* Regional lore (shrine-specific) */}
             <label className="space-y-1 block pt-3 border-t border-dashed border-moss/10">
-              <span className={`${typo.fieldLabel} block`}>Regional Lore & Sacred Origins</span>
+              <span className={`${typo.fieldLabel} block`}>
+                Regional Lore & Sacred Origins{api.editLang === "ja" ? " — 日本語" : ""}
+              </span>
               <textarea
-                value={d.regional_lore ?? ""}
-                onChange={(e) => update(i, { regional_lore: e.target.value || null })}
+                value={(bilingualField(d, "regional_lore", api.editLang) as string | null) ?? ""}
+                onChange={(e) => update(i, setBilingualField("regional_lore", api.editLang, e.target.value || null))}
                 rows={d.is_primary ? 5 : 4}
                 placeholder="This shrine's regional lore for the deity…"
                 aria-label="Regional lore"

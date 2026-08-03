@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import type { ShrineCard as Card } from "@/lib/types";
 import Chip from "@/components/ui/Chip";
 import PinHint from "@/components/ui/PinHint";
 
 export default function ShrineCard({ card }: { card: Card }) {
+  const t = useTranslations("ShrineCard");
+  const locale = useLocale() as Locale;
+  const shrineName = namePair(locale, card);
+  const deityName = card.primary_deity ? namePair(locale, card.primary_deity) : null;
   const extraCats = Math.max(0, card.categories.length - 3);
   return (
     <Link
@@ -17,38 +24,41 @@ export default function ShrineCard({ card }: { card: Card }) {
       {card.highest_rank && (
         <span className="kicker mb-2 inline-flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-vermilion" />
-          {card.highest_rank.name_en}
+          {namePair(locale, card.highest_rank).main}
         </span>
       )}
 
-      <h3 className="font-display text-2xl font-semibold leading-tight text-sumi">
-        {card.name_en}
+      <h3 className={`font-display text-2xl font-semibold leading-tight text-sumi${shrineName.mainIsJa ? " jp" : ""}`}>
+        {shrineName.main}
       </h3>
-      {card.name_ja && <p className="jp mt-0.5 text-base text-sumi-soft">{card.name_ja}</p>}
+      {shrineName.sub && (
+        <p className={`mt-0.5 text-base text-sumi-soft${shrineName.subIsJa ? " jp" : ""}`}>{shrineName.sub}</p>
+      )}
 
-      {card.primary_deity && (
+      {deityName && (
         <p className="mt-3 text-sm text-sumi-soft">
-          <span className="text-sumi-soft/70">Enshrines </span>
-          <span className="italic text-sumi">{card.primary_deity.name_en}</span>
-          {card.primary_deity.name_ja && (
-            <span className="jp ml-1 text-sumi-soft">{card.primary_deity.name_ja}</span>
+          <span className="text-sumi-soft/70">{t("enshrines")} </span>
+          <span className={deityName.mainIsJa ? "jp text-sumi" : "italic text-sumi"}>{deityName.main}</span>
+          {deityName.sub && (
+            <span className={`ml-1 text-sumi-soft${deityName.subIsJa ? " jp" : ""}`}>{deityName.sub}</span>
           )}
         </p>
       )}
 
       {card.categories.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {card.categories.slice(0, 3).map((c) => (
-            <Chip key={c.name_en} label={c.name_en} sub={c.name_ja} tone="accent" />
-          ))}
+          {card.categories.slice(0, 3).map((c) => {
+            const n = namePair(locale, c);
+            return <Chip key={c.name_en} label={n.main} sub={n.sub} subIsJa={n.subIsJa} tone="accent" />;
+          })}
           {extraCats > 0 && (
-            <span className="self-center text-xs text-sumi-soft/70">+{extraCats} more</span>
+            <span className="self-center text-xs text-sumi-soft/70">{t("more", { count: extraCats })}</span>
           )}
         </div>
       )}
 
       <div className="mt-5 border-t hairline pt-3">
-        <PinHint city={card.city} prefecture={card.prefecture} />
+        <PinHint city={card.city} prefecture={namePair(locale, card.prefecture).main} />
       </div>
     </Link>
   );

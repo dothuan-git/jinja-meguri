@@ -46,10 +46,10 @@ async function resolveDeity(
   if (existing.rows[0]) return existing.rows[0].id as string;
 
   if (!deity.canonical) throw new Error(`Deity "${deity.name_ja}" is not in the DB and no canonical block was provided`);
-  const { name_en, name_ja, deity_type, titles, canonical_lore } = deity.canonical;
+  const { name_en, name_ja, name_hiragana, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja } = deity.canonical;
   const ins = await client.query(
-    "INSERT INTO deities (name_en, name_ja, deity_type, titles, canonical_lore, mythic_sphere) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
-    [name_en, name_ja ?? deity.name_ja, deity_type, titles ?? null, canonical_lore ?? null, null],
+    "INSERT INTO deities (name_en, name_ja, name_hiragana, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+    [name_en, name_ja ?? deity.name_ja, name_hiragana ?? null, deity_type, titles ?? null, titles_ja ?? null, canonical_lore ?? null, canonical_lore_ja ?? null, null, null],
   );
   return ins.rows[0].id as string;
 }
@@ -84,12 +84,12 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
 
       await client.query(
         `UPDATE shrines SET
-          name_en=$1, name_ja=$2, prefecture_id=$3, region_id=$4,
-          city=$5, address=$6, lat=$7, lng=$8, image_urls=$9, updated_at=now()
-         WHERE id=$10`,
+          name_en=$1, name_ja=$2, name_hiragana=$3, prefecture_id=$4, region_id=$5,
+          city=$6, city_ja=$7, address=$8, address_ja=$9, lat=$10, lng=$11, image_urls=$12, updated_at=now()
+         WHERE id=$13`,
         [
-          input.name_en, input.name_ja ?? null, prefectureId, regionId,
-          input.city ?? null, input.address ?? null,
+          input.name_en, input.name_ja ?? null, input.name_hiragana ?? null, prefectureId, regionId,
+          input.city ?? null, input.city_ja ?? null, input.address ?? null, input.address_ja ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
           input.image_urls ?? null,
           shrineId,
@@ -97,11 +97,11 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
       );
     } else {
       const ins = await client.query(
-        `INSERT INTO shrines (slug,name_en,name_ja,prefecture_id,region_id,city,address,lat,lng,image_urls)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+        `INSERT INTO shrines (slug,name_en,name_ja,name_hiragana,prefecture_id,region_id,city,city_ja,address,address_ja,lat,lng,image_urls)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
         [
-          input.slug, input.name_en, input.name_ja ?? null, prefectureId, regionId,
-          input.city ?? null, input.address ?? null,
+          input.slug, input.name_en, input.name_ja ?? null, input.name_hiragana ?? null, prefectureId, regionId,
+          input.city ?? null, input.city_ja ?? null, input.address ?? null, input.address_ja ?? null,
           input.coordinates?.lat ?? null, input.coordinates?.lng ?? null,
           input.image_urls ?? null,
         ],
@@ -112,8 +112,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     // shrine_details (1:1)
     if (input.details) {
       await client.query(
-        "INSERT INTO shrine_details (shrine_id,history,description,prayer_focus,best_time,quote,geographic_notes) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-        [shrineId, input.details.history ?? null, input.details.description ?? null, input.details.prayer_focus ?? null, input.details.best_time ?? null, input.details.quote ?? null, input.details.geographic_notes ?? null],
+        "INSERT INTO shrine_details (shrine_id,history,history_ja,description,description_ja,prayer_focus,prayer_focus_ja,best_time,best_time_ja,quote,quote_ja,geographic_notes,geographic_notes_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
+        [shrineId, input.details.history ?? null, input.details.history_ja ?? null, input.details.description ?? null, input.details.description_ja ?? null, input.details.prayer_focus ?? null, input.details.prayer_focus_ja ?? null, input.details.best_time ?? null, input.details.best_time_ja ?? null, input.details.quote ?? null, input.details.quote_ja ?? null, input.details.geographic_notes ?? null, input.details.geographic_notes_ja ?? null],
       );
     }
 
@@ -121,8 +121,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     const highlights = (input.highlights ?? []).filter((h) => h.title.trim() !== "");
     for (const [i, h] of highlights.entries()) {
       await client.query(
-        "INSERT INTO shrine_highlights (shrine_id,title,body,sort_order) VALUES ($1,$2,$3,$4)",
-        [shrineId, h.title.trim(), h.body?.trim() || null, h.sort_order ?? i],
+        "INSERT INTO shrine_highlights (shrine_id,title,title_ja,body,body_ja,sort_order) VALUES ($1,$2,$3,$4,$5,$6)",
+        [shrineId, h.title.trim(), h.title_ja?.trim() || null, h.body?.trim() || null, h.body_ja?.trim() || null, h.sort_order ?? i],
       );
     }
 
@@ -155,8 +155,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     for (const d of input.deities) {
       const deityId = await resolveDeity(client, d);
       await client.query(
-        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore,alter_name_en,alter_name_ja,alter_titles) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null, d.alter_name_en ?? null, d.alter_name_ja ?? null, d.alter_titles ?? null],
+        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore,regional_lore_ja,alter_name_en,alter_name_ja,alter_titles,alter_titles_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null, d.regional_lore_ja ?? null, d.alter_name_en ?? null, d.alter_name_ja ?? null, d.alter_titles ?? null, d.alter_titles_ja ?? null],
       );
     }
 
@@ -171,30 +171,33 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     );
     for (const [i, f] of (input.festivals ?? []).entries()) {
       const fRes = await client.query(
-        `INSERT INTO festivals (shrine_id,name_en,name_ja,time_prose,start_date,end_date,origin,meaning,ritual,prayer,festival_type,visitor_notes,sort_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        `INSERT INTO festivals (shrine_id,name_en,name_ja,name_hiragana,time_prose,time_prose_ja,start_date,end_date,origin,origin_ja,meaning,meaning_ja,ritual,ritual_ja,prayer,prayer_ja,festival_type,visitor_notes,visitor_notes_ja,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
          ON CONFLICT (shrine_id,name_en) DO UPDATE SET
-           name_ja=EXCLUDED.name_ja, time_prose=EXCLUDED.time_prose,
+           name_ja=EXCLUDED.name_ja, name_hiragana=EXCLUDED.name_hiragana, time_prose=EXCLUDED.time_prose, time_prose_ja=EXCLUDED.time_prose_ja,
            start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
-           origin=EXCLUDED.origin, meaning=EXCLUDED.meaning, ritual=EXCLUDED.ritual,
-           prayer=EXCLUDED.prayer, festival_type=EXCLUDED.festival_type, visitor_notes=EXCLUDED.visitor_notes,
+           origin=EXCLUDED.origin, origin_ja=EXCLUDED.origin_ja, meaning=EXCLUDED.meaning, meaning_ja=EXCLUDED.meaning_ja,
+           ritual=EXCLUDED.ritual, ritual_ja=EXCLUDED.ritual_ja,
+           prayer=EXCLUDED.prayer, prayer_ja=EXCLUDED.prayer_ja, festival_type=EXCLUDED.festival_type,
+           visitor_notes=EXCLUDED.visitor_notes, visitor_notes_ja=EXCLUDED.visitor_notes_ja,
            sort_order=EXCLUDED.sort_order
          RETURNING id`,
         [
-          shrineId, f.name_en, f.name_ja ?? null, f.time_prose ?? null,
+          shrineId, f.name_en, f.name_ja ?? null, f.name_hiragana ?? null, f.time_prose ?? null, f.time_prose_ja ?? null,
           f.start_date ?? null, f.end_date ?? null,
-          f.origin ?? null, f.meaning ?? null, f.ritual ?? null,
-          f.prayer ?? null, f.festival_type ?? null, f.visitor_notes ?? null, i,
+          f.origin ?? null, f.origin_ja ?? null, f.meaning ?? null, f.meaning_ja ?? null,
+          f.ritual ?? null, f.ritual_ja ?? null,
+          f.prayer ?? null, f.prayer_ja ?? null, f.festival_type ?? null, f.visitor_notes ?? null, f.visitor_notes_ja ?? null, i,
         ],
       );
       const festivalId = fRes.rows[0].id as string;
       for (const occ of f.occurrences ?? []) {
         await client.query(
-          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes)
-           VALUES ($1,$2,$3,$4,$5)
+          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes,notes_ja)
+           VALUES ($1,$2,$3,$4,$5,$6)
            ON CONFLICT (festival_id,year) DO UPDATE SET
-             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes`,
-          [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null],
+             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes, notes_ja=EXCLUDED.notes_ja`,
+          [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null, occ.notes_ja ?? null],
         );
       }
     }
@@ -202,9 +205,9 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     // sources — one multi-row INSERT instead of a round-trip per source.
     const sources = input.sources ?? [];
     if (sources.length) {
-      const values = sources.map((_, i) => `($1,$${i * 2 + 2},$${i * 2 + 3})`).join(",");
-      const params = [shrineId, ...sources.flatMap((s) => [s.url, s.title ?? null])];
-      await client.query(`INSERT INTO sources (shrine_id,url,title) VALUES ${values}`, params);
+      const values = sources.map((_, i) => `($1,$${i * 3 + 2},$${i * 3 + 3},$${i * 3 + 4})`).join(",");
+      const params = [shrineId, ...sources.flatMap((s) => [s.url, s.title ?? null, s.title_ja ?? null])];
+      await client.query(`INSERT INTO sources (shrine_id,url,title,title_ja) VALUES ${values}`, params);
     }
 
     await client.query("COMMIT");
@@ -224,14 +227,14 @@ export async function upsertDeity(input: DeityInput): Promise<{ id: string; name
   if (existing.rows[0]) {
     const id = existing.rows[0].id as string;
     await pool.query(
-      "UPDATE deities SET name_en=$1, deity_type=$2, titles=$3, canonical_lore=$4, mythic_sphere=$5 WHERE id=$6",
-      [input.name_en, input.deity_type, input.titles ?? null, input.canonical_lore ?? null, input.mythic_sphere ?? null, id],
+      "UPDATE deities SET name_en=$1, name_hiragana=$2, deity_type=$3, titles=$4, titles_ja=$5, canonical_lore=$6, canonical_lore_ja=$7, mythic_sphere=$8, mythic_sphere_ja=$9 WHERE id=$10",
+      [input.name_en, input.name_hiragana ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
     );
     return { id, name_ja: input.name_ja, created: false };
   }
   const ins = await pool.query(
-    "INSERT INTO deities (name_en, name_ja, deity_type, titles, canonical_lore, mythic_sphere) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
-    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.canonical_lore ?? null, input.mythic_sphere ?? null],
+    "INSERT INTO deities (name_en, name_ja, name_hiragana, deity_type, titles, titles_ja, canonical_lore, canonical_lore_ja, mythic_sphere, mythic_sphere_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+    [input.name_en, input.name_ja, input.name_hiragana ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null],
   );
   return { id: ins.rows[0].id as string, name_ja: input.name_ja, created: true };
 }
@@ -241,8 +244,8 @@ export async function upsertDeity(input: DeityInput): Promise<{ id: string; name
 // a UNIQUE-violation DB error.
 export async function updateDeity(id: string, input: DeityInput): Promise<void> {
   const res = await pool.query(
-    "UPDATE deities SET name_en=$1, name_ja=$2, deity_type=$3, titles=$4, canonical_lore=$5, mythic_sphere=$6 WHERE id=$7",
-    [input.name_en, input.name_ja, input.deity_type, input.titles ?? null, input.canonical_lore ?? null, input.mythic_sphere ?? null, id],
+    "UPDATE deities SET name_en=$1, name_ja=$2, name_hiragana=$3, deity_type=$4, titles=$5, titles_ja=$6, canonical_lore=$7, canonical_lore_ja=$8, mythic_sphere=$9, mythic_sphere_ja=$10 WHERE id=$11",
+    [input.name_en, input.name_ja, input.name_hiragana ?? null, input.deity_type, input.titles ?? null, input.titles_ja ?? null, input.canonical_lore ?? null, input.canonical_lore_ja ?? null, input.mythic_sphere ?? null, input.mythic_sphere_ja ?? null, id],
   );
   if (res.rowCount === 0) throw new Error(`No deity with id "${id}"`);
 }
@@ -284,11 +287,11 @@ export async function upsertOccurrences(
       const festivalId = fRes.rows[0].id as string;
       for (const occ of t.occurrences) {
         await client.query(
-          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes)
-           VALUES ($1,$2,$3,$4,$5)
+          `INSERT INTO festival_occurrences (festival_id,year,start_date,end_date,notes,notes_ja)
+           VALUES ($1,$2,$3,$4,$5,$6)
            ON CONFLICT (festival_id,year) DO UPDATE SET
-             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes`,
-          [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null],
+             start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date, notes=EXCLUDED.notes, notes_ja=EXCLUDED.notes_ja`,
+          [festivalId, occ.year, occ.start_date, occ.end_date ?? null, occ.notes ?? null, occ.notes_ja ?? null],
         );
         count++;
       }

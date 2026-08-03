@@ -2,9 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
 export default function SiteFooter() {
   const pathname = usePathname();
+  const t = useTranslations("Footer");
   if (pathname === "/") return null;
 
   return (
@@ -26,10 +28,10 @@ export default function SiteFooter() {
         Jinja Meguri — 神社巡り
       </div>
       <p className="max-w-lg text-[10px] font-display italic text-stone/40 leading-relaxed">
-        AI-assisted research project. Information may contain inaccuracies; verify with official sanctuary channels before visiting.
+        {t("disclaimer")}
       </p>
       <div className="text-[9px] font-mono tracking-tight text-stone/30">
-        &copy; {new Date().getFullYear()} — Dedicated to the preservation of sacred lore.
+        {t("copyright", { year: new Date().getFullYear() })}
       </div>
     </motion.footer>
   );

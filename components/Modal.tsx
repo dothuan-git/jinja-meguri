@@ -4,9 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function Modal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const t = useTranslations("Common");
   const close = () => router.back();
 
   useEffect(() => {
@@ -43,12 +45,12 @@ export default function Modal({ children }: { children: React.ReactNode }) {
         >
           <div className="shrink-0 px-6 py-4 border-b border-moss/10 flex items-center justify-between bg-washi select-none">
             <div className="font-display text-xs font-bold uppercase tracking-widest text-moss/50">
-              Sanctuary Quick Preview
+              {t("quickPreview")}
             </div>
             <button
               onClick={close}
               className="p-1.5 rounded-full hover:bg-torii hover:text-white border border-moss/10 text-stone transition-all duration-300 cursor-pointer hover:-rotate-90"
-              title="Dismiss"
+              title={t("dismiss")}
             >
               <X size={16} />
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { saveDeityAction } from "@/app/admin/actions";
 import type { DeityInput } from "@/lib/admin/deityContract";
 import { useToast } from "@/components/ui/Toast";
@@ -19,6 +20,7 @@ export function useDeitySave(opts: {
   const { mode, deityId, onSaved } = opts;
   const [saving, startTransition] = useTransition();
   const toast = useToast();
+  const t = useTranslations("Toasts");
 
   function save(data: DeityInput) {
     const formData = new FormData();
@@ -29,12 +31,12 @@ export function useDeitySave(opts: {
       if (result?.success && result.name_ja) {
         toast.success(
           mode === "update"
-            ? `Deity "${data.name_en}" updated.`
-            : `Deity "${data.name_en}" added.`,
+            ? t("deityUpdated", { name: data.name_en })
+            : t("deityAdded", { name: data.name_en }),
         );
         onSaved?.(result.name_ja);
       } else if (result?.error) {
-        toast.error(`Couldn't save "${data.name_en}": ${result.error}`);
+        toast.error(t("deitySaveFailed", { name: data.name_en, error: result.error }));
       }
     });
   }

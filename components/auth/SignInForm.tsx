@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, type Variants } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import SocialAuthButtons from "./SocialAuthButtons";
 import OmikujiAlert from "./OmikujiAlert";
@@ -34,6 +35,7 @@ const itemVariants: Variants = {
 
 
 export default function SignInForm() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
@@ -49,13 +51,13 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.email({ email, password });
       if (error) {
-        setError(error.message ?? "Could not sign in. Check your credentials.");
+        setError(error.message ?? t("errSignIn"));
         return;
       }
       router.push(target);
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
     } finally {
       setPending(false);
     }
@@ -87,7 +89,7 @@ export default function SignInForm() {
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="email" className={LABEL}>
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
@@ -97,13 +99,13 @@ export default function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={INPUT}
-            placeholder="you@example.com"
+            placeholder={t("emailPh")}
           />
         </motion.div>
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="password" className={LABEL}>
-            Password
+            {t("password")}
           </label>
           <div className="relative">
             <input
@@ -114,7 +116,7 @@ export default function SignInForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`${INPUT} pr-11`}
-              placeholder="••••••••"
+              placeholder={t("passwordPh")}
             />
             <button
               type="button"
@@ -134,7 +136,7 @@ export default function SignInForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Signing in…" : "Sign in"}
+          {pending ? t("signingIn") : t("signIn")}
         </motion.button>
 
         <motion.div
@@ -142,18 +144,18 @@ export default function SignInForm() {
           className="flex flex-col gap-3.5 pt-2.5 text-center text-[10px] tracking-widest uppercase text-moss-light"
         >
           <p>
-            New here?{" "}
+            {t("newHere")}{" "}
             <Link href="/sign-up" className="font-bold text-torii hover:underline">
-              Create an account
+              {t("createAccount")}
             </Link>
           </p>
           <div className="flex items-center justify-center gap-4 text-moss-light/70 font-semibold">
             <Link href="/forgot-password" className="hover:text-torii hover:underline transition-colors">
-              Forgot Password
+              {t("forgotPassword")}
             </Link>
             <span>•</span>
             <Link href="/resend-verification" className="hover:text-torii hover:underline transition-colors">
-              Resend Verification
+              {t("resendVerificationShort")}
             </Link>
           </div>
         </motion.div>

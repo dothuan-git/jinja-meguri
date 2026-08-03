@@ -21,6 +21,7 @@ interface FormRow {
   startDate: string;
   endDate: string;
   notes: string;
+  notesJa: string;
 }
 
 const JSON_PLACEHOLDER = `[
@@ -37,18 +38,18 @@ const inputBase =
   "w-full rounded-sm border border-dashed border-torii/30 bg-torii/[0.04] px-2 py-1.5 text-xs font-mono text-stone/80 outline-none placeholder:text-stone/30 focus:border-torii transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 function emptyRow(key: string): FormRow {
-  return { key, shrineSlug: "", festivalId: "", startDate: "", endDate: "", notes: "" };
+  return { key, shrineSlug: "", festivalId: "", startDate: "", endDate: "", notes: "", notesJa: "" };
 }
 
 function prefill(
   seed: FestivalOccurrenceRow[],
   festivalId: string,
   year: number,
-): { startDate: string; endDate: string; notes: string } {
+): { startDate: string; endDate: string; notes: string; notesJa: string } {
   const occ = seed.find((o) => o.festival_id === festivalId && o.year === year);
   return occ
-    ? { startDate: occ.start_date, endDate: occ.end_date ?? "", notes: occ.notes ?? "" }
-    : { startDate: "", endDate: "", notes: "" };
+    ? { startDate: occ.start_date, endDate: occ.end_date ?? "", notes: occ.notes ?? "", notesJa: occ.notes_ja ?? "" }
+    : { startDate: "", endDate: "", notes: "", notesJa: "" };
 }
 
 export default function OccurrenceModal({
@@ -113,7 +114,7 @@ export default function OccurrenceModal({
     );
   }
 
-  function setRowField(idx: number, field: "startDate" | "endDate" | "notes", val: string) {
+  function setRowField(idx: number, field: "startDate" | "endDate" | "notes" | "notesJa", val: string) {
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
   }
 
@@ -130,12 +131,12 @@ export default function OccurrenceModal({
     const targets: {
       shrine_slug: string;
       festival_name_en: string;
-      occurrences: { year: number; start_date: string; end_date: string | null; notes: string | null }[];
+      occurrences: { year: number; start_date: string; end_date: string | null; notes: string | null; notes_ja: string | null }[];
     }[] = [];
 
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      const isBlank = !r.shrineSlug && !r.festivalId && !r.startDate.trim() && !r.endDate.trim() && !r.notes.trim();
+      const isBlank = !r.shrineSlug && !r.festivalId && !r.startDate.trim() && !r.endDate.trim() && !r.notes.trim() && !r.notesJa.trim();
       if (isBlank) continue;
       if (!r.shrineSlug) return { error: `Row ${i + 1}: choose a shrine.` };
       if (!r.festivalId) return { error: `Row ${i + 1}: choose a festival.` };
@@ -149,7 +150,7 @@ export default function OccurrenceModal({
         shrine_slug: shrine.shrine_slug,
         festival_name_en: festival.name_en,
         occurrences: [
-          { year, start_date: r.startDate, end_date: r.endDate.trim() || null, notes: r.notes.trim() || null },
+          { year, start_date: r.startDate, end_date: r.endDate.trim() || null, notes: r.notes.trim() || null, notes_ja: r.notesJa.trim() || null },
         ],
       });
     }
@@ -327,7 +328,7 @@ export default function OccurrenceModal({
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pr-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pr-6">
                             <div className="space-y-1">
                               <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50 select-none">
                                 Start date
@@ -358,6 +359,17 @@ export default function OccurrenceModal({
                                 type="text"
                                 value={r.notes}
                                 onChange={(e) => setRowField(idx, "notes", e.target.value)}
+                                className={inputBase}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-moss/50 select-none">
+                                Notes (JA, optional)
+                              </label>
+                              <input
+                                type="text"
+                                value={r.notesJa}
+                                onChange={(e) => setRowField(idx, "notesJa", e.target.value)}
                                 className={inputBase}
                               />
                             </div>

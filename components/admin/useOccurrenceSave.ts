@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { saveOccurrencesAction } from "@/app/admin/actions";
 import { useToast } from "@/components/ui/Toast";
 
@@ -15,6 +16,7 @@ export function useOccurrenceSave(opts: { onSaved?: () => void }) {
   const { onSaved } = opts;
   const [saving, startTransition] = useTransition();
   const toast = useToast();
+  const t = useTranslations("Toasts");
 
   function save(data: unknown) {
     const formData = new FormData();
@@ -22,10 +24,10 @@ export function useOccurrenceSave(opts: { onSaved?: () => void }) {
     startTransition(async () => {
       const result = await saveOccurrencesAction(null, formData);
       if (result?.success) {
-        toast.success(`Saved ${result.count} occurrence${result.count === 1 ? "" : "s"}.`);
+        toast.success(t("occurrencesSaved", { count: result.count ?? 0 }));
         onSaved?.();
       } else if (result?.error) {
-        toast.error(`Couldn't save occurrences: ${result.error}`);
+        toast.error(t("occurrencesSaveFailed", { error: result.error }));
       }
     });
   }

@@ -2,15 +2,18 @@
 
 import { useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { getRankColor, RANK_DESCRIPTIONS } from "@/lib/facetColors";
+import { getRankColor } from "@/lib/facetColors";
+import { namePair } from "@/lib/names";
+import type { Locale } from "@/lib/i18n";
 
 const CHIP = "text-[8.5px] font-mono font-bold tracking-wider px-2 py-0.5 rounded-md border";
 
 interface Props {
-  rank: string;
+  rank: { name_en: string; name_ja: string | null; description: string | null };
+  locale: Locale;
 }
 
-export default function RankTag({ rank }: Props) {
+export default function RankTag({ rank, locale }: Props) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
   const show = useCallback((e: React.MouseEvent) => {
@@ -20,16 +23,17 @@ export default function RankTag({ rank }: Props) {
 
   const hide = useCallback(() => setPos(null), []);
 
-  const description = RANK_DESCRIPTIONS[rank];
+  const description = rank.description;
+  const label = namePair(locale, rank).main;
 
   return (
     <>
       <span
         onMouseEnter={show}
         onMouseLeave={hide}
-        className={`${CHIP} ${getRankColor(rank)} cursor-default`}
+        className={`${CHIP} ${getRankColor(rank.name_en)} cursor-default`}
       >
-        {rank}
+        {label}
       </span>
 
       {pos && description &&

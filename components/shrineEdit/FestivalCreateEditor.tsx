@@ -18,6 +18,9 @@ function toBlock(f: FestivalDraft, i: number): FestivalForBlock {
     id: String(i),
     name: f.name_en ?? "",
     name_ja: f.name_ja ?? "",
+    // Create-flow blocks are always in edit mode; the read-mode display pair
+    // just mirrors the raw EN/kanji draft values.
+    display: { main: f.name_en ?? "", sub: f.name_ja || null, mainIsJa: false, subIsJa: Boolean(f.name_ja) },
     time: f.time_prose ?? "",
     origin: f.origin ?? "",
     meaning: f.meaning ?? "",

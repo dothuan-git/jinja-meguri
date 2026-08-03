@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { loadStore } from "@/lib/db/store";
 import { getShrineDetail } from "@/lib/db/repo";
+import type { Locale } from "@/lib/i18n";
 import ShrineDetailView, { type ShrineMarkInfo } from "@/components/ShrineDetailView";
 import Modal from "@/components/Modal";
 import { getCurrentUser } from "@/lib/auth/server";
@@ -10,7 +12,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ShrineModal({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const detail = getShrineDetail(await loadStore(), slug);
+  const locale = (await getLocale()) as Locale;
+  const detail = getShrineDetail(await loadStore(), slug, locale);
   if (!detail) notFound();
 
   const user = await getCurrentUser();

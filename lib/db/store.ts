@@ -68,15 +68,15 @@ async function fetchStore(): Promise<Store> {
     pool.query("SELECT * FROM ranks"),
     pool.query("SELECT * FROM prayer_categories"),
     pool.query("SELECT * FROM deities"),
-    pool.query("SELECT id, slug, name_en, name_ja, prefecture_id, region_id, city, address, lat, lng, image_urls FROM shrines"),
+    pool.query("SELECT id, slug, name_en, name_ja, name_hiragana, prefecture_id, region_id, city, city_ja, address, address_ja, lat, lng, image_urls FROM shrines"),
     pool.query("SELECT * FROM shrine_deities"),
     pool.query("SELECT * FROM shrine_ranks"),
     pool.query("SELECT * FROM shrine_prayer_categories"),
     pool.query("SELECT * FROM shrine_details"),
     pool.query("SELECT * FROM shrine_highlights"),
-    pool.query("SELECT id, shrine_id, name_en, name_ja, time_prose, start_date::text, end_date::text, origin, meaning, ritual, prayer, festival_type, visitor_notes, sort_order FROM festivals ORDER BY sort_order"),
+    pool.query("SELECT id, shrine_id, name_en, name_ja, name_hiragana, time_prose, time_prose_ja, start_date::text, end_date::text, origin, origin_ja, meaning, meaning_ja, ritual, ritual_ja, prayer, prayer_ja, festival_type, visitor_notes, visitor_notes_ja, sort_order FROM festivals ORDER BY sort_order"),
     pool.query("SELECT * FROM sources"),
-    pool.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes FROM festival_occurrences"),
+    pool.query("SELECT id, festival_id, year, start_date::text, end_date::text, notes, notes_ja FROM festival_occurrences"),
   ]);
 
   raw["regions"] = regions.rows;

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/server";
 import AuthShell from "@/components/auth/AuthShell";
 import SignInForm from "@/components/auth/SignInForm";
@@ -8,8 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage() {
   const user = await getCurrentUser();
   if (user) redirect(`/users/${user.id}`);
+  const t = await getTranslations("Auth");
   return (
-    <AuthShell title="Welcome back" subtitle="Sign in to continue.">
+    <AuthShell title={t("signInTitle")} subtitle={t("signInSubtitle")}>
       <SignInForm />
     </AuthShell>
   );

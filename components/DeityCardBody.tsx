@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { MapPin, ArrowRight } from "lucide-react";
-import { DEITY_TYPE_LABEL } from "@/lib/labels";
+import { useTranslations } from "next-intl";
 import { getDeityTypeTextColor } from "@/lib/facetColors";
 import { DEITY_TYPES } from "@/lib/admin/deityContract";
 import { useDeityEdit } from "@/components/deityEdit/context";
+import type { NamePair } from "@/lib/names";
 
 export interface DeityCardShrine {
   id: string;
@@ -25,6 +26,7 @@ function ShrineItem({
   shrine: DeityCardShrine;
   onShrineClick?: (slug: string) => void;
 }) {
+  const t = useTranslations("Deities");
   const [loreExpanded, setLoreExpanded] = useState(false);
   const { name: shrineName, location, prefecture, region, slug, isPrimary, regionalLore } = shrine;
 
@@ -44,7 +46,7 @@ function ShrineItem({
 
   const fileLink = (size: number) => (
     <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0">
-      File <ArrowRight size={size} className="group-hover:translate-x-0.5 transition-transform" />
+      {t("file")} <ArrowRight size={size} className="group-hover:translate-x-0.5 transition-transform" />
     </span>
   );
 
@@ -62,10 +64,10 @@ function ShrineItem({
           <div className="flex-1 min-w-0">
             <h4 className="text-xs font-serif font-black text-stone leading-tight truncate">{shrineName}</h4>
             <span className="text-[9px] font-sans text-stone/40 truncate block">
-              {location} · {prefecture} ({region})
+              {t("locationLineMobile", { location, prefecture, region })}
             </span>
           </div>
-          <span className={badgeMobile}>{isPrimary ? "Primary" : "Companion"}</span>
+          <span className={badgeMobile}>{isPrimary ? t("primary") : t("companion")}</span>
         </div>
 
         {regionalLore ? (
@@ -78,7 +80,7 @@ function ShrineItem({
                 onClick={(e) => { e.stopPropagation(); setLoreExpanded((v) => !v); }}
                 className="text-[9px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
               >
-                {loreExpanded ? "Show less ↑" : "Read more ↓"}
+                {loreExpanded ? t("showLess") : t("readMore")}
               </button>
               {fileLink(9)}
             </div>
@@ -100,7 +102,7 @@ function ShrineItem({
             <div className="space-y-0.5">
               <h4 className="text-xs font-serif font-black text-stone leading-tight">{shrineName}</h4>
               <span className="text-[9px] font-sans text-stone/40 block mt-0.5">
-                {location} • {prefecture} Prefecture ({region} Region)
+                {t("locationLine", { location, prefecture, region })}
               </span>
             </div>
           </div>
@@ -108,10 +110,10 @@ function ShrineItem({
             <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-sm shrink-0 scale-95 font-bold ${
               isPrimary ? "text-torii bg-torii/5" : "text-stone/40 bg-stone/5"
             }`}>
-              {isPrimary ? "Primary Enshrined" : "Companion Spirit"}
+              {isPrimary ? t("primaryEnshrined") : t("companionSpirit")}
             </span>
             <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-stone/40 group-hover:text-torii transition-colors flex items-center gap-0.5 shrink-0 pl-1.5 border-l border-stone/10">
-              File <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+              {t("file")} <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
         </div>
@@ -130,6 +132,9 @@ function ShrineItem({
 export interface DeityCardData {
   name: string;
   japaneseName: string;
+  // Locale-ordered display pair (kanji-main/hiragana-sub under the JA locale);
+  // `name`/`japaneseName` stay semantic for the hanko stamp and edit inputs.
+  display: NamePair;
   deityType: string;
   titles: string[];
   canonicalLore: string;
@@ -159,17 +164,24 @@ export default function DeityCardBody({
   deity: DeityCardData;
   onShrineClick?: (slug: string) => void;
 }) {
+  const t = useTranslations("Deities");
+  const tEnums = useTranslations("Enums");
   const edit = useDeityEdit();
   const editing = edit?.editing ?? false;
   const [loreExpanded, setLoreExpanded] = useState(false);
 
   // Display values: from the draft while editing, from the prop on the read path.
+  // Names stay unaffected by the EN/JA edit-language toggle (they're already
+  // explicit name_en/name_ja fields); titles/lore/sphere rebind to their `_ja`
+  // sibling when editLang is "ja".
+  const editLang = edit?.editLang ?? "en";
+  const bilingual = editLang === "ja";
   const name = editing ? edit!.draft.name_en : deity.name;
   const japaneseName = editing ? edit!.draft.name_ja : deity.japaneseName;
   const deityType = editing ? edit!.draft.deity_type : deity.deityType;
-  const titles = editing ? edit!.draft.titles ?? [] : deity.titles;
-  const canonicalLore = editing ? edit!.draft.canonical_lore ?? "" : deity.canonicalLore;
-  const mythicSphere = editing ? edit!.draft.mythic_sphere ?? "" : deity.mythicSphere ?? "";
+  const titles = editing ? (bilingual ? edit!.draft.titles_ja : edit!.draft.titles) ?? [] : deity.titles;
+  const canonicalLore = editing ? (bilingual ? edit!.draft.canonical_lore_ja : edit!.draft.canonical_lore) ?? "" : deity.canonicalLore;
+  const mythicSphere = editing ? (bilingual ? edit!.draft.mythic_sphere_ja : edit!.draft.mythic_sphere) ?? "" : deity.mythicSphere ?? "";
 
   return (
     <div className="relative z-10">
@@ -179,7 +191,7 @@ export default function DeityCardBody({
           {/* Top Row: Meta Indicator and Stamp Seal */}
           <div className="flex items-start justify-between">
             <span className="text-[9px] font-mono tracking-[0.15em] text-[#5e7f5a] font-bold bg-[#f3f6f1] border border-bamboo/15 px-2.5 py-1 rounded-sm select-none scale-95 origin-left uppercase">
-              Kami Chronicle Archive
+              {t("kamiChronicle")}
             </span>
 
             {/* Traditional Vermillion Square Hanko Stamp */}
@@ -198,44 +210,57 @@ export default function DeityCardBody({
               <input
                 value={name}
                 onChange={(e) => edit!.update({ name_en: e.target.value })}
-                placeholder="Amaterasu-Ōmikami"
-                aria-label="Deity name (romaji)"
+                placeholder={t("edit.namePh")}
+                aria-label={t("edit.nameAria")}
                 className={`${inputBase} text-3xl md:text-4xl font-display font-black text-stone tracking-tight leading-tight w-full`}
               />
             ) : (
               <h3 className="text-3xl md:text-4xl font-display font-black text-stone tracking-tight leading-tight select-all">
-                {name}
+                {deity.display.main}
               </h3>
             )}
             <div className="flex items-center gap-2">
               {editing ? (
-                <input
-                  value={japaneseName}
-                  onChange={(e) => edit!.update({ name_ja: e.target.value })}
-                  placeholder="例: 天照大神"
-                  aria-label="Deity name (kanji)"
-                  className={`${inputBase} text-sm font-display text-moss font-medium`}
-                  style={{ fontFamily: "'Noto Serif JP', serif" }}
-                />
+                <>
+                  <input
+                    value={japaneseName}
+                    onChange={(e) => edit!.update({ name_ja: e.target.value })}
+                    placeholder={t("edit.nameJaPh")}
+                    aria-label={t("edit.nameJaAria")}
+                    className={`${inputBase} text-sm font-display text-moss font-medium`}
+                    style={{ fontFamily: "'Noto Serif JP', serif" }}
+                  />
+                  <input
+                    value={edit!.draft.name_hiragana ?? ""}
+                    onChange={(e) => edit!.update({ name_hiragana: e.target.value || null })}
+                    placeholder={t("edit.nameHiraganaPh")}
+                    aria-label={t("edit.nameHiraganaAria")}
+                    className={`${inputBase} text-sm font-sans text-stone/70`}
+                  />
+                </>
               ) : (
-                <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                  {japaneseName}
-                </span>
+                deity.display.sub && (
+                  <span className="text-sm font-display text-moss font-medium pr-2 border-r border-stone/10 select-all" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    {deity.display.sub}
+                  </span>
+                )
               )}
               {editing ? (
                 <select
                   value={deityType}
                   onChange={(e) => edit!.update({ deity_type: e.target.value as (typeof DEITY_TYPES)[number] })}
-                  aria-label="Deity type"
+                  aria-label={t("edit.typeAria")}
                   className={selectBase}
                 >
-                  {DEITY_TYPES.map((t) => (
-                    <option key={t} value={t}>{DEITY_TYPE_LABEL[t] ?? t}</option>
+                  {DEITY_TYPES.map((dt) => (
+                    <option key={dt} value={dt}>{tEnums(`deityType.${dt}`)}</option>
                   ))}
                 </select>
               ) : (
                 <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(deityType)}`}>
-                  {DEITY_TYPE_LABEL[deityType] ?? deityType}
+                  {(DEITY_TYPES as readonly string[]).includes(deityType)
+                    ? tEnums(`deityType.${deityType as (typeof DEITY_TYPES)[number]}`)
+                    : deityType}
                 </span>
               )}
             </div>
@@ -246,15 +271,18 @@ export default function DeityCardBody({
         <div className="flex flex-col lg:flex-row lg:items-start gap-6 pt-6 border-t border-moss/10">
           <div className="flex-1 space-y-2 select-text">
             <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-              Divine Powers & Epithets
+              {t("divinePowers")}
             </span>
             {editing ? (
               <textarea
                 value={titles.join("\n")}
-                onChange={(e) => edit!.update({ titles: e.target.value.trim() === "" ? [] : e.target.value.split("\n") })}
+                onChange={(e) => {
+                  const next = e.target.value.trim() === "" ? [] : e.target.value.split("\n");
+                  edit!.update(bilingual ? { titles_ja: next } : { titles: next });
+                }}
                 rows={3}
-                placeholder={"God of Rice and Agriculture\nGuardian of Sailors"}
-                aria-label="Deity titles (one per line)"
+                placeholder={t("edit.titlesPh")}
+                aria-label={t("edit.titlesAria")}
                 className={`${areaBase} text-xs font-sans`}
               />
             ) : (
@@ -274,17 +302,17 @@ export default function DeityCardBody({
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-3 shrink-0 select-none">
             <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
-              <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Enshrined Sites</span>
-              <span className="text-xs font-serif font-bold text-torii leading-none mt-1 block">{deity.shrines.length} Sanctuaries</span>
+              <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">{t("enshrinedSites")}</span>
+              <span className="text-xs font-serif font-bold text-torii leading-none mt-1 block">{t("sanctuaries", { count: deity.shrines.length })}</span>
             </div>
             <div className="p-3 bg-white/50 border border-stone/5 rounded-xl shadow-4xs text-center sm:text-left">
-              <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">Mythic Sphere</span>
+              <span className="text-[8px] font-bold tracking-widest text-stone/45 uppercase block">{t("mythicSphere")}</span>
               {editing ? (
                 <input
                   value={mythicSphere}
-                  onChange={(e) => edit!.update({ mythic_sphere: e.target.value || null })}
-                  placeholder="e.g. Agriculture & Commerce"
-                  aria-label="Mythic sphere"
+                  onChange={(e) => edit!.update(bilingual ? { mythic_sphere_ja: e.target.value || null } : { mythic_sphere: e.target.value || null })}
+                  placeholder={t("edit.spherePh")}
+                  aria-label={t("edit.sphereAria")}
                   className={`${inputBase} text-xs font-serif font-bold text-moss-light w-full mt-1`}
                 />
               ) : (
@@ -300,15 +328,15 @@ export default function DeityCardBody({
       {/* ZONE 2 — Canonical Chronicle */}
       <div className="space-y-3 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <span className="text-[9px] font-bold tracking-widest text-moss/55 uppercase block select-none">
-          Canonical Chronicle
+          {t("canonicalChronicle")}
         </span>
         {editing ? (
           <textarea
             value={canonicalLore}
-            onChange={(e) => edit!.update({ canonical_lore: e.target.value || null })}
+            onChange={(e) => edit!.update(bilingual ? { canonical_lore_ja: e.target.value || null } : { canonical_lore: e.target.value || null })}
             rows={8}
-            placeholder="The deity's canonical mythological narrative (Kojiki / Nihon Shoki)…"
-            aria-label="Canonical lore"
+            placeholder={t("edit.lorePh")}
+            aria-label={t("edit.loreAria")}
             className={`${areaBase} text-xs md:text-sm font-sans text-stone/80 leading-relaxed`}
           />
         ) : (
@@ -320,7 +348,7 @@ export default function DeityCardBody({
               onClick={() => setLoreExpanded((v) => !v)}
               className="md:hidden mt-2 text-[10px] font-mono font-bold tracking-widest uppercase text-torii hover:text-torii/70 transition-colors"
             >
-              {loreExpanded ? "Show less ↑" : "Read more ↓"}
+              {loreExpanded ? t("showLess") : t("readMore")}
             </button>
           </>
         )}
@@ -330,11 +358,11 @@ export default function DeityCardBody({
       <div className="space-y-4 pt-4 md:pt-8 mt-4 md:mt-8 border-t border-moss/10">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[9px] font-bold tracking-widest text-[#782c1a] uppercase block select-none">
-            Enshrined Sites & Regional Lore
+            {t("enshrinedSitesLore")}
           </span>
           {deity.shrines.length > 0 && (
             <span className="text-[10px] font-mono text-stone/35 select-none block">
-              Scroll for more →
+              {t("scrollMore")}
             </span>
           )}
         </div>
@@ -342,7 +370,7 @@ export default function DeityCardBody({
         {deity.shrines.length === 0 ? (
           <div className="p-6 rounded-xl border border-dashed border-stone/15 bg-stone/[0.015] text-center flex flex-col items-center gap-2">
             <MapPin size={16} className="text-stone/25" />
-            <p className="text-xs font-serif text-stone/45 italic">No shrine linked yet</p>
+            <p className="text-xs font-serif text-stone/45 italic">{t("noShrineLinked")}</p>
           </div>
         ) : (
           <div

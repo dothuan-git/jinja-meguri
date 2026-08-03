@@ -66,6 +66,7 @@ export default function HighlightsEditor({
           <div className="flex-1 space-y-1.5">
             <EditableText
               path={`highlights.${i}.title`}
+              bilingual
               ariaLabel={`Highlight ${i + 1} title`}
               placeholder="Title — English first (kanji), e.g. Couple Camphor (夫婦楠)"
               editClassName="w-full text-sm font-sans font-bold text-stone"
@@ -74,6 +75,7 @@ export default function HighlightsEditor({
             </EditableText>
             <EditableProse
               path={`highlights.${i}.body`}
+              bilingual
               rows={2}
               ariaLabel={`Highlight ${i + 1} body`}
               placeholder="Short gloss (optional — leave blank if the description already covers it)…"

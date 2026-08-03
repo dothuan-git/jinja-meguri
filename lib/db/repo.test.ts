@@ -18,8 +18,8 @@ describe("getShrineCards", () => {
   });
   it("resolves region and prefecture names", () => {
     const a = cards.find((c) => c.slug === "a")!;
-    expect(a.region).toBe("Kanto");
-    expect(a.prefecture).toBe("Saitama");
+    expect(a.region.name_en).toBe("Kanto");
+    expect(a.prefecture.name_en).toBe("Saitama");
   });
   it("carries facet membership for client filtering", () => {
     const a = cards.find((c) => c.slug === "a")!;
@@ -35,11 +35,11 @@ describe("getShrineCards", () => {
   });
   it("builds festivals_brief with a time_prose 'when' for the map popup", () => {
     expect(cards.find((c) => c.slug === "a")!.festivals_brief).toEqual([
-      { name_en: "Grand Festival", name_ja: "大祭", when: "early August" },
+      { name_en: "Grand Festival", name_ja: "大祭", name_hiragana: null, when: "early August" },
     ]);
     // Undated lunar festival still lists, using its time_prose.
     expect(cards.find((c) => c.slug === "b")!.festivals_brief).toEqual([
-      { name_en: "Lunar Rite", name_ja: "旧暦祭", when: "2nd Sunday of the 6th lunar month" },
+      { name_en: "Lunar Rite", name_ja: "旧暦祭", name_hiragana: null, when: "2nd Sunday of the 6th lunar month" },
     ]);
   });
 });
@@ -95,6 +95,47 @@ describe("getShrineDetail", () => {
   });
 });
 
+describe("locale handling", () => {
+  it("falls back to English when locale is ja but _ja columns are null", () => {
+    const a = getShrineDetail(store, "a", "ja")!;
+    // Fixture has no history_ja/description_ja set — must fall back to EN prose.
+    expect(a.details?.history).toBe("hist-a");
+    expect(a.details?.description).toBe("desc-a");
+    expect(a.city).toBe("Saitama");
+  });
+
+  it("uses the _ja column when present and locale is ja", () => {
+    const storeJa = {
+      ...store,
+      shrine_details: store.shrine_details.map((d) =>
+        d.shrine_id === "shrine-a" ? { ...d, history_ja: "歴史あ" } : d,
+      ),
+    };
+    const a = getShrineDetail(storeJa, "a", "ja")!;
+    expect(a.details?.history).toBe("歴史あ");
+    // English locale is unaffected by the _ja value.
+    const aEn = getShrineDetail(storeJa, "a", "en")!;
+    expect(aEn.details?.history).toBe("hist-a");
+  });
+
+  it("falls back to the whole titles array when titles_ja is empty (never element-wise)", () => {
+    const storeJa = {
+      ...store,
+      deities: store.deities.map((d) => (d.id === "deity-1" ? { ...d, titles_ja: [] } : d)),
+    };
+    const cards = getShrineCards(storeJa, "ja");
+    const a = cards.find((c) => c.slug === "a")!;
+    // Primary deity titles come from alter_titles (unaffected here), but the
+    // deity's own titles (used elsewhere) still fall back to the EN array.
+    expect(a.primary_deity_titles).toEqual(["Shrine-Local Title"]);
+  });
+
+  it("defaults to English when no locale argument is passed", () => {
+    const cards = getShrineCards(store);
+    expect(cards.find((c) => c.slug === "a")!.city).toBe("Saitama");
+  });
+});
+
 describe("getFestivalYear", () => {
   it("returns festivals with prose and a resolved month", () => {
     const list = getFestivalYear(store, 2026);
@@ -110,7 +151,7 @@ describe("getFestivalYear", () => {
 
   // festival-1 has a default 2026-07-30..2026-08-02; festival-2 has no default date.
   const occ = (festival_id: string, year: number, start: string, end: string | null) => ({
-    id: `occ-${festival_id}-${year}`, festival_id, year, start_date: start, end_date: end, notes: null,
+    id: `occ-${festival_id}-${year}`, festival_id, year, start_date: start, end_date: end, notes: null, notes_ja: null,
   });
   const storeWith = (occurrences: ReturnType<typeof occ>[]) => ({ ...store, festival_occurrences: occurrences });
 

@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getLocale } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/server";
 import { loadStore } from "@/lib/db/store";
 import { loadUserMarks, getUserCollections, getUserProfile } from "@/lib/db/userRepo";
 import { getShrineCards } from "@/lib/db/repo";
+import type { Locale } from "@/lib/i18n";
 import UserProfileClient from "@/components/user/UserProfileClient";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +26,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // Owner-only: never reveal another account's profile (or its existence).
   if (!user || user.id !== id) notFound();
 
-  const [store, marks, profile] = await Promise.all([
+  const [store, marks, profile, locale] = await Promise.all([
     loadStore(),
     loadUserMarks(user.id),
     getUserProfile(user.id),
+    getLocale(),
   ]);
-  const { stamped, saved } = getUserCollections(store, marks);
-  const totalShrines = getShrineCards(store).length;
+  const { stamped, saved } = getUserCollections(store, marks, locale as Locale);
+  const totalShrines = getShrineCards(store, locale as Locale).length;
   // "Visit every region / prefecture" milestones target the full catalog — the classic
   // goal of all 8 regions and all 47 prefectures of Japan.
   const totalRegions = store.regions.length;

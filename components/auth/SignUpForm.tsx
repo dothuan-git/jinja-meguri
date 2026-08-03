@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import SocialAuthButtons from "./SocialAuthButtons";
 import OmikujiAlert from "./OmikujiAlert";
@@ -33,6 +34,7 @@ const itemVariants: Variants = {
 
 
 export default function SignUpForm() {
+  const t = useTranslations("Auth");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,14 +55,14 @@ export default function SignUpForm() {
         callbackURL: "/shrines", // where the email-verification link lands after confirming
       });
       if (error) {
-        setError(error.message ?? "Could not create your account.");
+        setError(error.message ?? t("errSignUp"));
         return;
       }
       // Email verification is required: don't sign in / redirect — confirm and
       // send the user to verify their inbox before they can sign in.
       setDone(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
     } finally {
       setPending(false);
     }
@@ -75,25 +77,27 @@ export default function SignUpForm() {
       >
         <OmikujiAlert
           type="success"
-          message={`A verification link has been sent to ${email}. Please check your inbox to activate your account.`}
+          message={t("verificationSent", { email })}
         />
-        
+
         <div className="pt-2 text-xs tracking-wide text-moss-light/80 leading-relaxed">
-          Didn&apos;t receive the email? Check your spam folder or{" "}
-          <Link
-            href={`/resend-verification?email=${encodeURIComponent(email)}`}
-            className="font-bold text-torii hover:underline"
-          >
-            resend the verification link
-          </Link>
-          .
+          {t.rich("didntReceive", {
+            link: (chunks) => (
+              <Link
+                href={`/resend-verification?email=${encodeURIComponent(email)}`}
+                className="font-bold text-torii hover:underline"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </div>
 
         <Link
           href="/sign-in"
           className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
         >
-          Go to sign in
+          {t("goToSignIn")}
         </Link>
       </motion.div>
     );
@@ -122,7 +126,7 @@ export default function SignUpForm() {
         )}
 
         <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="name" className={LABEL}>Name</label>
+          <label htmlFor="name" className={LABEL}>{t("name")}</label>
           <input
             id="name"
             type="text"
@@ -131,12 +135,12 @@ export default function SignUpForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className={INPUT}
-            placeholder="Your name"
+            placeholder={t("namePh")}
           />
         </motion.div>
 
         <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="email" className={LABEL}>Email</label>
+          <label htmlFor="email" className={LABEL}>{t("email")}</label>
           <input
             id="email"
             type="email"
@@ -145,12 +149,12 @@ export default function SignUpForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={INPUT}
-            placeholder="you@example.com"
+            placeholder={t("emailPh")}
           />
         </motion.div>
 
         <motion.div variants={itemVariants} className="space-y-1.5">
-          <label htmlFor="password" className={LABEL}>Password</label>
+          <label htmlFor="password" className={LABEL}>{t("password")}</label>
           <div className="relative">
             <input
               id="password"
@@ -161,7 +165,7 @@ export default function SignUpForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={`${INPUT} pr-11`}
-              placeholder="At least 8 characters"
+              placeholder={t("min8Ph")}
             />
             <button
               type="button"
@@ -181,16 +185,16 @@ export default function SignUpForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Creating account…" : "Sign up"}
+          {pending ? t("creatingAccount") : t("signUp")}
         </motion.button>
 
         <motion.p
           variants={itemVariants}
           className="text-center text-xs tracking-widest uppercase text-moss-light"
         >
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link href="/sign-in" className="font-bold text-torii hover:underline">
-            Sign in
+            {t("signIn")}
           </Link>
         </motion.p>
       </motion.form>

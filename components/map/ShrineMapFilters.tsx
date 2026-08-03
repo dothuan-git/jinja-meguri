@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import {
   Award,
   CalendarRange,
@@ -22,7 +23,8 @@ import {
   type ShrineFilters,
 } from "@/lib/shrineFilters";
 
-export type FacetDropdown = { id: ShrineFacetId; label: string; options: string[] };
+export type FacetOption = { value: string; label: string };
+export type FacetDropdown = { id: ShrineFacetId; label: string; options: FacetOption[] };
 
 // Per-facet icon so the facet tabs scan at a glance.
 const FACET_ICON: Partial<Record<ShrineFacetId, LucideIcon>> = {
@@ -55,6 +57,8 @@ export default function ShrineMapFilters({
   onClearAll: () => void;
   hasActiveFilters: boolean;
 }) {
+  const t = useTranslations("MapFilters");
+  const tCommon = useTranslations("Common");
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -79,11 +83,11 @@ export default function ShrineMapFilters({
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-moss/10 shrink-0">
               <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest text-torii select-none">
                 <SlidersHorizontal size={12} />
-                Filter shrines
+                {t("filterShrines")}
               </span>
               <button
                 type="button"
-                aria-label="Close"
+                aria-label={tCommon("close")}
                 onClick={onClose}
                 className="rounded-full p-0.5 text-stone/40 hover:text-stone transition-colors cursor-pointer"
               >
@@ -101,7 +105,7 @@ export default function ShrineMapFilters({
               />
 
               <p className="text-[9px] font-mono font-black uppercase tracking-widest text-moss-light/60 pt-1 select-none">
-                Refine by
+                {t("refineBy")}
               </p>
 
               <FacetTabs dropdowns={dropdowns} filters={filters} onToggleFacet={onToggleFacet} />
@@ -115,7 +119,7 @@ export default function ShrineMapFilters({
                   onClick={onClearAll}
                   className="text-[10px] uppercase font-mono tracking-widest text-[#9d4432] hover:text-torii font-black transition-colors cursor-pointer"
                 >
-                  Clear all
+                  {t("clearAll")}
                 </button>
               ) : (
                 <span />
@@ -125,7 +129,7 @@ export default function ShrineMapFilters({
                 onClick={onClose}
                 className="rounded-full bg-moss text-white px-4 py-1.5 text-[10px] font-mono font-bold uppercase tracking-widest cursor-pointer hover:bg-moss-light transition-colors"
               >
-                Done
+                {t("done")}
               </button>
             </div>
           </motion.div>
@@ -149,6 +153,7 @@ function FacetTabs({
   filters: ShrineFilters;
   onToggleFacet: (facet: ShrineFacetId, value: string) => void;
 }) {
+  const t = useTranslations("MapFilters");
   const [activeId, setActiveId] = useState<ShrineFacetId | null>(dropdowns[0]?.id ?? null);
   const [optionQuery, setOptionQuery] = useState("");
 
@@ -156,7 +161,7 @@ function FacetTabs({
   if (!active) return null;
 
   const query = optionQuery.trim().toLowerCase();
-  const options = query ? active.options.filter((o) => o.toLowerCase().includes(query)) : active.options;
+  const options = query ? active.options.filter((o) => o.label.toLowerCase().includes(query)) : active.options;
 
   function selectTab(id: ShrineFacetId) {
     setActiveId(id);
@@ -207,7 +212,7 @@ function FacetTabs({
               <Search className="absolute left-2.5 text-stone/40" size={12} />
               <input
                 type="text"
-                placeholder={`Search ${active.label.toLowerCase()}…`}
+                placeholder={t("searchFacet", { label: active.label.toLowerCase() })}
                 value={optionQuery}
                 onChange={(e) => setOptionQuery(e.target.value)}
                 className="w-full text-[11px] font-sans pl-7 pr-7 py-2 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
@@ -216,7 +221,7 @@ function FacetTabs({
                 <button
                   type="button"
                   onClick={() => setOptionQuery("")}
-                  aria-label="Clear"
+                  aria-label={t("clear")}
                   className="absolute right-2 text-stone/40 hover:text-torii p-1 rounded-full transition-colors cursor-pointer"
                 >
                   <X size={11} />
@@ -226,19 +231,19 @@ function FacetTabs({
           </div>
           <div className="px-3 pb-3 max-h-48 overflow-y-auto space-y-0.5">
             {options.length === 0 ? (
-              <p className="px-1 py-2 text-[11px] font-sans italic text-stone/40">No matches</p>
+              <p className="px-1 py-2 text-[11px] font-sans italic text-stone/40">{t("noMatches")}</p>
             ) : (
               options.map((option) => {
-                const checked = filters[active.id].includes(option);
+                const checked = filters[active.id].includes(option.value);
                 return (
                   <label
-                    key={option}
+                    key={option.value}
                     className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none"
                   >
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => onToggleFacet(active.id, option)}
+                      onChange={() => onToggleFacet(active.id, option.value)}
                       className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
                     />
                     <span
@@ -246,7 +251,7 @@ function FacetTabs({
                         checked ? "text-torii font-bold" : "text-stone/72"
                       }`}
                     >
-                      {option}
+                      {option.label}
                     </span>
                   </label>
                 );
@@ -293,6 +298,7 @@ function AutoHeight({ children, className }: { children: ReactNode; className?: 
 // marker-click popup. Rendered as a switch row nested inside FestivalsCard,
 // below the season range control.
 function ShowFestivalsRow({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  const t = useTranslations("MapFilters");
   return (
     <button
       type="button"
@@ -303,7 +309,7 @@ function ShowFestivalsRow({ checked, onToggle }: { checked: boolean; onToggle: (
         checked ? "bg-torii/5 text-torii font-bold" : "bg-washi/40 text-stone/75 hover:bg-washi/70"
       }`}
     >
-      <span className="font-sans">Show festivals in shrine popup</span>
+      <span className="font-sans">{t("showFestivalsPopup")}</span>
       <span
         className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${
           checked ? "bg-torii" : "bg-moss/25"
@@ -319,18 +325,13 @@ function ShowFestivalsRow({ checked, onToggle }: { checked: boolean; onToggle: (
   );
 }
 
-const MONTH_INITIALS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-const SEASON_PRESETS: { label: string; range: MonthRange }[] = [
-  { label: "Spring", range: { from: 3, to: 5 } },
-  { label: "Summer", range: { from: 6, to: 8 } },
-  { label: "Autumn", range: { from: 9, to: 11 } },
-  { label: "Winter", range: { from: 12, to: 2 } },
+// Month initials/names come from the MapFilters messages (per locale); the
+// season presets carry message keys resolved at render time.
+const SEASON_PRESETS: { key: "spring" | "summer" | "autumn" | "winter"; range: MonthRange }[] = [
+  { key: "spring", range: { from: 3, to: 5 } },
+  { key: "summer", range: { from: 6, to: 8 } },
+  { key: "autumn", range: { from: 9, to: 11 } },
+  { key: "winter", range: { from: 12, to: 2 } },
 ];
 
 function rangesEqual(a: MonthRange | null, b: MonthRange | null): boolean {
@@ -354,6 +355,10 @@ function FestivalsCard({
   showFestivals: boolean;
   onToggleShowFestivals: () => void;
 }) {
+  const t = useTranslations("MapFilters");
+  const monthInitial = (m: number) => t(`monthInitial.${m}` as Parameters<typeof t>[0]);
+  const monthShort = (m: number) => t(`monthShort.${m}` as Parameters<typeof t>[0]);
+  const monthName = (m: number) => t(`monthName.${m}` as Parameters<typeof t>[0]);
   const [anchor, setAnchor] = useState<number | null>(null);
 
   // Drop a pending start month if the range is cleared elsewhere (e.g. the
@@ -378,7 +383,7 @@ function FestivalsCard({
   }
 
   const seasonLabel =
-    value && value.from === value.to ? MONTH_NAMES[value.from - 1] : value ? `${MONTH_SHORT[value.from - 1]} – ${MONTH_SHORT[value.to - 1]}` : null;
+    value && value.from === value.to ? monthName(value.from) : value ? `${monthShort(value.from)} – ${monthShort(value.to)}` : null;
 
   return (
     <div className="border border-moss/15 rounded-xl overflow-hidden">
@@ -389,7 +394,7 @@ function FestivalsCard({
       >
         <span className="flex items-center gap-1.5 font-sans">
           <PartyPopper size={13} className={value ? "text-torii" : "text-moss-light"} />
-          Festivals
+          {t("festivals")}
         </span>
         {value && (
           <button
@@ -397,7 +402,7 @@ function FestivalsCard({
             onClick={() => applyPreset(null)}
             className="text-[9px] font-mono uppercase tracking-widest text-[#9d4432] hover:text-torii font-black cursor-pointer"
           >
-            Clear
+            {t("clear")}
           </button>
         )}
       </div>
@@ -406,12 +411,15 @@ function FestivalsCard({
         {/* Season sub-label */}
         <p className="flex items-center gap-1.5 text-[9px] font-mono font-black uppercase tracking-widest text-moss-light/60">
           <CalendarRange size={11} className="text-moss-light/70" />
-          Season
+          {t("season")}
         </p>
 
         {/* Season presets */}
         <div className="flex flex-wrap gap-1.5">
-          {[{ label: "Any", range: null as MonthRange | null }, ...SEASON_PRESETS].map(({ label, range }) => {
+          {[
+            { label: t("any"), range: null as MonthRange | null },
+            ...SEASON_PRESETS.map(({ key, range }) => ({ label: t(`seasons.${key}`), range: range as MonthRange | null })),
+          ].map(({ label, range }) => {
             const active = rangesEqual(value, range);
             return (
               <button
@@ -432,7 +440,7 @@ function FestivalsCard({
 
         {/* Month bar */}
         <div className="flex gap-0.5">
-          {MONTH_INITIALS.map((initial, i) => {
+          {Array.from({ length: 12 }, (_, i) => {
             const m = i + 1;
             const selected = value ? monthInRange(m, value) : false;
             const endpoint = value ? m === value.from || m === value.to : false;
@@ -441,8 +449,8 @@ function FestivalsCard({
                 key={i}
                 type="button"
                 onClick={() => pickMonth(m)}
-                title={MONTH_NAMES[i]}
-                aria-label={MONTH_NAMES[i]}
+                title={monthName(m)}
+                aria-label={monthName(m)}
                 className={`flex-1 min-w-0 py-1.5 rounded-md text-[10px] font-mono font-bold transition-colors cursor-pointer ${
                   endpoint
                     ? "bg-torii text-white"
@@ -451,7 +459,7 @@ function FestivalsCard({
                       : "text-stone/55 hover:bg-bamboo-light"
                 }`}
               >
-                {initial}
+                {monthInitial(m)}
               </button>
             );
           })}
@@ -460,13 +468,14 @@ function FestivalsCard({
         {/* Caption / hint */}
         <p className="text-[10px] font-sans text-stone/60 leading-snug">
           {anchor !== null ? (
-            <span className="text-torii font-semibold">Now pick the end month…</span>
+            <span className="text-torii font-semibold">{t("pickEnd")}</span>
           ) : seasonLabel ? (
-            <>
-              Shrines with a festival in <span className="text-torii font-semibold">{seasonLabel}</span>.
-            </>
+            t.rich("withSeason", {
+              season: seasonLabel,
+              s: (chunks) => <span className="text-torii font-semibold">{chunks}</span>,
+            })
           ) : (
-            <>Tap a start month, then an end — or pick a season above.</>
+            <>{t("tapHint")}</>
           )}
         </p>
       </div>

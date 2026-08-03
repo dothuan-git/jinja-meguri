@@ -28,30 +28,36 @@ CREATE TABLE ranks (
     id          smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name_en     text NOT NULL UNIQUE,    -- romaji name: 'Ichinomiya', 'Sonsha'...
     description text,                    -- English translation label
+    description_ja text,                 -- Japanese translation label (i18n; null => fall back to description)
     name_ja     text,
     rank_order  smallint NOT NULL        -- 1 = highest
 );
 
 -- Prayer categories ("strong for"). Powers the listing facet filter.
 CREATE TABLE prayer_categories (
-    id          smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name_en     text NOT NULL UNIQUE,
-    name_ja     text,
-    group_label text NOT NULL
+    id             smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name_en        text NOT NULL UNIQUE,
+    name_ja        text,
+    group_label    text NOT NULL,    -- also the facet grouping KEY (grouped on the EN value)
+    group_label_ja text              -- display-only JA label (i18n; null => fall back to group_label)
 );
 
 -- ------------------------------------------------------------
 -- DEITIES (canonical — one row per kami)
 -- ------------------------------------------------------------
 CREATE TABLE deities (
-    id             uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
-    name_en        text NOT NULL,                -- romaji / English name
-    name_ja        text UNIQUE,                  -- kanji; dedup key on ingest
-    titles         text[],                       -- domain/role epithets (sphere of patronage)
-    deity_type     text NOT NULL
+    id                uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    name_en           text NOT NULL,             -- romaji / English name
+    name_ja           text UNIQUE,               -- kanji; dedup key on ingest
+    name_hiragana       text,                      -- hiragana reading (JA-mode subname; null => fall back to name_en)
+    titles            text[],                    -- domain/role epithets (sphere of patronage)
+    titles_ja         text[],                    -- JA epithets (i18n; null => fall back to whole titles array)
+    deity_type        text NOT NULL
         CHECK (deity_type IN ('mythological','deified_human','syncretic')),
-    canonical_lore text,                         -- Kojiki/Nihon Shoki fallback narrative
-    mythic_sphere  text                          -- free-text domain label, e.g. "Agriculture & Commerce"
+    canonical_lore    text,                      -- Kojiki/Nihon Shoki fallback narrative
+    canonical_lore_ja text,                      -- JA canonical lore (i18n; null => fall back to canonical_lore)
+    mythic_sphere     text,                      -- free-text domain label, e.g. "Agriculture & Commerce"
+    mythic_sphere_ja  text                       -- JA domain label (i18n; null => fall back to mythic_sphere)
 );
 
 -- ------------------------------------------------------------
@@ -62,10 +68,13 @@ CREATE TABLE shrines (
     slug          text NOT NULL UNIQUE,          -- URL key for detail-page routing
     name_en       text NOT NULL,
     name_ja       text,
+    name_hiragana   text,                          -- hiragana reading (JA-mode subname; null => fall back to name_en)
     prefecture_id smallint NOT NULL REFERENCES prefectures(id),
     region_id     smallint NOT NULL REFERENCES regions(id),  -- denormalized for cheap region filter
     city          text,
+    city_ja       text,                          -- JA city name (i18n; null => fall back to city)
     address       text,
+    address_ja    text,                          -- JA address (i18n; null => fall back to address)
     lat           double precision,              -- WGS-84 latitude
     lng           double precision,              -- WGS-84 longitude
     image_urls    text[],                        -- array of external image URLs
@@ -82,12 +91,14 @@ CREATE INDEX idx_shrines_region     ON shrines(region_id);
 CREATE TABLE shrine_deities (
     shrine_id     uuid     NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
     deity_id      uuid     NOT NULL REFERENCES deities(id),
-    is_primary    boolean  NOT NULL DEFAULT false,
-    sort_order    smallint NOT NULL DEFAULT 0,
-    regional_lore text,                          -- shrine-specific lore; null = use deities.canonical_lore
-    alter_name_en text,                          -- shrine-specific alternate (enshrined) romaji name; null = use deities.name_en
-    alter_name_ja text,                          -- shrine-specific alternate (enshrined) kanji name; null = use deities.name_ja
-    alter_titles  text[],                        -- shrine-specific title/epithet override; null = use deities.titles
+    is_primary       boolean  NOT NULL DEFAULT false,
+    sort_order       smallint NOT NULL DEFAULT 0,
+    regional_lore    text,                       -- shrine-specific lore; null = use deities.canonical_lore
+    regional_lore_ja text,                       -- JA shrine-specific lore (i18n; null => fall back to regional_lore)
+    alter_name_en    text,                       -- shrine-specific alternate (enshrined) romaji name; null = use deities.name_en
+    alter_name_ja    text,                       -- shrine-specific alternate (enshrined) kanji name; null = use deities.name_ja
+    alter_titles     text[],                     -- shrine-specific title/epithet override; null = use deities.titles
+    alter_titles_ja  text[],                     -- JA title override (i18n; null => fall back to whole alter_titles array)
     PRIMARY KEY (shrine_id, deity_id)
 );
 
@@ -118,13 +129,19 @@ CREATE INDEX idx_shrine_prayer_categories_cat ON shrine_prayer_categories(catego
 -- SHRINE DETAILS (1:1 topical prose)
 -- ------------------------------------------------------------
 CREATE TABLE shrine_details (
-    shrine_id         uuid    PRIMARY KEY REFERENCES shrines(id) ON DELETE CASCADE,
-    history           text,    -- founding, legendary events, syncretic layers
-    description       text,    -- significance + visitor experience (why visit)
-    prayer_focus      text,    -- prayer purposes w/ JP terms
-    best_time         text,    -- nature / atmosphere / timing
-    quote             text,    -- short 1-2 sentence quote about the shrine
-    geographic_notes  text     -- natural setting, landscape, terrain, access notes
+    shrine_id           uuid    PRIMARY KEY REFERENCES shrines(id) ON DELETE CASCADE,
+    history             text,    -- founding, legendary events, syncretic layers
+    history_ja          text,    -- JA (i18n; null => fall back to history)
+    description         text,    -- significance + visitor experience (why visit)
+    description_ja      text,    -- JA (i18n; null => fall back to description)
+    prayer_focus        text,    -- prayer purposes w/ JP terms
+    prayer_focus_ja     text,    -- JA (i18n; null => fall back to prayer_focus)
+    best_time           text,    -- nature / atmosphere / timing
+    best_time_ja        text,    -- JA (i18n; null => fall back to best_time)
+    quote               text,    -- short 1-2 sentence quote about the shrine
+    quote_ja            text,    -- JA (i18n; null => fall back to quote)
+    geographic_notes    text,    -- natural setting, landscape, terrain, access notes
+    geographic_notes_ja text     -- JA (i18n; null => fall back to geographic_notes)
 );
 
 -- ------------------------------------------------------------
@@ -134,7 +151,9 @@ CREATE TABLE shrine_highlights (
     id          uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     shrine_id   uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
     title       text    NOT NULL,   -- English first, kanji in parens: 'Ōmigokoro Poem-Slips (大御心)'
+    title_ja    text,               -- JA title (i18n; null => fall back to title)
     body        text,               -- optional short gloss; null = title-only chip
+    body_ja     text,               -- JA body (i18n; null => fall back to body)
     sort_order  int     NOT NULL DEFAULT 0
 );
 
@@ -146,18 +165,25 @@ CREATE INDEX idx_shrine_highlights_shrine ON shrine_highlights(shrine_id, sort_o
 CREATE TABLE festivals (
     id            uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     shrine_id     uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
-    name_en       text NOT NULL,
-    name_ja       text,
-    time_prose    text,            -- display label: 'dawn, 2nd Sunday of May', lunar...
-    start_date    date,            -- structured start date; null if undated
-    end_date      date,            -- structured end date; null if undated
-    origin        text,
-    meaning       text,
-    ritual        text,
-    prayer        text,
-    festival_type text CHECK (festival_type IN ('spectacle','pilgrimage')),
-    visitor_notes text,
-    sort_order    int     NOT NULL DEFAULT 0,
+    name_en          text NOT NULL,
+    name_ja          text,
+    name_hiragana      text,         -- hiragana reading (JA-mode subname; null => fall back to name_en)
+    time_prose       text,         -- display label: 'dawn, 2nd Sunday of May', lunar...
+    time_prose_ja    text,         -- JA (i18n; null => fall back to time_prose)
+    start_date       date,         -- structured start date; null if undated
+    end_date         date,         -- structured end date; null if undated
+    origin           text,
+    origin_ja        text,         -- JA (i18n; null => fall back to origin)
+    meaning          text,
+    meaning_ja       text,         -- JA (i18n; null => fall back to meaning)
+    ritual           text,
+    ritual_ja        text,         -- JA (i18n; null => fall back to ritual)
+    prayer           text,
+    prayer_ja        text,         -- JA (i18n; null => fall back to prayer)
+    festival_type    text CHECK (festival_type IN ('spectacle','pilgrimage')),
+    visitor_notes    text,
+    visitor_notes_ja text,         -- JA (i18n; null => fall back to visitor_notes)
+    sort_order       int     NOT NULL DEFAULT 0,
     UNIQUE (shrine_id, name_en)  -- stable identity: re-importing a shrine upserts festivals by name
                                  -- (preserves festival_occurrences instead of cascade-deleting them)
 );
@@ -171,7 +197,8 @@ CREATE TABLE sources (
     id        uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
     shrine_id uuid    NOT NULL REFERENCES shrines(id) ON DELETE CASCADE,
     url       text NOT NULL,
-    title     text
+    title     text,
+    title_ja  text                 -- JA source title (i18n; null => fall back to title)
 );
 
 CREATE INDEX idx_sources_shrine ON sources(shrine_id);
@@ -186,6 +213,7 @@ CREATE TABLE festival_occurrences (
     start_date  date     NOT NULL,
     end_date    date,
     notes       text,
+    notes_ja    text,                                                  -- JA notes (i18n; null => fall back to notes)
     UNIQUE (festival_id, year)
 );
 

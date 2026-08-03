@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, type Variants } from "motion/react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import OmikujiAlert from "./OmikujiAlert";
 
@@ -32,6 +33,7 @@ const itemVariants: Variants = {
 
 
 export default function ResendVerificationForm() {
+  const t = useTranslations("Auth");
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get("email") || "";
 
@@ -57,12 +59,12 @@ export default function ResendVerificationForm() {
         callbackURL: "/shrines",
       });
       if (error) {
-        setError(error.message ?? "Could not send the verification link.");
+        setError(error.message ?? t("errVerification"));
         return;
       }
       setDone(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
     } finally {
       setPending(false);
     }
@@ -77,18 +79,18 @@ export default function ResendVerificationForm() {
       >
         <OmikujiAlert
           type="success"
-          message={`A new verification link has been sent to ${email}. Please check your inbox.`}
+          message={t("verifyResent", { email })}
         />
-        
+
         <p className="text-xs text-moss-light/80 leading-relaxed pt-2">
-          The link will remain active for 24 hours. Check your spam folders if you still don&apos;t see it within a couple of minutes.
+          {t("verifyResentNote")}
         </p>
 
         <Link
           href="/sign-in"
           className="inline-block w-full rounded-xl bg-torii px-5 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark shadow-sm"
         >
-          Return to sign in
+          {t("returnToSignIn")}
         </Link>
       </motion.div>
     );
@@ -114,7 +116,7 @@ export default function ResendVerificationForm() {
 
         <motion.div variants={itemVariants} className="space-y-1.5">
           <label htmlFor="email" className={LABEL}>
-            Email Address
+            {t("emailAddress")}
           </label>
           <input
             id="email"
@@ -124,7 +126,7 @@ export default function ResendVerificationForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={INPUT}
-            placeholder="you@example.com"
+            placeholder={t("emailPh")}
           />
         </motion.div>
 
@@ -135,16 +137,16 @@ export default function ResendVerificationForm() {
           whileTap={{ scale: 0.98 }}
           className="w-full cursor-pointer rounded-xl bg-torii px-4 py-3 text-xs font-bold uppercase tracking-widest text-washi transition-all hover:bg-torii-dark disabled:opacity-50 shadow-sm"
         >
-          {pending ? "Sending link…" : "Resend verification link"}
+          {pending ? t("sendingLinkShort") : t("resendVerification")}
         </motion.button>
 
         <motion.p
           variants={itemVariants}
           className="text-center text-xs tracking-widest uppercase text-moss-light"
         >
-          Ready to try signing in?{" "}
+          {t("readyToSignIn")}{" "}
           <Link href="/sign-in" className="font-bold text-torii hover:underline">
-            Sign in
+            {t("signIn")}
           </Link>
         </motion.p>
       </motion.form>

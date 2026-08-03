@@ -103,7 +103,7 @@ export function EditableChips({
   );
 }
 
-type SourceItem = { url: string; title?: string | null };
+type SourceItem = { url: string; title?: string | null; title_ja?: string | null };
 const sourceInput =
   "w-full rounded-sm border border-dashed border-torii/30 bg-torii/[0.04] px-2 py-1 text-xs font-mono text-stone/80 outline-none placeholder:text-stone/30 focus:border-torii";
 
@@ -116,7 +116,7 @@ export function EditableSources({ children }: { children: React.ReactNode }) {
   const update = (i: number, patch: Partial<SourceItem>) =>
     api.setValue("sources", sources.map((s, j) => (j === i ? { ...s, ...patch } : s)));
   const remove = (i: number) => api.setValue("sources", sources.filter((_, j) => j !== i));
-  const add = () => api.setValue("sources", [...sources, { url: "", title: "" }]);
+  const add = () => api.setValue("sources", [...sources, { url: "", title: "", title_ja: "" }]);
 
   return (
     <div className="space-y-2">
@@ -131,11 +131,18 @@ export function EditableSources({ children }: { children: React.ReactNode }) {
               className={sourceInput}
             />
             <input
+              value={s.title_ja ?? ""}
+              onChange={(e) => update(i, { title_ja: e.target.value })}
+              placeholder="Title (JA)"
+              aria-label={`Source ${i + 1} title (Japanese)`}
+              className={sourceInput}
+            />
+            <input
               value={s.url}
               onChange={(e) => update(i, { url: e.target.value })}
               placeholder="https://…"
               aria-label={`Source ${i + 1} URL`}
-              className={sourceInput}
+              className={`${sourceInput} sm:col-span-2`}
             />
           </div>
           <button

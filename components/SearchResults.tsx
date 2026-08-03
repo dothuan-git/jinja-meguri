@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { SearchDoc, ShrineCard as Card } from "@/lib/types";
 import { makeSearcher } from "@/lib/search";
 import ShrineCard from "@/components/ShrineCard";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; cards: Card[] }) {
+  const t = useTranslations("Search");
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -33,8 +35,8 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
   return (
     <main ref={containerRef} className="mx-auto w-full md:w-[calc(100%-2.5rem)] max-w-7xl px-4 md:px-6 lg:px-8 pt-12 pb-16">
       <div data-reveal="fade-up">
-        <p className="kicker">Find a shrine</p>
-        <h1 className="mt-2 font-display text-5xl font-semibold">Search</h1>
+        <p className="kicker">{t("kicker")}</p>
+        <h1 className="mt-2 font-display text-5xl font-semibold">{t("title")}</h1>
       </div>
 
       <form
@@ -59,8 +61,8 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
             setValue(e.target.value);
             submit(e.target.value);
           }}
-          placeholder="Shrine name, kami, city, prayer, or festival — English or 日本語"
-          aria-label="Search query"
+          placeholder={t("placeholder")}
+          aria-label={t("searchQuery")}
           className="w-full bg-transparent text-lg placeholder:text-sumi-soft/60 focus:outline-none"
         />
       </form>
@@ -68,17 +70,26 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
       <div data-reveal="rise" className="mt-8">
         {query === "" ? (
           <p className="text-sumi-soft">
-            Try <em>Yasaka</em>, <span className="jp">祇園</span>, <em>matchmaking</em>, or a kami's name.
+            {t.rich("tryHint", {
+              em: (chunks) => <em>{chunks}</em>,
+              jp: (chunks) => <span className="jp">{chunks}</span>,
+            })}
           </p>
         ) : matched.length === 0 ? (
           <p className="text-sumi-soft">
-            No shrines match "<span className="text-sumi">{query}</span>".
+            {t.rich("noMatch", {
+              query,
+              q: (chunks) => <span className="text-sumi">{chunks}</span>,
+            })}
           </p>
         ) : (
           <>
             <p className="mb-5 text-sm text-sumi-soft">
-              <span className="text-sumi">{matched.length}</span> result{matched.length === 1 ? "" : "s"} for "
-              {query}"
+              {t.rich("resultsFor", {
+                count: matched.length,
+                query,
+                n: (chunks) => <span className="text-sumi">{chunks}</span>,
+              })}
             </p>
             <div className="grid gap-5 sm:grid-cols-2">
               {matched.map((c) => (

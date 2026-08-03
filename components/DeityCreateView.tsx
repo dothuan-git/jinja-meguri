@@ -8,6 +8,7 @@ import { emptyDeityInput } from "@/lib/admin/deityInput";
 const EMPTY_CARD: DeityCardData = {
   name: "",
   japaneseName: "",
+  display: { main: "", sub: null, mainIsJa: false, subIsJa: false },
   deityType: "mythological",
   titles: [],
   canonicalLore: "",

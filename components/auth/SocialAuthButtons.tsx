@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 
 /**
@@ -12,7 +13,7 @@ import { authClient } from "@/lib/auth/client";
 const PROVIDERS = [
   {
     id: "google" as const,
-    label: "Continue with Google",
+    labelKey: "continueWithGoogle" as const,
     icon: <GoogleIcon />,
   },
 ];
@@ -22,6 +23,7 @@ export default function SocialAuthButtons({
 }: {
   callbackURL?: string;
 }) {
+  const t = useTranslations("Auth");
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +33,12 @@ export default function SocialAuthButtons({
     try {
       const { error } = await authClient.signIn.social({ provider, callbackURL });
       if (error) {
-        setError(error.message ?? "Could not continue with that provider.");
+        setError(error.message ?? t("errProvider"));
         setPending(null);
       }
       // On success the browser is redirected to the provider — leave pending set.
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("errGeneric"));
       setPending(null);
     }
   }
@@ -58,14 +60,14 @@ export default function SocialAuthButtons({
             className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-moss/20 bg-washi/60 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-stone transition-colors hover:border-torii disabled:opacity-50"
           >
             {p.icon}
-            {pending === p.id ? "Redirecting…" : p.label}
+            {pending === p.id ? t("redirecting") : t(p.labelKey)}
           </button>
         ))}
       </div>
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-moss/15" />
         <span className="text-[11px] font-bold uppercase tracking-widest text-moss-light/70">
-          or
+          {t("or")}
         </span>
         <span className="h-px flex-1 bg-moss/15" />
       </div>
