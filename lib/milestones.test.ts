@@ -8,17 +8,25 @@ import {
 import type { StampEntry, SavedEntry } from "@/lib/types";
 
 // Minimal StampEntry factory — only the fields the milestone logic reads matter.
-function stamp(p: Partial<StampEntry> & { slug: string; stamped_at: string }): StampEntry {
+function stamp(
+  p: Omit<Partial<StampEntry>, "prefecture" | "region"> & {
+    slug: string;
+    stamped_at: string;
+    prefecture?: string;
+    region?: string;
+  },
+): StampEntry {
   return {
     slug: p.slug,
     name_en: p.name_en ?? p.slug,
     name_ja: p.name_ja ?? null,
     name_romaji: p.name_romaji ?? null,
     city: p.city ?? null,
-    prefecture: p.prefecture ?? "Tokyo",
-    region: p.region ?? "Kanto",
+    prefecture: { name_en: p.prefecture ?? "Tokyo", name_ja: null },
+    region: { name_en: p.region ?? "Kanto", name_ja: null },
     primary_deity: p.primary_deity ?? null,
     categories: p.categories ?? [],
+    ranks: p.ranks ?? [],
     highest_rank: p.highest_rank ?? null,
     coordinates: p.coordinates ?? null,
     region_id: p.region_id ?? 1,

@@ -6,6 +6,8 @@ import { Filter, Heart, MapPinned, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+import { namePair } from "@/lib/names";
 import {
   FESTIVAL_MONTH_PARAM,
   FILTER_PARAM_KEY,
@@ -53,7 +55,7 @@ export default function ShrineMapView({
 }) {
   const router = useRouter();
   const params = useSearchParams();
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const t = useTranslations("Map");
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
@@ -110,18 +112,18 @@ export default function ShrineMapView({
   }
 
   const dropdowns: FacetDropdown[] = [
-    { id: "region", label: t("facets.region"), options: facets.regions.map((r) => r.name_en) },
+    { id: "region", label: t("facets.region"), options: facets.regions.map((r) => ({ value: r.name_en, label: namePair(locale, r).main })) },
     {
       id: "prefecture",
       label: t("facets.prefecture"),
-      options: Object.values(facets.prefecturesByRegion).flat().map((p) => p.name_en),
+      options: Object.values(facets.prefecturesByRegion).flat().map((p) => ({ value: p.name_en, label: namePair(locale, p).main })),
     },
     {
       id: "prayerFocus",
       label: t("facets.focus"),
-      options: facets.categoryGroups.flatMap((g) => g.categories.map((c) => c.name_en)),
+      options: facets.categoryGroups.flatMap((g) => g.categories.map((c) => ({ value: c.name_en, label: namePair(locale, c).main }))),
     },
-    { id: "ranks", label: t("facets.rank"), options: facets.ranks.map((r) => r.name_en) },
+    { id: "ranks", label: t("facets.rank"), options: facets.ranks.map((r) => ({ value: r.name_en, label: namePair(locale, r).main })) },
   ];
 
   const filtered = cards.filter((card) => {

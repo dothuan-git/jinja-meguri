@@ -251,10 +251,11 @@ export interface ShrineCard {
   name_ja: string | null;
   name_romaji: string | null;
   city: string | null;
-  prefecture: string;
-  region: string;
+  prefecture: { name_en: string; name_ja: string | null };
+  region: { name_en: string; name_ja: string | null };
   primary_deity: { name_en: string; name_ja: string | null; name_romaji: string | null } | null;
   categories: CategoryView[];
+  ranks: RankView[];
   highest_rank: RankView | null;
   coordinates: Coordinates | null;
   // Facet membership for client filtering:
@@ -310,8 +311,8 @@ export interface DeityShrineLink {
   name_ja: string | null;
   name_romaji: string | null;
   city: string | null;
-  prefecture: string;
-  region: string;
+  prefecture: { name_en: string; name_ja: string | null };
+  region: { name_en: string; name_ja: string | null };
   is_primary: boolean;
   regional_lore: string | null;
 }
@@ -334,8 +335,8 @@ export interface CalendarFestival {
   shrine_name_ja: string | null;
   shrine_name_romaji: string | null;
   shrine_city: string | null;
-  shrine_prefecture: string;
-  shrine_region: string;
+  shrine_prefecture: { name_en: string; name_ja: string | null };
+  shrine_region: { name_en: string; name_ja: string | null };
   region_id: number;
   festival_name_en: string;
   festival_name_ja: string | null;

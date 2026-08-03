@@ -208,8 +208,8 @@ function buildCard(idx: StoreIndex, s: ShrineRow, locale: Locale): ShrineCard {
     name_ja: s.name_ja,
     name_romaji: s.name_romaji,
     city: loc(locale, s.city, s.city_ja),
-    prefecture: pref?.name_en ?? "",
-    region: region?.name_en ?? "",
+    prefecture: { name_en: pref?.name_en ?? "", name_ja: pref?.name_ja ?? null },
+    region: { name_en: region?.name_en ?? "", name_ja: region?.name_ja ?? null },
     // Lead with the shrine's alternate (enshrined) name when set, else canonical.
     // An alternate name has no stored romaji — alter_name_en is already the
     // romaji form, so name_romaji is nulled and namePair falls back to it.
@@ -221,6 +221,7 @@ function buildCard(idx: StoreIndex, s: ShrineRow, locale: Locale): ShrineCard {
         }
       : null,
     categories,
+    ranks,
     highest_rank: ranks.find((r) => r.is_highest) ?? null,
     coordinates: s.coordinates,
     region_id: s.region_id,
@@ -317,8 +318,8 @@ export function getFestivalYear(store: Store, year: number, locale: Locale = DEF
       shrine_name_ja: s.name_ja,
       shrine_name_romaji: s.name_romaji,
       shrine_city: loc(locale, s.city, s.city_ja),
-      shrine_prefecture: pref?.name_en ?? "",
-      shrine_region: region?.name_en ?? "",
+      shrine_prefecture: { name_en: pref?.name_en ?? "", name_ja: pref?.name_ja ?? null },
+      shrine_region: { name_en: region?.name_en ?? "", name_ja: region?.name_ja ?? null },
       region_id: s.region_id,
       festival_name_en: f.name_en,
       festival_name_ja: f.name_ja,
@@ -355,8 +356,8 @@ export function getDeityList(store: Store, locale: Locale = DEFAULT_LOCALE): Dei
           name_ja: s.name_ja,
           name_romaji: s.name_romaji,
           city: loc(locale, s.city, s.city_ja),
-          prefecture: pref?.name_en ?? "",
-          region: region?.name_en ?? "",
+          prefecture: { name_en: pref?.name_en ?? "", name_ja: pref?.name_ja ?? null },
+          region: { name_en: region?.name_en ?? "", name_ja: region?.name_ja ?? null },
           is_primary: sd.is_primary,
           regional_lore: loc(locale, sd.regional_lore, sd.regional_lore_ja),
         };

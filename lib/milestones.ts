@@ -77,8 +77,8 @@ export function buildMilestoneContext(
   let hasNewYearStamp = false;
 
   for (const s of stamped) {
-    if (s.prefecture) prefectures.add(s.prefecture);
-    if (s.region) regions.add(s.region);
+    if (s.prefecture.name_en) prefectures.add(s.prefecture.name_en);
+    if (s.region.name_en) regions.add(s.region.name_en);
     if (s.primary_deity) {
       const en = normName(s.primary_deity.name_en);
       primaryDeities.push(en);

@@ -1008,7 +1008,7 @@ export default function UserProfileClient({
                     <div className="relative pl-4 md:pl-6 border-l border-moss/15 ml-2 md:ml-3 space-y-8">
                       {Object.entries(
                         stamped.reduce((acc, stamp) => {
-                          const pref = stamp.prefecture;
+                          const pref = stamp.prefecture.name_en;
                           if (!acc[pref]) acc[pref] = [];
                           acc[pref].push(stamp);
                           return acc;
@@ -1038,9 +1038,9 @@ export default function UserProfileClient({
                                 }`}
                               />
                               <h4 className="font-display text-base md:text-lg font-black text-stone flex items-baseline gap-2 select-none min-w-0 flex-1 truncate">
-                                {prefName}
+                                {namePair(locale, prefStamps[0].prefecture).main}
                                 <span className="font-serif text-xs text-torii font-bold shrink-0" style={{ fontFamily: "'Noto Serif JP', serif" }}>
-                                  {prefStamps[0]?.region || ""}
+                                  {namePair(locale, prefStamps[0].region).main}
                                 </span>
                               </h4>
                               <span className="text-[9px] font-mono tracking-widest text-moss-light/60 uppercase font-bold shrink-0 group-hover:text-torii transition-colors select-none">

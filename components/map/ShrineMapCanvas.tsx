@@ -219,7 +219,7 @@ export default function ShrineMapCanvas({
             {selected.highest_rank && (
               <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-widest text-moss-light mb-1.5">
                 <span className="w-1 h-1 rounded-full bg-torii" />
-                {selected.highest_rank.name_en}
+                {namePair(locale, selected.highest_rank).main}
               </span>
             )}
             <p className="text-sm font-serif font-bold text-stone leading-tight m-0">{selectedName!.main}</p>
@@ -229,7 +229,7 @@ export default function ShrineMapCanvas({
 
             <p className="flex items-center gap-1 text-[11px] text-moss mt-2 mb-0">
               <MapPin size={11} className="shrink-0 text-torii/70" />
-              {[selected.city, selected.prefecture].filter(Boolean).join(", ")}
+              {[selected.city, namePair(locale, selected.prefecture).main].filter(Boolean).join(", ")}
             </p>
 
             {selected.primary_deity && (() => {

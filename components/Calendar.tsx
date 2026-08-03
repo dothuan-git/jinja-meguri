@@ -210,8 +210,8 @@ export default function Calendar({
       id: f.shrine_slug,
       name: shrineName.main,
       location: f.shrine_city ?? "",
-      prefecture: f.shrine_prefecture,
-      region: f.shrine_region,
+      prefecture: namePair(locale, f.shrine_prefecture).main,
+      region: namePair(locale, f.shrine_region).main,
       slug: f.shrine_slug,
     },
   };

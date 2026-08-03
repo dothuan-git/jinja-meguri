@@ -23,7 +23,8 @@ import {
   type ShrineFilters,
 } from "@/lib/shrineFilters";
 
-export type FacetDropdown = { id: ShrineFacetId; label: string; options: string[] };
+export type FacetOption = { value: string; label: string };
+export type FacetDropdown = { id: ShrineFacetId; label: string; options: FacetOption[] };
 
 // Per-facet icon so the facet tabs scan at a glance.
 const FACET_ICON: Partial<Record<ShrineFacetId, LucideIcon>> = {
@@ -160,7 +161,7 @@ function FacetTabs({
   if (!active) return null;
 
   const query = optionQuery.trim().toLowerCase();
-  const options = query ? active.options.filter((o) => o.toLowerCase().includes(query)) : active.options;
+  const options = query ? active.options.filter((o) => o.label.toLowerCase().includes(query)) : active.options;
 
   function selectTab(id: ShrineFacetId) {
     setActiveId(id);
@@ -233,16 +234,16 @@ function FacetTabs({
               <p className="px-1 py-2 text-[11px] font-sans italic text-stone/40">{t("noMatches")}</p>
             ) : (
               options.map((option) => {
-                const checked = filters[active.id].includes(option);
+                const checked = filters[active.id].includes(option.value);
                 return (
                   <label
-                    key={option}
+                    key={option.value}
                     className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none"
                   >
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => onToggleFacet(active.id, option)}
+                      onChange={() => onToggleFacet(active.id, option.value)}
                       className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
                     />
                     <span
@@ -250,7 +251,7 @@ function FacetTabs({
                         checked ? "text-torii font-bold" : "text-stone/72"
                       }`}
                     >
-                      {option}
+                      {option.label}
                     </span>
                   </label>
                 );

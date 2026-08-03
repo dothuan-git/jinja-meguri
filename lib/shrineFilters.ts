@@ -80,7 +80,7 @@ export function matchesShrineFilters(card: ShrineCard, filters: ShrineFilters): 
     const query = filters.searchQuery.toLowerCase();
     const nameMatch = card.name_en.toLowerCase().includes(query) || (card.name_ja ?? "").includes(query);
     const locMatch =
-      (card.city ?? "").toLowerCase().includes(query) || card.prefecture.toLowerCase().includes(query);
+      (card.city ?? "").toLowerCase().includes(query) || card.prefecture.name_en.toLowerCase().includes(query);
     const primaryDeityMatch =
       (card.primary_deity?.name_en ?? "").toLowerCase().includes(query) ||
       (card.primary_deity?.name_ja ?? "").includes(query);
@@ -100,10 +100,10 @@ export function matchesShrineFilters(card: ShrineCard, filters: ShrineFilters): 
   }
 
   // Region multi-match
-  if (filters.region.length > 0 && !filters.region.includes(card.region)) return false;
+  if (filters.region.length > 0 && !filters.region.includes(card.region.name_en)) return false;
 
   // Prefecture multi-match
-  if (filters.prefecture.length > 0 && !filters.prefecture.includes(card.prefecture)) return false;
+  if (filters.prefecture.length > 0 && !filters.prefecture.includes(card.prefecture.name_en)) return false;
 
   // Deity multi-match (primary)
   if (filters.deity.length > 0) {

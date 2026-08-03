@@ -98,10 +98,10 @@ export default function ShrineListing({
     router.replace(`/shrines?${next.toString()}`, { scroll: false });
   }
 
-  const REGIONS_LIST = facets.regions.map((r) => r.name_en);
+  const REGIONS_LIST = facets.regions.map((r) => ({ value: r.name_en, label: namePair(locale, r).main }));
   const PREFECTURES_LIST = Object.values(facets.prefecturesByRegion)
     .flat()
-    .map((p) => p.name_en);
+    .map((p) => ({ value: p.name_en, label: namePair(locale, p).main }));
 
   // Modals portal to document.body so they escape the page's stacking context
   // and paint above the site chrome. Render only after mount (SSR-safe).
@@ -245,13 +245,13 @@ export default function ShrineListing({
                 </div>
                 <div className="text-[11px] text-stone/55 font-mono tracking-wide mt-0.5">
                   {card.primary_deity ? `${namePair(locale, card.primary_deity).main} · ` : ""}
-                  {card.city ?? ""}, {card.prefecture}
+                  {card.city ?? ""}, {namePair(locale, card.prefecture).main}
                 </div>
-                {card.category_codes.length > 0 && (
+                {card.categories.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {card.category_codes.map((focus) => (
-                      <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                        {focus}
+                    {card.categories.map((c) => (
+                      <span key={c.name_en} className={`${CHIP} ${getCategoryColor(c.name_en)}`}>
+                        {namePair(locale, c).main}
                       </span>
                     ))}
                   </div>
@@ -338,7 +338,7 @@ export default function ShrineListing({
           >
             {/* Image header */}
             <div className="h-28 sm:h-36 w-full relative overflow-hidden bg-sand shrink-0 border-b border-moss/10">
-              <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={card.prefecture} nameJa={card.name_ja ?? undefined} compact />
+              <ShrineImage alt={card.name_en} shrineId={card.slug} prefecture={namePair(locale, card.prefecture).main} nameJa={card.name_ja ?? undefined} compact />
 
               {renderHeart(
                 card.slug,
@@ -363,18 +363,18 @@ export default function ShrineListing({
                   <h4 className="text-base sm:text-lg font-display font-black text-stone group-hover:text-torii tracking-wide transition-colors leading-snug">
                     {namePair(locale, card).main}
                   </h4>
-                  {card.rank_codes.length > 0 && (
+                  {card.ranks.length > 0 && (
                     <div className="flex flex-wrap justify-end gap-1 shrink-0">
-                      {card.rank_codes.map((rankTitle) => (
-                        <span key={rankTitle} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
-                          {rankTitle}
+                      {card.ranks.map((rank) => (
+                        <span key={rank.name_en} className="text-[8.5px] bg-stone text-sand/90 border border-stone/15 px-2 py-0.5 rounded-md font-sans font-bold tracking-wider uppercase shadow-3xs">
+                          {namePair(locale, rank).main}
                         </span>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="text-[11px] text-[#5c685f]/70 tracking-wide font-semibold mt-1 uppercase font-mono">
-                  {card.city ?? ""}, {card.prefecture}
+                  {card.city ?? ""}, {namePair(locale, card.prefecture).main}
                 </div>
               </div>
 
@@ -392,11 +392,11 @@ export default function ShrineListing({
               </div>
 
               {/* Category chips */}
-              {card.category_codes.length > 0 && (
+              {card.categories.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {card.category_codes.map((focus) => (
-                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                      {focus}
+                  {card.categories.map((c) => (
+                    <span key={c.name_en} className={`${CHIP} ${getCategoryColor(c.name_en)}`}>
+                      {namePair(locale, c).main}
                     </span>
                   ))}
                 </div>
@@ -551,17 +551,17 @@ export default function ShrineListing({
                         </span>
                         <div className="space-y-0.5">
                           {dropdown.list.map((option) => {
-                            const checked = filters[dropdown.id].includes(option);
+                            const checked = filters[dropdown.id].includes(option.value);
                             return (
-                              <label key={option} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
+                              <label key={option.value} className="flex items-center gap-2.5 text-xs text-stone cursor-pointer py-1.5 px-1 rounded-lg hover:bg-bamboo-light select-none">
                                 <input
                                   type="checkbox"
                                   checked={checked}
-                                  onChange={() => handleToggleFilter(dropdown.id, option)}
+                                  onChange={() => handleToggleFilter(dropdown.id, option.value)}
                                   className="rounded border-moss/30 text-torii focus:ring-0 w-3.5 h-3.5 accent-torii"
                                 />
                                 <span className={`transition-colors truncate font-sans font-medium ${checked ? 'text-torii font-bold' : 'text-stone/72'}`}>
-                                  {option}
+                                  {option.label}
                                 </span>
                               </label>
                             );
@@ -726,12 +726,12 @@ export default function ShrineListing({
                                 {namePair(locale, card).sub ?? ""}
                               </div>
                               <span className="text-[11px] text-stone/50 font-sans tracking-wide block pt-1.5">
-                                {card.city ?? ""}, {card.prefecture}
+                                {card.city ?? ""}, {namePair(locale, card.prefecture).main}
                               </span>
-                              {card.rank_codes.length > 0 && (
+                              {card.ranks.length > 0 && (
                                 <div className="flex flex-wrap gap-1 pt-2">
-                                  {card.rank_codes.map((rank) => (
-                                    <RankTag key={rank} rank={rank} />
+                                  {card.ranks.map((rank) => (
+                                    <RankTag key={rank.name_en} rank={rank} locale={locale} />
                                   ))}
                                 </div>
                               )}
@@ -764,9 +764,9 @@ export default function ShrineListing({
                                 {card.prayer_focus ?? ""}
                               </p>
                               <div className="flex flex-wrap gap-1.5">
-                                {card.category_codes.map((focus) => (
-                                  <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                                    {focus}
+                                {card.categories.map((c) => (
+                                  <span key={c.name_en} className={`${CHIP} ${getCategoryColor(c.name_en)}`}>
+                                    {namePair(locale, c).main}
                                   </span>
                                 ))}
                               </div>
@@ -839,18 +839,18 @@ export default function ShrineListing({
                 </span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {REGIONS_LIST.map((reg) => {
-                    const checked = filters.region.includes(reg);
+                    const checked = filters.region.includes(reg.value);
                     return (
                       <button
-                        key={reg}
-                        onClick={() => handleToggleFilter("region", reg)}
+                        key={reg.value}
+                        onClick={() => handleToggleFilter("region", reg.value)}
                         className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer font-mono tracking-wide ${
                           checked
                             ? "border-torii bg-torii/10 text-torii font-bold"
                             : "border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45"
                         }`}
                       >
-                        {reg}
+                        {reg.label}
                       </button>
                     );
                   })}
@@ -864,18 +864,18 @@ export default function ShrineListing({
                 </span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {PREFECTURES_LIST.map((pref) => {
-                    const checked = filters.prefecture.includes(pref);
+                    const checked = filters.prefecture.includes(pref.value);
                     return (
                       <button
-                        key={pref}
-                        onClick={() => handleToggleFilter("prefecture", pref)}
+                        key={pref.value}
+                        onClick={() => handleToggleFilter("prefecture", pref.value)}
                         className={`px-3 py-2 text-center rounded-lg text-xs border transition-all cursor-pointer font-mono tracking-wide ${
                           checked
                             ? "border-torii bg-torii/10 text-torii font-bold"
                             : "border-moss/15 bg-washi/95 text-stone/70 hover:border-moss/45"
                         }`}
                       >
-                        {pref}
+                        {pref.label}
                       </button>
                     );
                   })}

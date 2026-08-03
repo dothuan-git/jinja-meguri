@@ -18,8 +18,8 @@ describe("getShrineCards", () => {
   });
   it("resolves region and prefecture names", () => {
     const a = cards.find((c) => c.slug === "a")!;
-    expect(a.region).toBe("Kanto");
-    expect(a.prefecture).toBe("Saitama");
+    expect(a.region.name_en).toBe("Kanto");
+    expect(a.prefecture.name_en).toBe("Saitama");
   });
   it("carries facet membership for client filtering", () => {
     const a = cards.find((c) => c.slug === "a")!;

@@ -58,7 +58,7 @@ export default function ShrineCard({ card }: { card: Card }) {
       )}
 
       <div className="mt-5 border-t hairline pt-3">
-        <PinHint city={card.city} prefecture={card.prefecture} />
+        <PinHint city={card.city} prefecture={namePair(locale, card.prefecture).main} />
       </div>
     </Link>
   );

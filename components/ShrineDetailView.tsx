@@ -125,10 +125,10 @@ function toView(shrine: ShrineDetail, locale: Locale) {
     japaneseName: shrine.name_ja ?? "",
     displayName: namePair(locale, shrine),
     location: shrine.city ?? "",
-    prefecture: shrine.prefecture,
-    region: shrine.region,
-    ranks: shrine.ranks.map((r) => r.name_en),
-    prayerFocus: shrine.categories.map((c) => c.name_en),
+    prefecture: namePair(locale, shrine.prefecture).main,
+    region: namePair(locale, shrine.region).main,
+    ranks: shrine.ranks.map((r) => ({ code: r.name_en, label: namePair(locale, r).main })),
+    prayerFocus: shrine.categories.map((c) => ({ code: c.name_en, label: namePair(locale, c).main })),
     prayerFocusText: shrine.details?.prayer_focus ?? "",
     description: shrine.details?.description ?? "",
     quote: shrine.details?.quote ?? "",
@@ -482,10 +482,10 @@ function PageBody({
               <EditableChips kind="ranks" label={t("edit.ranksLabel")}>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
                   {shrine.ranks.map((rank, i) => (
-                    <span key={rank} className="inline-flex items-center gap-1">
+                    <span key={rank.code} className="inline-flex items-center gap-1">
                       {i > 0 && <span className="opacity-30">|</span>}
-                      {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                      <span>{rank}</span>
+                      {rank.code === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                      <span>{rank.label}</span>
                     </span>
                   ))}
                 </div>
@@ -702,8 +702,8 @@ function PageBody({
               <EditableChips kind="prayerCategories" label={t("edit.categoriesLabel")}>
                 <div className="flex flex-wrap gap-1.5 pt-1 select-none">
                   {shrine.prayerFocus.map((focus) => (
-                    <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                      {focus}
+                    <span key={focus.code} className={`${CHIP} ${getCategoryColor(focus.code)}`}>
+                      {focus.label}
                     </span>
                   ))}
                 </div>
@@ -1463,10 +1463,10 @@ function ModalBody({
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-wrap gap-x-3 gap-y-1 select-none text-[9px] font-mono tracking-widest uppercase text-moss-light font-bold">
                 {shrine.ranks.map((rank, i) => (
-                  <span key={rank} className="inline-flex items-center gap-1">
+                  <span key={rank.code} className="inline-flex items-center gap-1">
                     {i > 0 && <span className="opacity-30">|</span>}
-                    {rank === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
-                    <span>{rank}</span>
+                    {rank.code === "Ise Grand Shrine" && <Crown size={10} className="text-torii" />}
+                    <span>{rank.label}</span>
                   </span>
                 ))}
               </div>
@@ -1504,8 +1504,8 @@ function ModalBody({
 
           <div className="flex flex-wrap gap-1.5">
             {shrine.prayerFocus.map(focus => (
-              <span key={focus} className={`${CHIP} ${getCategoryColor(focus)}`}>
-                {focus}
+              <span key={focus.code} className={`${CHIP} ${getCategoryColor(focus.code)}`}>
+                {focus.label}
               </span>
             ))}
           </div>
