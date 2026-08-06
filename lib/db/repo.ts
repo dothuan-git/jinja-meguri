@@ -212,13 +212,14 @@ function buildCard(idx: StoreIndex, s: ShrineRow, locale: Locale): ShrineCard {
     prefecture: { name_en: pref?.name_en ?? "", name_ja: pref?.name_ja ?? null },
     region: { name_en: region?.name_en ?? "", name_ja: region?.name_ja ?? null },
     // Lead with the shrine's alternate (enshrined) name when set, else canonical.
-    // An alternate name has no stored hiragana — alter_name_en is already a
-    // display-ready form, so name_hiragana is nulled and namePair falls back to it.
+    // Mirrors ShrineDetailView's hasAlter resolution so the listing and detail
+    // pages agree on which name (and hiragana reading) to show.
     primary_deity: primary
       ? {
           name_en: primary.alter_name_en || primary.name_en,
           name_ja: primary.alter_name_ja || primary.name_ja,
-          name_hiragana: primary.alter_name_en ? null : primary.name_hiragana,
+          name_hiragana:
+            primary.alter_name_en || primary.alter_name_ja ? primary.alter_name_hiragana : primary.name_hiragana,
         }
       : null,
     categories,
