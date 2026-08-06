@@ -155,8 +155,8 @@ export async function upsertShrine(input: ShrineInput): Promise<{ id: string; sl
     for (const d of input.deities) {
       const deityId = await resolveDeity(client, d);
       await client.query(
-        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore,regional_lore_ja,alter_name_en,alter_name_ja,alter_titles,alter_titles_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
-        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null, d.regional_lore_ja ?? null, d.alter_name_en ?? null, d.alter_name_ja ?? null, d.alter_titles ?? null, d.alter_titles_ja ?? null],
+        "INSERT INTO shrine_deities (shrine_id,deity_id,is_primary,sort_order,regional_lore,regional_lore_ja,alter_name_en,alter_name_ja,alter_name_hiragana,alter_titles,alter_titles_ja) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
+        [shrineId, deityId, d.is_primary, d.sort_order, d.regional_lore ?? null, d.regional_lore_ja ?? null, d.alter_name_en ?? null, d.alter_name_ja ?? null, d.alter_name_hiragana ?? null, d.alter_titles ?? null, d.alter_titles_ja ?? null],
       );
     }
 

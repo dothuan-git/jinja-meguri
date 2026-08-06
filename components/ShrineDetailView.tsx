@@ -111,14 +111,25 @@ function deityHref(nameJa: string) {
 // bindings need the raw values); the locale-ordered heading pair is `displayName`.
 function toView(shrine: ShrineDetail, locale: Locale) {
   const primary = primaryOf(shrine);
-  // The enshrined (alter) name has no stored hiragana — alter_name_en is
-  // already a display-ready form, so the pair falls back to it as the JA-mode sub.
-  const deityPair = (d: NonNullable<ReturnType<typeof primaryOf>>) =>
-    namePair(locale, {
+  const deityPair = (d: NonNullable<ReturnType<typeof primaryOf>>) => {
+    const hasAlter = Boolean(d.alter_name_en || d.alter_name_ja);
+    return namePair(locale, {
       name_en: d.alter_name_en || d.name_en,
       name_ja: d.alter_name_ja || d.name_ja,
-      name_hiragana: d.alter_name_en ? null : d.name_hiragana,
+      name_hiragana: hasAlter ? d.alter_name_hiragana : d.name_hiragana,
     });
+  };
+  // The "Enshrined form of X" caption always names the *canonical* deity, so
+  // it must pick its own locale-appropriate form independent of the alter name
+  // pair above — JA mode should never fall through to the English name_en.
+  const canonicalCaption = (d: NonNullable<ReturnType<typeof primaryOf>> | null) => {
+    if (!d) return { name: "", paren: "" };
+    if (locale === "ja") {
+      const name = d.name_ja || d.name_hiragana || d.name_en;
+      return { name, paren: d.name_hiragana && d.name_hiragana !== name ? d.name_hiragana : "" };
+    }
+    return { name: d.name_en, paren: d.name_ja ?? "" };
+  };
   return {
     slug: shrine.slug,
     name: shrine.name_en,
@@ -150,25 +161,35 @@ function toView(shrine: ShrineDetail, locale: Locale) {
       // when an alter name is present, and used to locate the deity in the draft).
       alterNameEn: primary?.alter_name_en ?? "",
       alterNameJa: primary?.alter_name_ja ?? "",
+      alterNameHiragana: primary?.alter_name_hiragana ?? "",
       canonicalName: primary?.name_en ?? "",
       canonicalNameJa: primary?.name_ja ?? "",
+      // Locale-appropriate canonical name + reading for the "Enshrined form of X" caption.
+      enshrinedName: canonicalCaption(primary).name,
+      enshrinedParen: canonicalCaption(primary).paren,
       // Raw canonical titles (pre-fallback) — shown as reference next to the alter_titles editor.
       canonicalTitles: primary?.titles ?? [],
       hasAlter: Boolean(primary?.alter_name_en || primary?.alter_name_ja),
     },
-    secondaryDeities: companionsOf(shrine).map((d) => ({
-      name: d.alter_name_en || d.name_en,
-      japaneseName: d.alter_name_ja || d.name_ja || "",
-      display: deityPair(d),
-      deityType: d.deity_type,
-      titles: d.alter_titles ?? d.titles,
-      regionalLore: d.regional_lore ?? "",
-      alterNameEn: d.alter_name_en ?? "",
-      alterNameJa: d.alter_name_ja ?? "",
-      canonicalName: d.name_en,
-      canonicalNameJa: d.name_ja ?? "",
-      hasAlter: Boolean(d.alter_name_en || d.alter_name_ja),
-    })),
+    secondaryDeities: companionsOf(shrine).map((d) => {
+      const caption = canonicalCaption(d);
+      return {
+        name: d.alter_name_en || d.name_en,
+        japaneseName: d.alter_name_ja || d.name_ja || "",
+        display: deityPair(d),
+        deityType: d.deity_type,
+        titles: d.alter_titles ?? d.titles,
+        regionalLore: d.regional_lore ?? "",
+        alterNameEn: d.alter_name_en ?? "",
+        alterNameJa: d.alter_name_ja ?? "",
+        alterNameHiragana: d.alter_name_hiragana ?? "",
+        canonicalName: d.name_en,
+        canonicalNameJa: d.name_ja ?? "",
+        enshrinedName: caption.name,
+        enshrinedParen: caption.paren,
+        hasAlter: Boolean(d.alter_name_en || d.alter_name_ja),
+      };
+    }),
     festivals: shrine.festivals.map((f) => ({
       id: f.id,
       name: f.name_en,
@@ -529,10 +550,10 @@ function PageBody({
                   <>
                     (
                     <input
-                      value={edit!.getField("city")}
-                      onChange={(e) => edit!.setField("city", e.target.value)}
-                      placeholder={t("edit.cityPh")}
-                      aria-label={t("edit.cityAria")}
+                      value={edit!.getField(resolvePath("city", true, edit!.editLang))}
+                      onChange={(e) => edit!.setField(resolvePath("city", true, edit!.editLang), e.target.value)}
+                      placeholder={edit!.editLang === "ja" ? t("edit.cityJaPh") : t("edit.cityPh")}
+                      aria-label={edit!.editLang === "ja" ? t("edit.cityJaAria") : t("edit.cityAria")}
                       className="inline-block w-28 bg-torii/[0.04] outline-none border-b border-dashed border-torii/40 focus:border-torii rounded-sm px-1 text-xs font-sans"
                     />
                     {", "}
@@ -794,14 +815,23 @@ function PageBody({
                           {shrine.primaryDeity.display.sub}
                         </span>
                       </EditableText>
+                      {/* Hiragana reading for the alter name — edit-only input (read mode shows it via display.sub). */}
+                      <EditableText
+                        path={`deities.${primaryDeityIndex}.alter_name_hiragana`}
+                        ariaLabel={t("primaryAlterHiraganaAria")}
+                        placeholder={t("enshrinedNameHiraganaPh")}
+                        editClassName="text-xs font-sans text-moss/70"
+                      >
+                        {null}
+                      </EditableText>
                       <span className={`text-[10px] font-mono tracking-widest font-bold select-none ${getDeityTypeTextColor(shrine.primaryDeity.deityType)}`}>
                         {deityTypeLabel(shrine.primaryDeity.deityType)}
                       </span>
                     </div>
                     {(editing || shrine.primaryDeity.hasAlter) && (
                       <p className="mt-1.5 text-[10px] font-mono tracking-wide text-stone/40 select-none">
-                        {t("enshrinedFormOf", { name: shrine.primaryDeity.canonicalName })}
-                        {shrine.primaryDeity.canonicalNameJa ? ` (${shrine.primaryDeity.canonicalNameJa})` : ""}
+                        {t("enshrinedFormOf", { name: shrine.primaryDeity.enshrinedName })}
+                        {shrine.primaryDeity.enshrinedParen ? ` (${shrine.primaryDeity.enshrinedParen})` : ""}
                       </p>
                     )}
                   </div>
@@ -952,6 +982,13 @@ function PageBody({
                                         aria-label={t("companionAlterJaAria")}
                                         className="bg-torii/[0.04] outline-none rounded-sm border-b border-dashed border-torii/40 focus:border-torii px-1 text-xs font-serif w-full placeholder:text-stone/30"
                                       />
+                                      <input
+                                        value={edit!.getField(`deities.${globalIdx}.alter_name_hiragana`)}
+                                        onChange={(e) => edit!.setField(`deities.${globalIdx}.alter_name_hiragana`, e.target.value)}
+                                        placeholder={catalogDeity?.name_hiragana ?? t("enshrinedNameHiraganaPh")}
+                                        aria-label={t("companionAlterHiraganaAria")}
+                                        className="bg-torii/[0.04] outline-none rounded-sm border-b border-dashed border-torii/40 focus:border-torii px-1 text-xs font-sans w-full placeholder:text-stone/30"
+                                      />
                                       {catalogDeity?.titles && catalogDeity.titles.length > 0 && (
                                         <div className="pt-1.5 border-t border-stone/5">
                                           <div className="flex flex-col gap-1 text-[10px] text-stone/50 font-sans leading-normal">
@@ -1004,8 +1041,8 @@ function PageBody({
                                   </div>
                                   {deity.hasAlter && (
                                     <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
-                                      {t("enshrinedFormOf", { name: deity.canonicalName })}
-                                      {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
+                                      {t("enshrinedFormOf", { name: deity.enshrinedName })}
+                                      {deity.enshrinedParen ? ` (${deity.enshrinedParen})` : ""}
                                     </p>
                                   )}
                                 </div>
@@ -1558,8 +1595,8 @@ function ModalBody({
                 </div>
                 {shrine.primaryDeity.hasAlter && (
                   <p className="mt-1.5 text-[10px] font-mono tracking-wide text-stone/40 select-none">
-                    {t("enshrinedFormOf", { name: shrine.primaryDeity.canonicalName })}
-                    {shrine.primaryDeity.canonicalNameJa ? ` (${shrine.primaryDeity.canonicalNameJa})` : ""}
+                    {t("enshrinedFormOf", { name: shrine.primaryDeity.enshrinedName })}
+                    {shrine.primaryDeity.enshrinedParen ? ` (${shrine.primaryDeity.enshrinedParen})` : ""}
                   </p>
                 )}
               </div>
@@ -1614,8 +1651,8 @@ function ModalBody({
                           </div>
                           {deity.hasAlter && (
                             <p className="text-[9px] font-mono tracking-wide text-stone/40 select-none">
-                              {t("enshrinedFormOf", { name: deity.canonicalName })}
-                              {deity.canonicalNameJa ? ` (${deity.canonicalNameJa})` : ""}
+                              {t("enshrinedFormOf", { name: deity.enshrinedName })}
+                              {deity.enshrinedParen ? ` (${deity.enshrinedParen})` : ""}
                             </p>
                           )}
                         </div>

@@ -97,6 +97,7 @@ CREATE TABLE shrine_deities (
     regional_lore_ja text,                       -- JA shrine-specific lore (i18n; null => fall back to regional_lore)
     alter_name_en    text,                       -- shrine-specific alternate (enshrined) romaji name; null = use deities.name_en
     alter_name_ja    text,                       -- shrine-specific alternate (enshrined) kanji name; null = use deities.name_ja
+    alter_name_hiragana text,                    -- JA kana reading for alter_name_ja (i18n; null => fall back to deities.name_hiragana)
     alter_titles     text[],                     -- shrine-specific title/epithet override; null = use deities.titles
     alter_titles_ja  text[],                     -- JA title override (i18n; null => fall back to whole alter_titles array)
     PRIMARY KEY (shrine_id, deity_id)

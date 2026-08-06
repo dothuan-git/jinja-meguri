@@ -67,6 +67,7 @@ export function buildShrineInput(store: Store, slug: string): ShrineInput | null
         regional_lore_ja: sd.regional_lore_ja,
         alter_name_en: sd.alter_name_en,
         alter_name_ja: sd.alter_name_ja,
+        alter_name_hiragana: sd.alter_name_hiragana,
         alter_titles: sd.alter_titles,
         alter_titles_ja: sd.alter_titles_ja,
       })),
@@ -132,7 +133,7 @@ export function emptyShrineInput(): ShrineInput {
     deities: [{
       name_ja: "", is_primary: true, sort_order: 0,
       regional_lore: null, regional_lore_ja: null,
-      alter_name_en: null, alter_name_ja: null,
+      alter_name_en: null, alter_name_ja: null, alter_name_hiragana: null,
       alter_titles: null, alter_titles_ja: null,
     }],
     festivals: [],

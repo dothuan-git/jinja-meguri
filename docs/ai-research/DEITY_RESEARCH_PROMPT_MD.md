@@ -75,7 +75,7 @@ The response should use headers and section titles for human readability — bol
 
 Canonical deity
 Name (English): <romaji name, macrons where standard — e.g. Ame-no-Uzume, Inari Ōkami>
-Name (kanji): <kanji — global dedup key; saving the same kanji updates the existing deity. Use kana only if no standard kanji form exists>
+Name (kanji): <kanji — global dedup key; saving the same kanji updates the existing deity. Use kana only if no standard kanji form exists> (<hiragana>)
 Name (romaji reading): <pure romaji reading only when it differs from Name (English); — if identical>
 Deity type: <mythological | deified_human | syncretic>
 Mythic sphere: <concise 2–5 word Title Case category label, not a title epithet — e.g. "Agriculture & Commerce", "Storm & Seas" — or — if unknown>
@@ -100,7 +100,7 @@ Ame-no-Uzume — 天宇受売命
 
 Canonical deity
 Name (English): Ame-no-Uzume
-Name (kanji): 天宇受売命
+Name (kanji): 天宇受売命 (あめのうずめ)
 Name (romaji reading): —
 Deity type: mythological
 Mythic sphere: Dawn & Performing Arts

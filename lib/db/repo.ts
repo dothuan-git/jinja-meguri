@@ -186,6 +186,7 @@ function shrineDeityViews(idx: StoreIndex, shrineId: string, locale: Locale): De
         regional_lore: loc(locale, sd.regional_lore, sd.regional_lore_ja),
         alter_name_en: sd.alter_name_en,
         alter_name_ja: sd.alter_name_ja,
+        alter_name_hiragana: sd.alter_name_hiragana,
         alter_titles: locArr(locale, sd.alter_titles, sd.alter_titles_ja),
         is_primary: sd.is_primary,
         sort_order: sd.sort_order,

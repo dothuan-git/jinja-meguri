@@ -74,9 +74,9 @@ Render the sheet as formatted Markdown for easy scanning — use headers for the
 Identity
 Slug: <lowercase-hyphenated, e.g. fushimi-inari-taisha>
 Name (English): <romaji name>
-Name (Japanese): <kanji>
+Name (Japanese): <kanji> (<hiragana>)
 Name (romaji reading): <pure romaji reading when it differs from Name (English) — e.g. "Fushimi Inari Taisha" vs "Fushimi Inari Grand Shrine"; — if identical>
-City: <city/ward>
+City: <city/ward> (<city/ward japanese>)
 Region: <one Region value>
 Prefecture: <one Prefecture value>
 Address: <full address; Japanese in parentheses ok>
@@ -119,9 +119,9 @@ Highlights (repeat per item; write "none" if there are none):
 Deity 1
 Primary: Yes
 Name (romaji): <romaji>
-Name (kanji): <kanji — dedup key>
+Name (kanji): <kanji — dedup key> (<hiragana>)
 Enshrined as (romaji): <this shrine's alternate/enshrined name in romaji, or — if same as canonical>
-Enshrined as (kanji): <this shrine's alternate/enshrined name in kanji (別名), or — if same as canonical>
+Enshrined as (kanji): <this shrine's alternate/enshrined name in kanji (別名), or — if same as canonical> (<hiragana>)
 Deity type: <mythological | deified_human | syncretic>
 
 Titles (one English domain epithet per line — the deity's roles / sphere of patronage; no romaji names, no kanji):
@@ -136,7 +136,7 @@ Regional lore:
 
 Festival 1
 Name (English): <name>
-Name (Japanese): <kanji, or —>
+Name (Japanese): <kanji, or —> (<hiragana>)
 Name (romaji reading): <pure romaji reading when it differs from Name (English) — e.g. "Reitaisai" vs "Grand Festival"; — if identical>
 Type: <spectacle (no limit) | pilgrimage (max 2 per shrine) | —>
 Time (display): <human-readable timing, e.g. "First Day of the Horse in February">
@@ -161,8 +161,8 @@ Visitor notes:
 <repeat "Festival N" for each qualifying festival — spectacle has no cap, pilgrimage max 2; omit entire section if none. Write each one standalone — no cross-references to other festivals or shrine fields.>
 
 Sources (one entry per site — consolidate multiple pages from the same domain into one):
-1. URL: <url> — Title: <English site title>
-2. URL: <url> — Title: <English site title>
+1. URL: <url> — Title: <English site title> (<Japanese title>)
+2. URL: <url> — Title: <English site title> (<Japanese title>)
 
 Notes:
 <anything worth flagging — ambiguous/conflicting sources, judgment calls, low-confidence
