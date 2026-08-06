@@ -160,6 +160,24 @@ not in the components. This includes the map-only **festival-season filter** (`f
 year-wrapping month range carried in the `fmFrom`/`fmTo` params) matched against
 `ShrineCard.festival_months`; it lives in the shared predicate but only the map renders a control.
 
+**Filter/search URL state is [nuqs](https://nuqs.dev), shallow.** None of `/shrines`, `/map`,
+or `/search` read `searchParams` on the server — filtering is entirely client-side over the
+`Store`-derived arrays those pages already pass down — so writing a filter to the URL must
+never trigger an RSC round trip. `lib/shrineFilters.ts`'s `shrineFilterParsers` (consumed via
+`useQueryStates`/`useQueryState`) defaults to nuqs's `shallow: true`, which rewrites the address
+bar via the History API instead of re-fetching the page; `toShrineFilters()` adapts the parsed
+state bag back to the `ShrineFilters` shape `matchesShrineFilters` consumes. The search input
+itself reads `qs.q` directly (updates synchronously) while the *filtered list* reads
+`useDeferredValue(qs.q)`, so a keystroke never blocks on re-rendering results; the URL write is
+additionally debounced (`debounce(300)`) purely to stay under Safari's History API rate limit,
+not for input latency. `NuqsAdapter` is mounted once in `app/layout.tsx`. Facet arrays
+(`region`, `pref`, `cat`, `rank`, `deity`) use `parseAsNativeArrayOf`, which reads/writes
+**repeated query keys** (`?region=Kinki&region=Kanto`) — the format these params have always
+used. `ShrineListing`'s three row renderers (`components/shrineList/ShrineTableRow.tsx`,
+`ShrineListRow.tsx`, `ShrineGridCard.tsx`) are `memo()`'d for the same reason — a large result
+set shouldn't re-render every row on every keystroke — so their callback props
+(`useShrineMarks`'s `toggleSave`/`toggleStamp`, `onOpen`) must stay referentially stable.
+
 ### Admin section (dynamic, authenticated)
 
 Content management is **entirely in-place on the public surfaces** — admins see editing

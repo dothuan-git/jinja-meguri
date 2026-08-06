@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Filter, Heart, MapPinned, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryStates } from "nuqs";
 import type { Coordinates, ShrineCard, FacetCatalogs } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { namePair } from "@/lib/names";
@@ -12,7 +12,8 @@ import {
   FESTIVAL_MONTH_PARAM,
   FILTER_PARAM_KEY,
   matchesShrineFilters,
-  readShrineFilters,
+  shrineFilterParsers,
+  toShrineFilters,
   type MonthRange,
   type ShrineFacetId,
 } from "@/lib/shrineFilters";
@@ -53,18 +54,18 @@ export default function ShrineMapView({
   savedSlugs?: string[];
   stampedSlugs?: string[];
 }) {
-  const router = useRouter();
-  const params = useSearchParams();
   const locale = useLocale() as Locale;
   const t = useTranslations("Map");
   const containerRef = useRef<HTMLDivElement>(null);
   useEntranceReveal(containerRef);
 
   const marks = useShrineMarks({ saved: savedSlugs, stamped: stampedSlugs });
-  const showSaved = params.get("saved") === "1";
-  const showCollected = params.get("collected") === "1";
 
-  const filters = readShrineFilters(params);
+  // Shallow URL state — see lib/shrineFilters.ts. The page filters entirely in
+  // the browser, so these writes must not trigger an RSC round trip.
+  const [qs, setQs] = useQueryStates(shrineFilterParsers);
+  const { saved: showSaved, collected: showCollected } = qs;
+  const filters = useMemo(() => toShrineFilters(qs), [qs]);
   const [filterOpen, setFilterOpen] = useState(false);
   // Display-only preference (not a filter): show each shrine's festivals inside
   // the marker-click popup. Toggled from the filter modal.
@@ -73,42 +74,23 @@ export default function ShrineMapView({
   // for heart/stamp icons on the map. Signed-in users only.
   const [showFavoriteMarkers, setShowFavoriteMarkers] = useState(false);
 
-  function replaceParams(next: URLSearchParams) {
-    router.replace(`/map?${next.toString()}`, { scroll: false });
-  }
-  function setSearch(q: string) {
-    const next = new URLSearchParams(params.toString());
-    if (q) next.set("q", q);
-    else next.delete("q");
-    replaceParams(next);
-  }
-  function setFlag(key: string, on: boolean) {
-    const next = new URLSearchParams(params.toString());
-    if (on) next.set(key, "1");
-    else next.delete(key);
-    replaceParams(next);
+  const setSearch = useCallback((q: string) => setQs({ q }), [setQs]);
+  function setFlag(key: "saved" | "collected", on: boolean) {
+    setQs({ [key]: on });
   }
   function toggleFacet(facet: ShrineFacetId, value: string) {
     const current = filters[facet];
     const values = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
-    const next = new URLSearchParams(params.toString());
-    next.delete(FILTER_PARAM_KEY[facet]);
-    values.forEach((v) => next.append(FILTER_PARAM_KEY[facet], v));
-    replaceParams(next);
+    setQs({ [FILTER_PARAM_KEY[facet]]: values });
   }
   function setFestivalMonths(range: MonthRange | null) {
-    const next = new URLSearchParams(params.toString());
-    if (range) {
-      next.set(FESTIVAL_MONTH_PARAM.from, String(range.from));
-      next.set(FESTIVAL_MONTH_PARAM.to, String(range.to));
-    } else {
-      next.delete(FESTIVAL_MONTH_PARAM.from);
-      next.delete(FESTIVAL_MONTH_PARAM.to);
-    }
-    replaceParams(next);
+    setQs({
+      [FESTIVAL_MONTH_PARAM.from]: range?.from ?? null,
+      [FESTIVAL_MONTH_PARAM.to]: range?.to ?? null,
+    });
   }
   function clearAll() {
-    router.replace("/map", { scroll: false });
+    setQs(null);
   }
 
   const dropdowns: FacetDropdown[] = [
@@ -126,12 +108,22 @@ export default function ShrineMapView({
     { id: "ranks", label: t("facets.rank"), options: facets.ranks.map((r) => ({ value: r.name_en, label: namePair(locale, r).main })) },
   ];
 
-  const filtered = cards.filter((card) => {
-    if (showSaved && !marks.isSaved(card.slug)) return false;
-    if (showCollected && !marks.isStamped(card.slug)) return false;
-    return matchesShrineFilters(card, filters);
-  });
-  const points = filtered.filter((c): c is ShrineMapPoint => c.coordinates !== null);
+  // Filter on the deferred query so a keystroke doesn't block on re-deriving
+  // every marker and re-rendering the MapLibre canvas.
+  const deferredQuery = useDeferredValue(qs.q);
+  const filtered = useMemo(() => {
+    const deferredFilters = { ...filters, searchQuery: deferredQuery };
+    return cards.filter((card) => {
+      if (showSaved && !marks.saved.has(card.slug)) return false;
+      if (showCollected && !marks.stamped.has(card.slug)) return false;
+      return matchesShrineFilters(card, deferredFilters);
+    });
+  }, [cards, filters, deferredQuery, showSaved, showCollected, marks.saved, marks.stamped]);
+
+  const points = useMemo(
+    () => filtered.filter((c): c is ShrineMapPoint => c.coordinates !== null),
+    [filtered],
+  );
   const missingCoords = filtered.length - points.length;
 
   // Search now lives on the page, so the filter button reflects only the facet
@@ -189,13 +181,14 @@ export default function ShrineMapView({
           <div className="relative flex-1 flex items-center bg-washi/90 border border-moss/15 rounded-xl shadow-xs focus-within:ring-1 focus-within:ring-torii/40 focus-within:border-torii/40 transition-all">
             <Search className="absolute left-3 text-stone/40" size={14} />
             <input
-              type="text"
+              type="search"
+              aria-label={t("searchPlaceholder")}
               placeholder={t("searchPlaceholder")}
-              value={filters.searchQuery}
+              value={qs.q}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs font-sans pl-9 pr-9 py-3 bg-transparent border-none outline-hidden focus:ring-0 text-stone"
             />
-            {filters.searchQuery && (
+            {qs.q && (
               <button
                 type="button"
                 onClick={() => setSearch("")}

@@ -22,6 +22,15 @@
   --color-washi: #fbf9f4;
 }
 
+/* type="search" inputs on /shrines and /map render their own custom clear (X)
+   button, so suppress the browser's native one (WebKit/Blink only — Firefox
+   has none) to avoid two overlapping X buttons appearing once text is typed. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Utility aliases for display serif family
    - `font-display` maps to the Cormorant Garamond display face used for headings
    - keep `font-serif` as explicit mapping to the Noto Serif JP body serif so

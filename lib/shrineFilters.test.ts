@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
 import type { ShrineCard } from "@/lib/types";
 import {
-  readShrineFilters,
+  toShrineFilters,
   matchesShrineFilters,
   hasActiveShrineFilters,
   type ShrineFilters,
+  type ShrineQueryState,
 } from "@/lib/shrineFilters";
 
 const card: ShrineCard = {
@@ -42,10 +43,35 @@ const none: ShrineFilters = {
   festivalMonths: null,
 };
 
-describe("readShrineFilters", () => {
-  it("reads all facets from URL params", () => {
-    const params = new URLSearchParams("q=fox&cat=Protection&cat=Luck&rank=Sonsha&region=Kansai&pref=Kyoto&deity=Inari&fmFrom=3&fmTo=5");
-    expect(readShrineFilters(params)).toEqual({
+// The nuqs state bag as `useQueryStates(shrineFilterParsers)` returns it.
+const emptyState: ShrineQueryState = {
+  q: "",
+  cat: [],
+  rank: [],
+  region: [],
+  pref: [],
+  deity: [],
+  fmFrom: null,
+  fmTo: null,
+  saved: false,
+  collected: false,
+};
+
+describe("toShrineFilters", () => {
+  it("maps every facet off the query state", () => {
+    expect(
+      toShrineFilters({
+        ...emptyState,
+        q: "fox",
+        cat: ["Protection", "Luck"],
+        rank: ["Sonsha"],
+        region: ["Kansai"],
+        pref: ["Kyoto"],
+        deity: ["Inari"],
+        fmFrom: 3,
+        fmTo: 5,
+      }),
+    ).toEqual({
       searchQuery: "fox",
       prayerFocus: ["Protection", "Luck"],
       ranks: ["Sonsha"],
@@ -57,13 +83,16 @@ describe("readShrineFilters", () => {
   });
 
   it("ignores an incomplete or out-of-range festival month range", () => {
-    expect(readShrineFilters(new URLSearchParams("fmFrom=3")).festivalMonths).toBeNull();
-    expect(readShrineFilters(new URLSearchParams("fmFrom=0&fmTo=5")).festivalMonths).toBeNull();
-    expect(readShrineFilters(new URLSearchParams("fmFrom=3&fmTo=13")).festivalMonths).toBeNull();
+    const months = (fmFrom: number | null, fmTo: number | null) =>
+      toShrineFilters({ ...emptyState, fmFrom, fmTo }).festivalMonths;
+    expect(months(3, null)).toBeNull();
+    expect(months(0, 5)).toBeNull();
+    expect(months(3, 13)).toBeNull();
+    expect(months(3, 5)).toEqual({ from: 3, to: 5 });
   });
 
   it("defaults to empty filters", () => {
-    expect(readShrineFilters(new URLSearchParams())).toEqual(none);
+    expect(toShrineFilters(emptyState)).toEqual(none);
   });
 });
 
