@@ -15,6 +15,7 @@ export default function ShrineCard({ card }: { card: Card }) {
   return (
     <Link
       href={`/shrines/${card.slug}`}
+      scroll={false}
       data-testid="shrine-card"
       className="group relative flex flex-col overflow-hidden rounded-md border hairline bg-washi-deep/60 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:bg-washi-deep hover:shadow-[0_12px_30px_-18px_rgba(33,28,22,0.5)]"
     >

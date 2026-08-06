@@ -268,6 +268,7 @@ export default function ShrineMapCanvas({
 
             <Link
               href={`/shrines/${selected.slug}`}
+              scroll={false}
               className="mt-2.5 pt-2 border-t border-moss/10 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest !text-torii hover:!text-torii-dark transition-colors"
             >
               {t("viewShrine")}

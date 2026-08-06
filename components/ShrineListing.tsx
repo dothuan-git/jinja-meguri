@@ -132,7 +132,12 @@ export default function ShrineListing({
     });
   }, []);
 
-  const openShrine = useCallback((slug: string) => router.push(`/shrines/${slug}`), [router]);
+  // scroll:false — the intercepted @modal slot is the last node in <body>, so Next's
+  // default "scroll the new segment into view" jumps the listing behind it to the bottom.
+  const openShrine = useCallback(
+    (slug: string) => router.push(`/shrines/${slug}`, { scroll: false }),
+    [router]
+  );
 
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<string | null>(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
