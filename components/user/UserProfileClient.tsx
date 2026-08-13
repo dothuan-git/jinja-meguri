@@ -834,7 +834,7 @@ export default function UserProfileClient({
 
                           {/* Right: Shrine Details */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
+                            <Link href={`/shrines/${item.slug}`} scroll={false} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
                               <h4 className="font-serif text-[13px] font-bold text-stone truncate leading-snug tracking-wide">
                                 {namePair(locale, item).main}
                               </h4>
@@ -864,6 +864,7 @@ export default function UserProfileClient({
                           {/* Small hover arrow */}
                           <Link
                             href={`/shrines/${item.slug}`}
+                            scroll={false}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="p-1 rounded-full border border-moss/10 bg-washi opacity-0 group-hover:opacity-100 group-hover:text-torii hover:scale-110 transition-all ml-2"
                             aria-label={t("viewShrine", { name: item.name_en })}
@@ -911,7 +912,7 @@ export default function UserProfileClient({
                       >
                         <div>
                           <div className="flex justify-between items-start gap-2">
-                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
+                            <Link href={`/shrines/${item.slug}`} scroll={false} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
                               <h4 className="font-serif text-[13px] font-bold text-stone leading-snug group-hover:text-torii truncate tracking-wide">
                                 {namePair(locale, item).main}
                               </h4>
@@ -941,6 +942,7 @@ export default function UserProfileClient({
                           </span>
                           <Link
                             href={`/shrines/${item.slug}`}
+                            scroll={false}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="text-[10px] font-mono font-black uppercase tracking-widest text-stone hover:text-torii inline-flex items-center gap-0.5"
                           >
@@ -1065,6 +1067,7 @@ export default function UserProfileClient({
                                       <Link
                                         key={stamp.slug}
                                         href={`/shrines/${stamp.slug}`}
+                                        scroll={false}
                                         onClick={(e) => openShrineDirectOnMobile(e, stamp.slug)}
                                         className="wabi-sabi-card washi-paper rounded-lg px-3 py-2.5 flex items-center gap-2.5 shadow-3xs group hover:border-torii/30 transition-all"
                                       >
