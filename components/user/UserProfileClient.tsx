@@ -53,7 +53,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/ui/Toast";
 import { saveCrestAction } from "@/app/users/actions";
-import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, type Milestone } from "@/lib/milestones";
+import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, localizeCatalogEntry, type Milestone } from "@/lib/milestones";
 import type { StampEntry, SavedEntry } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { namePair } from "@/lib/names";
@@ -104,13 +104,17 @@ function MilestoneCard({
   current,
   target,
   percent,
+  locale,
 }: {
   def: Milestone;
   unlocked: boolean;
   current: number;
   target: number;
   percent: number;
+  locale: Locale;
 }) {
+  const t = useTranslations("Profile");
+  const { title, subtitle, description } = localizeCatalogEntry(locale, def);
   const Icon = MILESTONE_ICONS[def.icon] ?? Award;
   // Count-style milestones (target > 1) show the "current / target" tally; boolean
   // ones (target === 1) rely on the empty/full bar alone.
@@ -147,18 +151,18 @@ function MilestoneCard({
       <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:gap-1">
         <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
           <h4 className={`font-sans text-[11px] md:text-xs font-bold uppercase tracking-wider ${active ? "text-stone" : "text-stone/60"}`}>
-            {def.title_en}
+            {title}
           </h4>
-          <span className="font-serif text-[10px] text-torii">({def.title_ja})</span>
+          <span className="font-serif text-[10px] text-torii">({subtitle})</span>
         </div>
-        <p className="text-[10px] md:text-[11px] text-stone/75 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{def.description}</p>
+        <p className="text-[10px] md:text-[11px] text-stone/75 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{description}</p>
 
         {/* Progress bar — fills as the milestone nears completion; pinned to card foot */}
         <div className="mt-auto pt-1 md:pt-1.5 space-y-1">
           <div className="flex items-center justify-between gap-1 text-[9px] font-mono tracking-widest">
             {unlocked ? (
               <span className="text-bamboo font-bold flex items-center gap-0.5">
-                <CheckCircle2 size={10} /> UNLOCKED
+                <CheckCircle2 size={10} /> {t("unlocked")}
               </span>
             ) : inProgress ? (
               <span className="text-torii font-bold flex items-center gap-0.5">
@@ -408,7 +412,7 @@ export default function UserProfileClient({
   useEffect(() => setMounted(true), []);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"stamps" | "saved" | "journey">("stamps");
+  const [activeTab, setActiveTab] = useState<"stamps" | "saved" | "journey">("journey");
 
   // Chronicle Expansion State (Prefectures and long lists of Shrines)
   const [collapsedPrefs, setCollapsedPrefs] = useState<Record<string, boolean>>({});
@@ -434,9 +438,7 @@ export default function UserProfileClient({
   // These replace the old hardcoded tiers and are excluded from the Sacred Milestones list.
   const stampCount = stamped.length;
   const rank = getPilgrimRank(stampCount);
-  const statusNameEn = rank.current.title_en;
-  const statusNameJa = rank.current.title_ja;
-  const statusDesc = rank.current.description;
+  const { title: statusTitle, subtitle: statusSubtitle, description: statusDesc } = localizeCatalogEntry(locale, rank.current);
   const progressPercentage = rank.percent;
   const nextGoal = rank.next?.threshold ?? stampCount;
 
@@ -667,7 +669,7 @@ export default function UserProfileClient({
                 <div className="flex items-center gap-2">
                   <Award size={15} className="text-torii" />
                   <span className="font-sans text-sm font-bold uppercase text-stone tracking-wide">
-                    {statusNameEn} <span className="font-serif text-xs text-torii ml-1">({statusNameJa})</span>
+                    {statusTitle} <span className="font-serif text-xs text-torii ml-1">({statusSubtitle})</span>
                   </span>
                 </div>
                 <p className="hidden md:block text-[11px] text-stone/75 leading-normal text-center md:text-left mb-2">
@@ -739,9 +741,9 @@ export default function UserProfileClient({
       >
         <div className="flex justify-around md:justify-center border-b border-moss/15 gap-1 md:gap-8 select-none pb-px">
           {([
+            { id: "journey", label: "巡礼の旅路", sub: t("tabPilgrimLog"), count: null },
             { id: "stamps", label: "御朱印帳", sub: t("tabStampBook"), count: stampCount },
             { id: "saved", label: "お気に入り", sub: t("tabWishlist"), count: wishlistCount },
-            { id: "journey", label: "巡礼の旅路", sub: t("tabPilgrimLog"), count: null },
           ] as const).map((tab) => (
             <button
               key={tab.id}
@@ -805,19 +807,19 @@ export default function UserProfileClient({
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                     {stamped.map((item) => {
                       const firstKanji = item.name_ja ? item.name_ja.charAt(0) : "神";
                       return (
                         <motion.div
                           key={item.slug}
                           whileHover={{ y: -3, scale: 1.01 }}
-                          className="wabi-sabi-card washi-paper rounded-xl p-4 flex items-center gap-4 relative overflow-hidden group shadow-3xs hover:border-torii/30 hover:shadow-xs"
+                          className="wabi-sabi-card washi-paper rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group shadow-3xs hover:border-torii/30 hover:shadow-xs"
                         >
                           {/* Left: Authentic Red Hanko Seal stamp graphic */}
                           <div className="relative shrink-0 select-none">
                             {/* Seal boundary */}
-                            <div className="hanko-seal w-16 h-16 rounded-md flex flex-col items-center justify-center p-1 border-[2.5px] border-torii text-torii font-serif font-black relative overflow-hidden bg-transparent shadow-xs transition-transform duration-300 group-hover:rotate-3">
+                            <div className="hanko-seal w-13 h-13 rounded-md flex flex-col items-center justify-center p-1 border-2 border-torii text-torii font-serif font-black relative overflow-hidden bg-transparent shadow-xs transition-transform duration-300 group-hover:rotate-3">
                               {/* Distress grunge overlay to simulate paper stamp bleed */}
                               <div
                                 className="absolute inset-0 opacity-15 mix-blend-multiply pointer-events-none"
@@ -825,20 +827,20 @@ export default function UserProfileClient({
                                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
                                 }}
                               />
-                              <span className="text-xl leading-none">{firstKanji}</span>
-                              <span className="text-[8px] font-sans tracking-tight leading-none mt-0.5 opacity-80 uppercase">印</span>
+                              <span className="text-lg leading-none">{firstKanji}</span>
+                              <span className="text-[7px] font-sans tracking-tight leading-none mt-0.5 opacity-80 uppercase">印</span>
                             </div>
                           </div>
 
                           {/* Right: Shrine Details */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
-                              <h4 className="font-serif text-sm font-bold text-stone truncate leading-snug tracking-wide">
+                            <Link href={`/shrines/${item.slug}`} scroll={false} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors">
+                              <h4 className="font-serif text-[13px] font-bold text-stone truncate leading-snug tracking-wide">
                                 {namePair(locale, item).main}
                               </h4>
                               {namePair(locale, item).sub && (
                                 <p
-                                  className="font-serif text-xs text-torii-dark/70 tracking-wider leading-none mt-0.5"
+                                  className="font-serif text-[11px] text-torii-dark/70 tracking-wider leading-none mt-0.5 truncate"
                                   style={{ fontFamily: "'Noto Serif JP', serif" }}
                                 >
                                   {namePair(locale, item).sub}
@@ -846,10 +848,10 @@ export default function UserProfileClient({
                               )}
                             </Link>
                             
-                            <div className="flex items-center gap-1.5 text-[10px] text-stone/55 mt-2">
-                              <MapPin size={11} className="text-moss-light/60" />
+                            <div className="flex items-center gap-1.5 text-[10px] text-stone/55 mt-1.5">
+                              <MapPin size={11} className="text-moss-light/60 shrink-0" />
                               <span className="truncate">
-                                {[item.city, item.prefecture].filter(Boolean).join(", ")}
+                                {[item.city, namePair(locale, item.prefecture).main].filter(Boolean).join(", ")}
                               </span>
                             </div>
 
@@ -862,6 +864,7 @@ export default function UserProfileClient({
                           {/* Small hover arrow */}
                           <Link
                             href={`/shrines/${item.slug}`}
+                            scroll={false}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="p-1 rounded-full border border-moss/10 bg-washi opacity-0 group-hover:opacity-100 group-hover:text-torii hover:scale-110 transition-all ml-2"
                             aria-label={t("viewShrine", { name: item.name_en })}
@@ -900,22 +903,22 @@ export default function UserProfileClient({
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                     {saved.map((item) => (
                       <motion.div
                         key={item.slug}
                         whileHover={{ y: -3, scale: 1.01 }}
-                        className="wabi-sabi-card washi-paper rounded-xl p-4.5 flex flex-col justify-between group shadow-3xs hover:border-torii/30"
+                        className="wabi-sabi-card washi-paper rounded-xl p-3.5 flex flex-col justify-between group shadow-3xs hover:border-torii/30"
                       >
                         <div>
                           <div className="flex justify-between items-start gap-2">
-                            <Link href={`/shrines/${item.slug}`} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
-                              <h4 className="font-serif text-sm font-bold text-stone leading-snug group-hover:text-torii truncate tracking-wide">
+                            <Link href={`/shrines/${item.slug}`} scroll={false} onClick={(e) => openShrineDirectOnMobile(e, item.slug)} className="group-hover:text-torii transition-colors min-w-0">
+                              <h4 className="font-serif text-[13px] font-bold text-stone leading-snug group-hover:text-torii truncate tracking-wide">
                                 {namePair(locale, item).main}
                               </h4>
                               {namePair(locale, item).sub && (
                                 <p
-                                  className="font-serif text-[11px] text-torii-dark/70 tracking-wider mt-0.5 truncate"
+                                  className="font-serif text-[10px] text-torii-dark/70 tracking-wider mt-0.5 truncate"
                                   style={{ fontFamily: "'Noto Serif JP', serif" }}
                                 >
                                   {namePair(locale, item).sub}
@@ -925,20 +928,21 @@ export default function UserProfileClient({
                             <Heart size={14} className="text-torii fill-torii shrink-0" />
                           </div>
 
-                          <div className="flex items-center gap-1.5 text-[10px] text-stone/55 mt-3">
-                            <MapPin size={11} className="text-moss-light/60" />
+                          <div className="flex items-center gap-1.5 text-[10px] text-stone/55 mt-2.5">
+                            <MapPin size={11} className="text-moss-light/60 shrink-0" />
                             <span className="truncate">
-                              {[item.city, item.prefecture].filter(Boolean).join(", ")}
+                              {[item.city, namePair(locale, item.prefecture).main].filter(Boolean).join(", ")}
                             </span>
                           </div>
                         </div>
 
-                        <div className="border-t border-moss/5 mt-4 pt-3.5 flex justify-between items-center">
+                        <div className="border-t border-moss/5 mt-3 pt-3 flex justify-between items-center">
                           <span className="text-[8px] font-mono tracking-widest text-moss-light/70 uppercase">
                             {t("saved", { date: formatDate(item.saved_at, locale) })}
                           </span>
                           <Link
                             href={`/shrines/${item.slug}`}
+                            scroll={false}
                             onClick={(e) => openShrineDirectOnMobile(e, item.slug)}
                             className="text-[10px] font-mono font-black uppercase tracking-widest text-stone hover:text-torii inline-flex items-center gap-0.5"
                           >
@@ -981,7 +985,7 @@ export default function UserProfileClient({
                   >
                     {orderedMilestones.map(({ def, unlocked, current, target, percent }) => (
                       <div key={def.id} className="h-full">
-                        <MilestoneCard def={def} unlocked={unlocked} current={current} target={target} percent={percent} />
+                        <MilestoneCard def={def} unlocked={unlocked} current={current} target={target} percent={percent} locale={locale} />
                       </div>
                     ))}
                   </div>
@@ -1058,11 +1062,12 @@ export default function UserProfileClient({
                                   transition={{ duration: 0.25, ease: "easeInOut" }}
                                   className="overflow-hidden space-y-4 pl-2"
                                 >
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
                                     {displayStamps.map((stamp) => (
                                       <Link
                                         key={stamp.slug}
                                         href={`/shrines/${stamp.slug}`}
+                                        scroll={false}
                                         onClick={(e) => openShrineDirectOnMobile(e, stamp.slug)}
                                         className="wabi-sabi-card washi-paper rounded-lg px-3 py-2.5 flex items-center gap-2.5 shadow-3xs group hover:border-torii/30 transition-all"
                                       >
