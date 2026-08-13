@@ -53,7 +53,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/ui/Toast";
 import { saveCrestAction } from "@/app/users/actions";
-import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, type Milestone } from "@/lib/milestones";
+import { buildMilestoneContext, evaluateMilestones, getPilgrimRank, localizeCatalogEntry, type Milestone } from "@/lib/milestones";
 import type { StampEntry, SavedEntry } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { namePair } from "@/lib/names";
@@ -104,13 +104,17 @@ function MilestoneCard({
   current,
   target,
   percent,
+  locale,
 }: {
   def: Milestone;
   unlocked: boolean;
   current: number;
   target: number;
   percent: number;
+  locale: Locale;
 }) {
+  const t = useTranslations("Profile");
+  const { title, subtitle, description } = localizeCatalogEntry(locale, def);
   const Icon = MILESTONE_ICONS[def.icon] ?? Award;
   // Count-style milestones (target > 1) show the "current / target" tally; boolean
   // ones (target === 1) rely on the empty/full bar alone.
@@ -147,18 +151,18 @@ function MilestoneCard({
       <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:gap-1">
         <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
           <h4 className={`font-sans text-[11px] md:text-xs font-bold uppercase tracking-wider ${active ? "text-stone" : "text-stone/60"}`}>
-            {def.title_en}
+            {title}
           </h4>
-          <span className="font-serif text-[10px] text-torii">({def.title_ja})</span>
+          <span className="font-serif text-[10px] text-torii">({subtitle})</span>
         </div>
-        <p className="text-[10px] md:text-[11px] text-stone/75 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{def.description}</p>
+        <p className="text-[10px] md:text-[11px] text-stone/75 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{description}</p>
 
         {/* Progress bar — fills as the milestone nears completion; pinned to card foot */}
         <div className="mt-auto pt-1 md:pt-1.5 space-y-1">
           <div className="flex items-center justify-between gap-1 text-[9px] font-mono tracking-widest">
             {unlocked ? (
               <span className="text-bamboo font-bold flex items-center gap-0.5">
-                <CheckCircle2 size={10} /> UNLOCKED
+                <CheckCircle2 size={10} /> {t("unlocked")}
               </span>
             ) : inProgress ? (
               <span className="text-torii font-bold flex items-center gap-0.5">
@@ -434,9 +438,7 @@ export default function UserProfileClient({
   // These replace the old hardcoded tiers and are excluded from the Sacred Milestones list.
   const stampCount = stamped.length;
   const rank = getPilgrimRank(stampCount);
-  const statusNameEn = rank.current.title_en;
-  const statusNameJa = rank.current.title_ja;
-  const statusDesc = rank.current.description;
+  const { title: statusTitle, subtitle: statusSubtitle, description: statusDesc } = localizeCatalogEntry(locale, rank.current);
   const progressPercentage = rank.percent;
   const nextGoal = rank.next?.threshold ?? stampCount;
 
@@ -667,7 +669,7 @@ export default function UserProfileClient({
                 <div className="flex items-center gap-2">
                   <Award size={15} className="text-torii" />
                   <span className="font-sans text-sm font-bold uppercase text-stone tracking-wide">
-                    {statusNameEn} <span className="font-serif text-xs text-torii ml-1">({statusNameJa})</span>
+                    {statusTitle} <span className="font-serif text-xs text-torii ml-1">({statusSubtitle})</span>
                   </span>
                 </div>
                 <p className="hidden md:block text-[11px] text-stone/75 leading-normal text-center md:text-left mb-2">
@@ -981,7 +983,7 @@ export default function UserProfileClient({
                   >
                     {orderedMilestones.map(({ def, unlocked, current, target, percent }) => (
                       <div key={def.id} className="h-full">
-                        <MilestoneCard def={def} unlocked={unlocked} current={current} target={target} percent={percent} />
+                        <MilestoneCard def={def} unlocked={unlocked} current={current} target={target} percent={percent} locale={locale} />
                       </div>
                     ))}
                   </div>
