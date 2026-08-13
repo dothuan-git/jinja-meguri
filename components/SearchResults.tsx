@@ -1,33 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useDeferredValue, useMemo, useRef } from "react";
+import { useQueryState } from "nuqs";
 import { useTranslations } from "next-intl";
 import type { SearchDoc, ShrineCard as Card } from "@/lib/types";
 import { makeSearcher } from "@/lib/search";
+import { shrineFilterParsers } from "@/lib/shrineFilters";
 import ShrineCard from "@/components/ShrineCard";
 import { useEntranceReveal } from "@/components/useEntranceReveal";
 
 export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; cards: Card[] }) {
   const t = useTranslations("Search");
-  const sp = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
 
-  const query = (sp.get("q") ?? "").trim();
-  const [value, setValue] = useState(query);
-  useEffect(() => setValue(sp.get("q") ?? ""), [sp]);
+  // Shallow + debounced: the page filters client-side with Fuse.js and never
+  // reads `searchParams` on the server, so `?q=` is only there to make results
+  // shareable. Typing updates `value` synchronously; the URL catches up.
+  const [value, setValue] = useQueryState("q", shrineFilterParsers.q);
+  const query = useDeferredValue(value.trim());
 
   const searcher = useMemo(() => makeSearcher(docs), [docs]);
   const cardBySlug = useMemo(() => new Map(cards.map((c) => [c.slug, c])), [cards]);
   const results = useMemo(() => (query ? searcher(query) : []), [searcher, query]);
 
-  const submit = (v: string) => {
-    const q = v.trim();
-    router.replace(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname, { scroll: false });
-  };
-
-  const matched = results.map((r) => cardBySlug.get(r.slug)).filter((c): c is Card => !!c);
+  const matched = useMemo(
+    () => results.map((r) => cardBySlug.get(r.slug)).filter((c): c is Card => !!c),
+    [results, cardBySlug],
+  );
 
   const containerRef = useRef<HTMLElement>(null);
   useEntranceReveal(containerRef);
@@ -42,10 +40,7 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
       <form
         data-reveal="fade-up"
         role="search"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit(value);
-        }}
+        onSubmit={(e) => e.preventDefault()}
         className="mt-6 flex items-center gap-3 border-b-2 border-[var(--hairline)] pb-2 focus-within:border-vermilion"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-sumi-soft" aria-hidden>
@@ -57,10 +52,7 @@ export default function SearchResults({ docs, cards }: { docs: SearchDoc[]; card
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            submit(e.target.value);
-          }}
+          onChange={(e) => setValue(e.target.value)}
           placeholder={t("placeholder")}
           aria-label={t("searchQuery")}
           className="w-full bg-transparent text-lg placeholder:text-sumi-soft/60 focus:outline-none"

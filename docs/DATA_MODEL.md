@@ -90,6 +90,8 @@ nullable `*_ja` sibling added by `docs/migrations/001-i18n-ja-prose.sql` (mirror
   EN: main = `name_en`, sub = `name_ja` (kanji); JA: main = `name_ja ?? name_en`,
   sub = `name_hiragana ?? name_en` (a sub that would duplicate the main is dropped). Every
   name-pair render site calls `namePair(locale, …)` instead of hardcoding the EN-first order.
+  `shrine_deities.alter_name_hiragana` (`docs/migrations/003-alter-name-hiragana.sql`) extends the
+  same reading column to a shrine's alternate (enshrined) deity name — see §5 below.
 - **The `Store` cache stays locale-agnostic.** `loadStore()`/`fetchStore()` never reads
   `cookies()` and is never keyed by locale — it fetches every column (including all `_ja`
   siblings) once, and locale is applied per-request in `repo.ts`. See `lib/i18n.ts` for the
@@ -250,6 +252,7 @@ Shrine ↔ deity, carrying shrine-specific deity data.
 | `regional_lore_ja` | `text`  | Yes      | —                                     | JA lore (i18n; null ⇒ falls back to `regional_lore` — §1.5).|
 | `alter_name_en` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) romaji name; `null` = use `deities.name_en`.|
 | `alter_name_ja` | `text`     | Yes      | —                                     | Shrine-specific alternate (enshrined) kanji name; `null` = use `deities.name_ja`.|
+| `alter_name_hiragana` | `text` | Yes    | —                                     | Kana reading for `alter_name_ja` (i18n; null ⇒ falls back to `deities.name_hiragana` — §1.5).|
 | `alter_titles`  | `text[]`   | Yes      | —                                     | Shrine-specific title/epithet override; `null` = use `deities.titles`.|
 | `alter_titles_ja` | `text[]` | Yes      | —                                     | JA title override (i18n, whole-array fallback — §1.5).|
 
@@ -531,8 +534,9 @@ Key derivations done in `repo.ts`, not in SQL:
   festivals in popup" display. `when` prefers the festival's `time_prose`, else a `Jul 30 – Aug 2`
   span from its fixed `start_date`/`end_date`, else null.
 - **Lore fallback** — `regional_lore ?? canonical_lore` for display.
-- **Enshrined-name fallback** — `alter_name_en ?? name_en` / `alter_name_ja ?? name_ja`: the shrine's
-  alternate (enshrined) name is shown when present, otherwise the canonical deity name.
+- **Enshrined-name fallback** — `alter_name_en ?? name_en` / `alter_name_ja ?? name_ja` /
+  `alter_name_hiragana ?? name_hiragana`: the shrine's alternate (enshrined) name is shown when
+  present, otherwise the canonical deity name.
 - **Calendar date resolution** — occurrence date wins over the festival's own date;
   `is_fallback = true` when neither exists (display `time_prose` only).
 

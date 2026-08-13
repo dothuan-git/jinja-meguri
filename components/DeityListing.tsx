@@ -388,7 +388,7 @@ export default function DeityListing({
                       if (window.matchMedia("(max-width: 639.98px)").matches) {
                         window.location.assign(`/shrines/${slug}`);
                       } else {
-                        router.push(`/shrines/${slug}`);
+                        router.push(`/shrines/${slug}`, { scroll: false });
                       }
                     }}
                   />

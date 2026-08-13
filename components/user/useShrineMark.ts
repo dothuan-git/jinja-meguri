@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toggleSaveAction, toggleStampAction } from "@/app/users/actions";
 import { useToast } from "@/components/ui/Toast";
@@ -20,6 +20,10 @@ function withSlug(set: Set<string>, slug: string, present: boolean): Set<string>
  * and a detail page (one shrine). Applies the change immediately, calls the
  * server action, reconciles to its authoritative MarkState, and reverts + toasts
  * on failure. Must be rendered under a ToastProvider (mounted in the root layout).
+ *
+ * The returned handlers are referentially stable across renders (current set
+ * membership is read through refs rather than closed over), so they can be
+ * passed as props to the memoized shrine rows without defeating the memo.
  */
 export function useShrineMarks(initial: { saved?: string[]; stamped?: string[] } = {}) {
   const [saved, setSaved] = useState<Set<string>>(() => new Set(initial.saved ?? []));
@@ -28,10 +32,19 @@ export function useShrineMarks(initial: { saved?: string[]; stamped?: string[] }
   const toast = useToast();
   const t = useTranslations("Toasts");
 
+  const savedRef = useRef(saved);
+  const stampedRef = useRef(stamped);
+  useEffect(() => {
+    savedRef.current = saved;
+  }, [saved]);
+  useEffect(() => {
+    stampedRef.current = stamped;
+  }, [stamped]);
+
   const run = useCallback(
     (kind: Kind, slug: string, name?: string) => {
       const setState = kind === "save" ? setSaved : setStamped;
-      const current = kind === "save" ? saved : stamped;
+      const current = kind === "save" ? savedRef.current : stampedRef.current;
       const next = !current.has(slug);
 
       // Optimistic.
@@ -53,14 +66,24 @@ export function useShrineMarks(initial: { saved?: string[]; stamped?: string[] }
         }
       });
     },
-    [saved, stamped, toast, t],
+    [toast, t],
   );
 
-  return {
-    pending,
-    isSaved: (slug: string) => saved.has(slug),
-    isStamped: (slug: string) => stamped.has(slug),
-    toggleSave: (slug: string, name?: string) => run("save", slug, name),
-    toggleStamp: (slug: string, name?: string) => run("stamp", slug, name),
-  };
+  const toggleSave = useCallback((slug: string, name?: string) => run("save", slug, name), [run]);
+  const toggleStamp = useCallback((slug: string, name?: string) => run("stamp", slug, name), [run]);
+
+  return useMemo(
+    () => ({
+      pending,
+      // The raw sets are exposed as stable useMemo dependencies for callers that
+      // filter by collection membership; the predicates stay for one-off reads.
+      saved,
+      stamped,
+      isSaved: (slug: string) => saved.has(slug),
+      isStamped: (slug: string) => stamped.has(slug),
+      toggleSave,
+      toggleStamp,
+    }),
+    [pending, saved, stamped, toggleSave, toggleStamp],
+  );
 }

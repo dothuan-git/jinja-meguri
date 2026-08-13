@@ -69,6 +69,8 @@ export interface ShrineDeityRow {
   // sourced from the deities table. null = fall back to deities.name_en/name_ja.
   alter_name_en: string | null;
   alter_name_ja: string | null;
+  // Kana reading for alter_name_ja; null = fall back to deities.name_hiragana.
+  alter_name_hiragana: string | null;
   // Shrine-specific title/epithet override. null = fall back to deities.titles.
   alter_titles: string[] | null;
   // JA title override; null = fall back to the whole alter_titles array.
@@ -212,6 +214,8 @@ export interface DeityView {
   regional_lore: string | null;
   alter_name_en: string | null;
   alter_name_ja: string | null;
+  // Kana reading for alter_name_ja; null = fall back to name_hiragana.
+  alter_name_hiragana: string | null;
   // Shrine-specific title override (shrine_deities.alter_titles); raw, pre-fallback.
   // Display should use `alter_titles ?? titles`.
   alter_titles: string[] | null;

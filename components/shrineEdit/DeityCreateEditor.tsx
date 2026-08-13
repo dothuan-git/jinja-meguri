@@ -11,7 +11,7 @@ type DeityDraft = ShrineInput["deities"][number];
 const DEITY_TYPES = ["mythological", "deified_human", "syncretic"] as const;
 
 function emptyCompanion(sortOrder: number): DeityDraft {
-  return { name_ja: "", is_primary: false, sort_order: sortOrder, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_titles: null };
+  return { name_ja: "", is_primary: false, sort_order: sortOrder, regional_lore: null, alter_name_en: null, alter_name_ja: null, alter_name_hiragana: null, alter_titles: null };
 }
 
 // alter_titles / regional_lore are shrine-specific overrides edited via raw
@@ -250,7 +250,7 @@ export default function DeityCreateEditor() {
             <div className="space-y-3 pt-3 border-t border-dashed border-moss/10">
               <div className="space-y-1">
                 <span className={`${typo.fieldLabel} block`}>Enshrined as (this shrine&rsquo;s alternate name)</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input
                     value={d.alter_name_en ?? ""}
                     onChange={(e) => update(i, { alter_name_en: e.target.value || null })}
@@ -263,6 +263,13 @@ export default function DeityCreateEditor() {
                     onChange={(e) => update(i, { alter_name_ja: e.target.value || null })}
                     placeholder="別名 (kanji) — optional"
                     aria-label="Enshrined alternate name (kanji)"
+                    className={`${inputBase} w-full`}
+                  />
+                  <input
+                    value={d.alter_name_hiragana ?? ""}
+                    onChange={(e) => update(i, { alter_name_hiragana: e.target.value || null })}
+                    placeholder="別名 (hiragana) — optional"
+                    aria-label="Enshrined alternate name (hiragana)"
                     className={`${inputBase} w-full`}
                   />
                 </div>

@@ -1,3 +1,12 @@
+import {
+  debounce,
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsNativeArrayOf,
+  parseAsString,
+  type inferParserType,
+} from "nuqs";
+import { fold } from "@/lib/search";
 import type { ShrineCard } from "@/lib/types";
 
 // Faceted shrine filtering shared by the listing (/shrines) and the map (/map).
@@ -25,41 +34,73 @@ export function monthInRange(month: number, { from, to }: MonthRange): boolean {
 
 // Only the string[] facets are driven by generic param keys / dropdowns;
 // searchQuery and the festivalMonths range are handled separately.
-export const FILTER_PARAM_KEY: Record<Exclude<keyof ShrineFilters, "searchQuery" | "festivalMonths">, string> = {
+// `as const` keeps the values as literal types so they can key the nuqs parser
+// map below without widening to `string`.
+export const FILTER_PARAM_KEY = {
   prayerFocus: "cat",
   ranks: "rank",
   region: "region",
   prefecture: "pref",
   deity: "deity",
-};
+} as const satisfies Record<Exclude<keyof ShrineFilters, "searchQuery" | "festivalMonths">, string>;
 
 export type ShrineFacetId = keyof typeof FILTER_PARAM_KEY;
-
-// Structural param type so this works with both URLSearchParams and
-// next/navigation's ReadonlyURLSearchParams.
-type ParamsLike = { get(key: string): string | null; getAll(key: string): string[] };
 
 // Festival-season range params — map-only, so kept out of FILTER_PARAM_KEY
 // (which drives the generic string[] facet dropdowns).
 export const FESTIVAL_MONTH_PARAM = { from: "fmFrom", to: "fmTo" } as const;
 
-function readMonthParam(value: string | null): number | null {
-  const n = Number(value);
-  return Number.isInteger(n) && n >= 1 && n <= 12 ? n : null;
-}
+// ---------------------------------------------------------------------------
+// nuqs URL state
+//
+// Both /shrines and /map filter entirely in the browser — neither page reads
+// `searchParams` on the server — so filter changes must not trigger an RSC
+// refetch. nuqs defaults to `shallow: true`, which rewrites the address bar via
+// the History API and skips the network entirely.
+//
+// `parseAsNativeArrayOf` uses repeated keys (?region=Kinki&region=Kanto), which
+// is the format these params have always used, so existing links keep working.
+// ---------------------------------------------------------------------------
 
-export function readShrineFilters(params: ParamsLike): ShrineFilters {
-  const from = readMonthParam(params.get(FESTIVAL_MONTH_PARAM.from));
-  const to = readMonthParam(params.get(FESTIVAL_MONTH_PARAM.to));
+const facetList = () => parseAsNativeArrayOf(parseAsString).withDefault([]);
+
+export const shrineFilterParsers = {
+  // The state updates synchronously; only the URL write is debounced, purely to
+  // stay under Safari's ~100-calls-per-30s History API rate limit.
+  q: parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }),
+  [FILTER_PARAM_KEY.prayerFocus]: facetList(),
+  [FILTER_PARAM_KEY.ranks]: facetList(),
+  [FILTER_PARAM_KEY.region]: facetList(),
+  [FILTER_PARAM_KEY.prefecture]: facetList(),
+  [FILTER_PARAM_KEY.deity]: facetList(),
+  [FESTIVAL_MONTH_PARAM.from]: parseAsInteger,
+  [FESTIVAL_MONTH_PARAM.to]: parseAsInteger,
+  saved: parseAsBoolean.withDefault(false),
+  collected: parseAsBoolean.withDefault(false),
+};
+
+export type ShrineQueryState = {
+  [K in keyof typeof shrineFilterParsers]: inferParserType<(typeof shrineFilterParsers)[K]>;
+};
+
+// Adapts the flat nuqs state bag to the ShrineFilters shape the predicate below
+// consumes, so filter semantics stay in one place.
+export function toShrineFilters(qs: ShrineQueryState): ShrineFilters {
+  const from = clampMonth(qs[FESTIVAL_MONTH_PARAM.from]);
+  const to = clampMonth(qs[FESTIVAL_MONTH_PARAM.to]);
   return {
-    searchQuery: params.get("q") ?? "",
-    prayerFocus: params.getAll(FILTER_PARAM_KEY.prayerFocus),
-    ranks: params.getAll(FILTER_PARAM_KEY.ranks),
-    region: params.getAll(FILTER_PARAM_KEY.region),
-    prefecture: params.getAll(FILTER_PARAM_KEY.prefecture),
-    deity: params.getAll(FILTER_PARAM_KEY.deity),
+    searchQuery: qs.q,
+    prayerFocus: qs[FILTER_PARAM_KEY.prayerFocus],
+    ranks: qs[FILTER_PARAM_KEY.ranks],
+    region: qs[FILTER_PARAM_KEY.region],
+    prefecture: qs[FILTER_PARAM_KEY.prefecture],
+    deity: qs[FILTER_PARAM_KEY.deity],
     festivalMonths: from !== null && to !== null ? { from, to } : null,
   };
+}
+
+function clampMonth(value: number | null): number | null {
+  return value !== null && Number.isInteger(value) && value >= 1 && value <= 12 ? value : null;
 }
 
 export function hasActiveShrineFilters(filters: ShrineFilters): boolean {
@@ -75,18 +116,22 @@ export function hasActiveShrineFilters(filters: ShrineFilters): boolean {
 }
 
 export function matchesShrineFilters(card: ShrineCard, filters: ShrineFilters): boolean {
-  // Search Term match
+  // Search Term match. Folded (diacritic-stripped + lowercased) so ASCII
+  // queries like "Bunkyo" match macron'd romaji like "Bunkyō" — same
+  // normalization /search already applies via lib/search.ts's `fold`.
   if (filters.searchQuery) {
-    const query = filters.searchQuery.toLowerCase();
-    const nameMatch = card.name_en.toLowerCase().includes(query) || (card.name_ja ?? "").includes(query);
-    const locMatch =
-      (card.city ?? "").toLowerCase().includes(query) || card.prefecture.name_en.toLowerCase().includes(query);
+    const query = fold(filters.searchQuery);
+    const nameMatch = fold(card.name_en).includes(query) || (card.name_ja ?? "").includes(query);
+    const locMatch = fold(card.city ?? "").includes(query) || fold(card.prefecture.name_en).includes(query);
     const primaryDeityMatch =
-      (card.primary_deity?.name_en ?? "").toLowerCase().includes(query) ||
-      (card.primary_deity?.name_ja ?? "").includes(query);
+      fold(card.primary_deity?.name_en ?? "").includes(query) || (card.primary_deity?.name_ja ?? "").includes(query);
     const deityKanjiMatch = card.deity_ja.some((k) => k.includes(query));
-    const rankMatch = card.rank_codes.some((r) => r.toLowerCase().includes(query));
-    if (!nameMatch && !locMatch && !primaryDeityMatch && !deityKanjiMatch && !rankMatch) return false;
+    const rankMatch = card.rank_codes.some((r) => fold(r).includes(query));
+    const categoryMatch = card.categories.some(
+      (c) => fold(c.name_en).includes(query) || (c.name_ja ?? "").includes(query),
+    );
+    if (!nameMatch && !locMatch && !primaryDeityMatch && !deityKanjiMatch && !rankMatch && !categoryMatch)
+      return false;
   }
 
   // Prayer Focus multi-match

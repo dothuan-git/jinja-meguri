@@ -50,6 +50,8 @@ const DeitySchema = z.object({
   // Shrine-specific alternate (enshrined) name; null/absent = use the canonical deity name.
   alter_name_en: z.string().nullable().optional(),
   alter_name_ja: z.string().nullable().optional(),
+  // Kana reading for alter_name_ja; null/absent = use the canonical deity's name_hiragana.
+  alter_name_hiragana: z.string().nullable().optional(),
   // Only required when the deity doesn't exist in the DB yet
   canonical: DeityCanonicalSchema.optional(),
   // Shrine-specific title/epithet override, like alter_name_en/ja; null/absent = use

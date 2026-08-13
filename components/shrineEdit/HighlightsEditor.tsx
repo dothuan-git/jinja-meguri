@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Sparkles, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useShrineEdit, EditableText, EditableProse } from "@/components/shrineEdit/context";
 import { typo } from "@/components/shrineEdit/detailStyles";
 import type { ShrineInput } from "@/lib/admin/shrineContract";
@@ -21,6 +22,8 @@ export default function HighlightsEditor({
 }) {
   const api = useShrineEdit();
   const editing = Boolean(api?.editing);
+  const t = useTranslations("ShrineDetail.highlights");
+  const tRemove = useTranslations("ShrineDetail");
 
   if (!editing) {
     if (highlights.length === 0) return null;
@@ -28,7 +31,7 @@ export default function HighlightsEditor({
       <div className="space-y-2.5 pt-4">
         <h4 className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
           <Sparkles size={12} className="text-torii-dark/70" />
-          Highlights
+          {t("title")}
         </h4>
         <ul className="space-y-2">
           {highlights.map((h, i) => (
@@ -52,12 +55,12 @@ export default function HighlightsEditor({
     <div className="space-y-3 pt-4">
       <h4 className={`${typo.eyebrow} flex items-center gap-1.5 select-none`}>
         <Sparkles size={12} className="text-torii-dark/70" />
-        Highlights
+        {t("title")}
       </h4>
 
       {draft.length === 0 && (
         <p className="text-xs text-stone/40 font-sans italic">
-          No highlights yet — optional. Add the don't-miss features a visitor can walk up to.
+          {t("empty")}
         </p>
       )}
 
@@ -67,8 +70,8 @@ export default function HighlightsEditor({
             <EditableText
               path={`highlights.${i}.title`}
               bilingual
-              ariaLabel={`Highlight ${i + 1} title`}
-              placeholder="Title — English first (kanji), e.g. Couple Camphor (夫婦楠)"
+              ariaLabel={t("titleAria", { n: i + 1 })}
+              placeholder={t("titlePh")}
               editClassName="w-full text-sm font-sans font-bold text-stone"
             >
               <span>{h.title}</span>
@@ -77,8 +80,8 @@ export default function HighlightsEditor({
               path={`highlights.${i}.body`}
               bilingual
               rows={2}
-              ariaLabel={`Highlight ${i + 1} body`}
-              placeholder="Short gloss (optional — leave blank if the description already covers it)…"
+              ariaLabel={t("bodyAria", { n: i + 1 })}
+              placeholder={t("bodyPh")}
               editClassName="w-full text-xs md:text-sm font-sans text-stone/80"
             >
               <>{h.body}</>
@@ -86,11 +89,11 @@ export default function HighlightsEditor({
           </div>
           <button
             type="button"
-            aria-label={`Remove highlight ${i + 1}`}
+            aria-label={t("removeAria", { n: i + 1 })}
             onClick={() => setDraft(draft.filter((_, j) => j !== i))}
             className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-red-500 hover:text-red-700 shrink-0"
           >
-            <X size={12} /> Remove
+            <X size={12} /> {tRemove("remove")}
           </button>
         </div>
       ))}
@@ -100,7 +103,7 @@ export default function HighlightsEditor({
         onClick={() => setDraft([...draft, { title: "", body: "" }])}
         className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-torii/40 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider text-torii transition-colors hover:bg-torii/5"
       >
-        <Plus size={13} /> Add highlight
+        <Plus size={13} /> {t("add")}
       </button>
     </div>
   );

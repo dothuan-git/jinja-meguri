@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
 import SiteFooter from "@/components/SiteFooter";
@@ -40,16 +41,21 @@ export default async function RootLayout({
         {/* Reveal hidden [data-reveal] elements for visitors without JS */}
         <noscript><style>{`[data-reveal]{opacity:1}`}</style></noscript>
         <AmbientByRoute />
-        <NextIntlClientProvider>
-          <ToastProvider>
-            <div className="relative z-10 flex min-h-screen flex-col items-center">
-              <SiteChrome user={user} />
-              <div className="w-full flex-1">{children}</div>
-              <SiteFooter />
-            </div>
-            {modal}
-          </ToastProvider>
-        </NextIntlClientProvider>
+        {/* Backs the URL-synced filter state on /shrines, /map and /search.
+            nuqs defaults to shallow updates, so a filter change rewrites the
+            address bar without re-running the server components. */}
+        <NuqsAdapter>
+          <NextIntlClientProvider>
+            <ToastProvider>
+              <div className="relative z-10 flex min-h-screen flex-col items-center">
+                <SiteChrome user={user} />
+                <div className="w-full flex-1">{children}</div>
+                <SiteFooter />
+              </div>
+              {modal}
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );
